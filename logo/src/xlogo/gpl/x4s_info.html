@@ -37,6 +37,6 @@
 			<li>
 				The Graphics are much smoother due to another rendering configuration.</li>
 			<li>
-				Measured on a Sierpinski Triangle of depth 9, XLogo4Schools is around 25% faster than XLogo (16s vs. 21s on my machine). It is even faster, when many procedures are added to the workspace. XLogo uses a stack to manage its procedures and it uses O(N) string comparisons to find a procedure. Interestingly, the hash operations push and pop are not really used. XLogo4Schools uses a HashMap that usually works in O(1).</li>
+				Measured on a Sierpinski Triangle of depth 9, XLogo4Schools is around 25% faster than XLogo (16s vs. 21s on my machine). It is even faster, when many procedures are added to the workspace. XLogo used a stack to manage its procedures which took O(N) string comparisons to find a procedure. Interestingly, the designated stack operations push and pop are not really used. For the same purpose, XLogo4Schools uses now a HashMap that usually works in O(1).</li>
 		</ul></body>
 </html>
