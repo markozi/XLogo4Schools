@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <!-- ====================================================================== 
      9 févr. 08 15:00:15                                                        
 
@@ -7,9 +7,9 @@
                    
      Le Coq Loïc                                                      
      ====================================================================== -->
-<project name="project Xlogo" default="deploy">
+<project name="XLogo4Schools" default="deploy">
     <description>
-            XLogo: Logo Programming Interpreter
+            XLogo4Schools: Logo Interpreter and Programming Environment
     </description>
 	<!-- Build Properties -->
 	
@@ -17,7 +17,7 @@
 	Does the Jar has to be signed ? 
 	================================-->
 	
-	<property name="signJar" value="true" />
+	<property name="signJar" value="false" />
 	
 	<!-- Property platform:
 	================================================
@@ -35,7 +35,7 @@
 
 	<!-- Version for this Build -->
 	
-	<property name="version" value="0.9.94beta-2008-08-02"/>
+	<property name="version" value="0.9.01beta-2014-06-12"/>
 
 	
     <!-- ================================= 
@@ -45,14 +45,13 @@
 		<condition property="sign.jar">
 			<equals arg1="true" arg2="${signJar}"/>		
 		</condition>		
-		<antcall target="sign.xlogo">
+		<antcall target="sign.xlogo4schools">
 		</antcall>
 		<condition property="build.source.tarball">
 			<equals arg1="true" arg2="${buildSrc}" />
 		</condition>
-    <antcall target="create.src.tarball">
-    </antcall>
-    
+	    <antcall target="create.src.tarball">
+	    </antcall>
     </target>
 	
 
@@ -63,8 +62,8 @@
 	<!-- Creates the source tarball -->
 	
 	<target name="create.src.tarball" if="build.source.tarball">
-		<mkdir dir="deploy/xlogo-${version}"/>
-		<copy todir="deploy/xlogo-${version}">
+		<mkdir dir="deploy/XLogo4Schools-${version}"/>
+		<copy todir="deploy/XLogo4Schools-${version}">
 			<fileset dir="." >
 		    	<include name="src/**"/>
 		    	<include name="windows/**"/>
@@ -82,24 +81,24 @@
 			</fileset>		
 		</copy>
 			
-		<tar destfile="deploy/xlogo-${version}-source.tar.bz2" compression="bzip2">
+		<tar destfile="deploy/XLogo4Schools-${version}-source.tar.bz2" compression="bzip2">
 			<fileset dir="deploy/">
-				<include name="xlogo-${version}/**"/>
+				<include name="XLogo4Schools-${version}/**"/>
 			</fileset>
 		
 		</tar>
-		<delete dir="deploy/xlogo-${version}"/>
+		<delete dir="deploy/XLogo4Schools-${version}"/>
 	</target>
 	
 	<!-- Sign the XLogo (Java Web Start) -->
 	
-	<target name="sign.xlogo" if="sign.jar">
+	<target name="sign.xlogo4schools" if="sign.jar">
      	<input
     	 	message="Password"
      		addproperty="pwd"/>
     	  <signjar keystore="keystore.ks" storepass="${pwd}" alias="myalias">
         	    	<fileset dir="deploy">
-        	    		<include name="xlogo.jar"/>
+        	    		<include name="XLogo4Schools.jar"/>
         			</fileset>
            </signjar>
    	</target>
@@ -127,7 +126,7 @@
 		
 		<!-- Create xlogo.jar -->
 		
-		<jar destfile="deploy/xlogo.jar"
+		<jar destfile="deploy/XLogo4Schools.jar"
 	 		manifest="manifest_start">
 	 		<fileset dir="deploy/">
 				<include name="**"/>
@@ -137,7 +136,7 @@
 		<!-- Delete Used files -->
 		<delete includeemptydirs="true">
 			<fileset dir="deploy/">
-				<exclude name="xlogo.jar"/>
+				<exclude name="XLogo4Schools.jar"/>
 	 			<include name="**"/>
 		    </fileset>
 	    </delete>
