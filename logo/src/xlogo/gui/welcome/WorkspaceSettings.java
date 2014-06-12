@@ -64,10 +64,14 @@ public class WorkspaceSettings extends X4SFrame {
 	 */
 	private ActionListener listener;
 	
-	public WorkspaceSettings(ActionListener listener, String authentification)
+	public WorkspaceSettings(ActionListener listener)
 	{
 		super();
 		this.listener = listener;
+	}
+	
+	public void showFrame(String authentification)
+	{
 		globalTab.authenticate(authentification);
 		frame.setVisible(true);
 	}

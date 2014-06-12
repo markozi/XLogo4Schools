@@ -77,14 +77,16 @@ public class WelcomeScreen extends JFrame {
 	private JPanel panel = new JPanel();
 	private GroupLayout groupLayout;
 	
-	private ActionListener listener;	
+	private ActionListener onApplicationEnterListener;
+
+	private WorkspaceSettings workspaceSettings;
 	
 	/**
 	 * 
 	 * @param listener to be informed when the user is ready to enter the application
 	 */
-	public WelcomeScreen(ActionListener listener){
-		this.listener = listener;
+	public WelcomeScreen(ActionListener onApplicationEnterListener){
+		this.onApplicationEnterListener = onApplicationEnterListener;
 		// Window
 		super.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setIconImage(Toolkit.getDefaultToolkit().createImage(Utils.class.getResource("Icon_x4s.png")));
@@ -160,8 +162,22 @@ public class WelcomeScreen extends JFrame {
 		setText();
 		pack();
 		setVisible(true);
-		//MessageManager.getInstance().setParent(this);
+
+		/*
+		 * Make this component the parent for popups and dialogs.
+		 */
 		setMessageManagerParent();
+		
+		workspaceSettings = new WorkspaceSettings(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				// When the window is closed, repopulate workspace and user lists, update language, enable this window again.
+				setMessageManagerParent();
+				setText();
+				populateWorkspaceList();
+				populateUserList();
+				setEnabled(true);
+			}
+		});
 	}
 	
 	private void initWorkspaceListModel()
@@ -281,13 +297,12 @@ public class WelcomeScreen extends JFrame {
 						)
 					);
 	}
-	
+		
 	/**
 	 * Display {@link xlogo.gui.welcome.WelcomeScreen} when starting the application.
 	 */
-	private void showWorkspaceSettings()
-	{
-		
+	private synchronized void showWorkspaceSettings()
+	{		
 		Runnable runnable = new Runnable() {
 			public void run() {
 				String authentification = null;
@@ -308,18 +323,8 @@ public class WelcomeScreen extends JFrame {
 					}
 				}
 				
-				ActionListener listener = new ActionListener() {
-					public void actionPerformed(ActionEvent arg0) {
-						setMessageManagerParent();
-						setText();
-						populateWorkspaceList();
-						populateUserList();
-						setEnabled(true);
-					}
-				};
-
 				setEnabled(false);
-				new WorkspaceSettings(listener, authentification);
+				workspaceSettings.showFrame(authentification);
 			}
 		};
 		
@@ -371,7 +376,6 @@ public class WelcomeScreen extends JFrame {
 
 	public void enterApplication()
 	{
-		System.gc();
 		String username = (String) userSelection.getSelectedItem();
 		
 		if ((username == null) || (username.length() == 0))
@@ -398,8 +402,9 @@ public class WelcomeScreen extends JFrame {
 					Logo.messages.getString("welcome.could.not.enter.user") + e.toString());
 			return;
 		}
+		workspaceSettings.stopEventListeners();
+		onApplicationEnterListener.actionPerformed(new ActionEvent(this, 0, null));
 		System.gc();
-		listener.actionPerformed(new ActionEvent(this, 0, null));
 	}
 	
 	@Override
