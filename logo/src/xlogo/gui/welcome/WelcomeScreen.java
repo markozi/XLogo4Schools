@@ -36,10 +36,8 @@ import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.io.IOException;
 
+import xlogo.gui.components.X4SFrame;
 import xlogo.messages.MessageKeys;
-import xlogo.messages.async.AsyncMediumAdapter;
-import xlogo.messages.async.AsyncMessage;
-import xlogo.messages.async.AsyncMessenger;
 import xlogo.messages.async.dialog.DialogMessenger;
 import xlogo.storage.Storable;
 import xlogo.storage.WSManager;
@@ -48,7 +46,6 @@ import xlogo.storage.workspace.WorkspaceConfig;
 import xlogo.utils.Utils;
 import xlogo.utils.WebPage;
 import xlogo.Application;
-import xlogo.Logo;
 
 /**
  * This was initially called {@code Selection_Langue} and it was only displayed when the Application was opened for the very first time.
@@ -57,24 +54,25 @@ import xlogo.Logo;
  * <li> Storage Location (master password required) </li>
  * @author Marko
  */
-public class WelcomeScreen extends JFrame {
-	private static final long serialVersionUID = 1L;
+public class WelcomeScreen extends X4SFrame {
 
+	JFrame frame;
+	
 	private JLabel label;
 	
-	private JLabel workspace = new JLabel("Workspace");
-	private JLabel username = new JLabel("User");
+	private JLabel workspace;
+	private JLabel username;
 
-	private JComboBox workspaceSelection = new JComboBox();
-	private JComboBox userSelection = new JComboBox();
+	private JComboBox workspaceSelection;
+	private JComboBox userSelection;
 
-	private JButton openWorkspaceSettingsBtn = new JButton("Settings");
-	private JButton enterButton = new JButton("Enter");
+	private JButton openWorkspaceSettingsBtn;
+	private JButton enterButton;
 	
-	private JButton infoButton = new JButton();
-	private JButton gplButton = new JButton();
+	private JButton infoButton;
+	private JButton gplButton;
 	
-	private JPanel panel = new JPanel();
+	private JPanel panel;
 	private GroupLayout groupLayout;
 	
 	private ActionListener onApplicationEnterListener;
@@ -87,86 +85,64 @@ public class WelcomeScreen extends JFrame {
 	 */
 	public WelcomeScreen(ActionListener onApplicationEnterListener){
 		this.onApplicationEnterListener = onApplicationEnterListener;
+	}
+
+	@Override
+	public JFrame getFrame()
+	{
+		return frame;
+	}
+
+	@Override
+	protected void initComponent()
+	{
+		frame = new JFrame(){
+			
+			private static final long	serialVersionUID	= -6730403281163492211L;
+
+			@Override
+			public void dispose()
+			{
+				try {
+					WSManager.getInstance().getGlobalConfigInstance().store();
+				} catch (IOException e) {
+					DialogMessenger.getInstance().dispatchMessage(
+							translate("ws.error.title"),
+							translate("storage.could.not.store.gc"));
+				}
+
+				System.gc();
+				super.dispose();
+			}
+		};
 		// Window
-		super.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setIconImage(Toolkit.getDefaultToolkit().createImage(Utils.class.getResource("Icon_x4s.png")));
-		setTitle("XLogo4Schools");
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frame.setIconImage(Toolkit.getDefaultToolkit().createImage(Utils.class.getResource("Icon_x4s.png")));
+		frame.setTitle("XLogo4Schools");
+
+
+		workspace = new JLabel("Workspace");
+		username = new JLabel("User");
+
+		workspaceSelection = new JComboBox();
+		userSelection = new JComboBox();
+
+		openWorkspaceSettingsBtn = new JButton("Settings");
+		enterButton = new JButton("Enter");
+		
+		infoButton = new JButton();
+		gplButton = new JButton();
+		
+		panel = new JPanel();
 
 		// The XLogo4Schools logo
 		//ImageIcon logo = Utils.dimensionne_image("Logo_xlogo4schools.png", this);
-		
 		infoButton.setIcon(createImageIcon("info_icon.png", "Info", 40, 40));
 		gplButton.setIcon(createImageIcon("gnu_gpl.png", "GPL", 40, 40));
 		label = new JLabel(createImageIcon("Logo_xlogo4schools.png", "XLogo4Schools", 250, 40));
 		
-		// Select workspace combo box
 		initWorkspaceListModel();
-		workspaceSelection.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent e) {
-				String workspace = (String) workspaceSelection.getSelectedItem();
-		    	enterWorkspace(workspace);
-			}
-		});
-		// Open workspace settings button
-		openWorkspaceSettingsBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				showWorkspaceSettings();
-			}
-		});
-		
-		// Select user combo box
 		populateUserList();
-		final JTextComponent tc = (JTextComponent) userSelection.getEditor().getEditorComponent();
-		tc.getDocument().addDocumentListener(new DocumentListener() {
-			public void removeUpdate(DocumentEvent arg0) { enableOrDisableEnter(); }
-			public void insertUpdate(DocumentEvent arg0) { enableOrDisableEnter(); }
-			public void changedUpdate(DocumentEvent arg0) { enableOrDisableEnter(); }
-			private void enableOrDisableEnter()
-			{
-				String username = tc.getText();
-				enterButton.setEnabled(username != null && username.length() != 0);
-			}
-		});
-		
-		userSelection.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				String username = (String) userSelection.getSelectedItem();
-				enterButton.setEnabled(username != null && username.length() != 0);
-			}
-		});
-		
-		// Enter user space button
-		enterButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				enterApplication();
-			}
-		});
-		
-		gplButton.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e)
-			{
-				showGPL();
-			}
-		});
-		
-		infoButton.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e)
-			{
-				showInfo();
-			}
-		});
-		
-		// Add all
-		initLayout();
-		getContentPane().add(panel);
-		setText();
-		pack();
-		setVisible(true);
-
-		/*
-		 * Make this component the parent for popups and dialogs.
-		 */
-		setMessageManagerParent();
 		
 		workspaceSettings = new WorkspaceSettings(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -175,65 +151,17 @@ public class WelcomeScreen extends JFrame {
 				setText();
 				populateWorkspaceList();
 				populateUserList();
-				setEnabled(true);
+				frame.setEnabled(true);
 			}
 		});
 	}
-	
-	private void initWorkspaceListModel()
-	{
-		WSManager wsManager = WSManager.getInstance();
-		try
-		{
-			String lastUsedWorkspace = wsManager.getGlobalConfigInstance().getLastUsedWorkspace();
-			wsManager.enterWorkspace(lastUsedWorkspace);
-			populateWorkspaceList();
-		}
-		catch (IOException e)
-		{
-			DialogMessenger
-				.getInstance()
-					.dispatchMessage(
-							"I'm sorry, something very bad happened",
-							"Please report this error message. You could try to delete the file X4S_GlobalConfig from your home directory, "
-							+ "and restart XLogo4Schools. You will have to import your Workspaces again.\n\n"
-							+ e.toString());
-		}
-	}
-	
-	private void populateWorkspaceList()
-	{
-		GlobalConfig gc = WSManager.getInstance().getGlobalConfigInstance();
-		String[] workspaces = gc.getAllWorkspaces();
-		workspaceSelection.setModel(new DefaultComboBoxModel(workspaces));
-		workspaceSelection.setSelectedItem(gc.getLastUsedWorkspace());
-	}
-	
-	private void populateUserList()
-	{
-		WorkspaceConfig wc = WSManager.getInstance().getWorkspaceConfigInstance();
-		String[] users = wc.getUserList();
-		userSelection.setModel(new DefaultComboBoxModel(users));
-		String lastUser = wc.getLastActiveUser();
-		userSelection.setSelectedItem(lastUser);
-		enterButton.setEnabled(lastUser != null && lastUser.length() > 0);
-		userSelection.setEditable(wc.isUserCreationAllowed());
-	}
-	
-	protected void enterWorkspace(String workspaceName) {
-		try {
-			WSManager.getInstance().enterWorkspace(workspaceName);
-			populateUserList();
-		} catch (IOException e) {
-			DialogMessenger.getInstance().dispatchMessage(
-						Logo.messages.getString("ws.error.title"),
-						Logo.messages.getString("ws.settings.could.not.enter.wp") + "\n\n" + e.toString());
-		}
-	}
 
-	private void initLayout()
+	@Override
+	protected void layoutComponent()
 	{
-		setResizable(false);
+		frame.getContentPane().add(panel);
+		
+		frame.setResizable(false);
 		infoButton.setBorder(null);
 		gplButton.setBorder(null);
 		
@@ -297,10 +225,116 @@ public class WelcomeScreen extends JFrame {
 						)
 					);
 	}
+
+	@Override
+	protected void initEventListeners()
+	{
+		workspaceSelection.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				String workspace = (String) workspaceSelection.getSelectedItem();
+		    	enterWorkspace(workspace);
+			}
+		});
+		// Open workspace settings button
+		openWorkspaceSettingsBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				showWorkspaceSettings();
+			}
+		});
 		
-	/**
-	 * Display {@link xlogo.gui.welcome.WelcomeScreen} when starting the application.
-	 */
+		// Select user combo box
+		final JTextComponent tc = (JTextComponent) userSelection.getEditor().getEditorComponent();
+		tc.getDocument().addDocumentListener(new DocumentListener() {
+			public void removeUpdate(DocumentEvent arg0) { enableOrDisableEnter(); }
+			public void insertUpdate(DocumentEvent arg0) { enableOrDisableEnter(); }
+			public void changedUpdate(DocumentEvent arg0) { enableOrDisableEnter(); }
+			private void enableOrDisableEnter()
+			{
+				String username = tc.getText();
+				enterButton.setEnabled(username != null && username.length() != 0);
+			}
+		});
+		
+		userSelection.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String username = (String) userSelection.getSelectedItem();
+				enterButton.setEnabled(username != null && username.length() != 0);
+			}
+		});
+		
+		// Enter user space button
+		enterButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				enterApplication();
+			}
+		});
+		
+		gplButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				showGPL();
+			}
+		});
+		
+		infoButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				showInfo();
+			}
+		});
+	}
+	
+	private void initWorkspaceListModel()
+	{
+		WSManager wsManager = WSManager.getInstance();
+		try
+		{
+			String lastUsedWorkspace = wsManager.getGlobalConfigInstance().getLastUsedWorkspace();
+			wsManager.enterWorkspace(lastUsedWorkspace);
+			populateWorkspaceList();
+		}
+		catch (IOException e)
+		{
+			DialogMessenger
+				.getInstance()
+					.dispatchMessage(
+							"I'm sorry, something very bad happened",
+							"Please report this error message. You could try to delete the file X4S_GlobalConfig from your home directory, "
+							+ "and restart XLogo4Schools. You will have to import your Workspaces again.\n\n"
+							+ e.toString());
+		}
+	}
+	
+	private void populateWorkspaceList()
+	{
+		GlobalConfig gc = WSManager.getInstance().getGlobalConfigInstance();
+		String[] workspaces = gc.getAllWorkspaces();
+		workspaceSelection.setModel(new DefaultComboBoxModel(workspaces));
+		workspaceSelection.setSelectedItem(gc.getLastUsedWorkspace());
+	}
+	
+	private void populateUserList()
+	{
+		WorkspaceConfig wc = WSManager.getInstance().getWorkspaceConfigInstance();
+		String[] users = wc.getUserList();
+		userSelection.setModel(new DefaultComboBoxModel(users));
+		String lastUser = wc.getLastActiveUser();
+		userSelection.setSelectedItem(lastUser);
+		enterButton.setEnabled(lastUser != null && lastUser.length() > 0);
+		userSelection.setEditable(wc.isUserCreationAllowed());
+	}
+	
+	protected void enterWorkspace(String workspaceName) {
+		try {
+			WSManager.getInstance().enterWorkspace(workspaceName);
+			populateUserList();
+		} catch (IOException e) {
+			DialogMessenger.getInstance().dispatchMessage(
+						translate("ws.error.title"),
+						translate("ws.settings.could.not.enter.wp") + "\n\n" + e.toString());
+		}
+	}
+		
 	private synchronized void showWorkspaceSettings()
 	{		
 		Runnable runnable = new Runnable() {
@@ -317,13 +351,13 @@ public class WelcomeScreen extends JFrame {
 					{
 						// Could not authenticate => cancel
 						DialogMessenger.getInstance().dispatchMessage(
-								Logo.messages.getString("i.am.sorry"),
-								Logo.messages.getString("welcome.wrong.pw"));
+								translate("i.am.sorry"),
+								translate("welcome.wrong.pw"));
 						return;
 					}
 				}
 				
-				setEnabled(false);
+				frame.setEnabled(false);
 				workspaceSettings.showFrame(authentification);
 			}
 		};
@@ -331,41 +365,9 @@ public class WelcomeScreen extends JFrame {
 		new Thread(runnable).start();
 	}
 	
-	private void setMessageManagerParent()
-	{
-		DialogMessenger.getInstance().setMedium(new AsyncMediumAdapter<AsyncMessage<JFrame>, JFrame>(){
-			public boolean isReady()
-			{
-				return getThis().isDisplayable();
-			}
-			public JFrame getMedium()
-			{
-				return getThis();
-			}
-			public void addMediumReadyListener(final AsyncMessenger messenger)
-			{
-				getThis().addWindowStateListener(new WindowStateListener(){
-					
-					@Override
-					public void windowStateChanged(WindowEvent e)
-					{
-						if (getThis().isDisplayable())
-							messenger.onMediumReady();
-					}
-				});
-			}
-		});
-	}
-	
-	private JFrame getThis()
-	{
-		return this;
-	}
-	
-	
 	protected String showPasswordPopup() {
 		JPasswordField passwordField = new JPasswordField();
-		int option = JOptionPane.showConfirmDialog(this, passwordField, Logo.messages.getString("welcome.enter.pw"),
+		int option = JOptionPane.showConfirmDialog(frame, passwordField, translate("welcome.enter.pw"),
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
 		if (option == JOptionPane.OK_OPTION) {
@@ -384,8 +386,8 @@ public class WelcomeScreen extends JFrame {
 		if(!Storable.checkLegalName(username))
 		{
 			DialogMessenger.getInstance().dispatchError(
-					Logo.messages.getString(MessageKeys.NAME_ERROR_TITLE), 
-					Logo.messages.getString(MessageKeys.ILLEGAL_NAME));
+					translate(MessageKeys.NAME_ERROR_TITLE), 
+					translate(MessageKeys.ILLEGAL_NAME));
 			return;
 		}
 		
@@ -398,38 +400,24 @@ public class WelcomeScreen extends JFrame {
 			WSManager.getInstance().enterUserSpace(username);
 		} catch (IOException e) {
 			DialogMessenger.getInstance().dispatchMessage(
-					Logo.messages.getString("ws.error.title"),
-					Logo.messages.getString("welcome.could.not.enter.user") + e.toString());
+					translate("ws.error.title"),
+					translate("welcome.could.not.enter.user") + e.toString());
 			return;
 		}
+		
 		workspaceSettings.stopEventListeners();
 		onApplicationEnterListener.actionPerformed(new ActionEvent(this, 0, null));
 		System.gc();
 	}
 	
-	@Override
-	public void dispose()
-	{
-		try {
-			WSManager.getInstance().getGlobalConfigInstance().store();
-		} catch (IOException e) {
-			DialogMessenger.getInstance().dispatchMessage(
-					Logo.messages.getString("ws.error.title"),
-					Logo.messages.getString("storage.could.not.store.gc"));
-		}
-
-		System.gc();
-		super.dispose();
-	}
-	
 	public void setText()
 	{
-		workspace.setText(Logo.messages.getString("welcome.workspace"));
-		username.setText(Logo.messages.getString("welcome.username"));
-		openWorkspaceSettingsBtn.setText(Logo.messages.getString("welcome.settings"));
-		enterButton.setText(Logo.messages.getString("welcome.enter"));
-		setTitle(Logo.messages.getString("welcome.title"));
-		pack();
+		workspace.setText(translate("welcome.workspace"));
+		username.setText(translate("welcome.username"));
+		openWorkspaceSettingsBtn.setText(translate("welcome.settings"));
+		enterButton.setText(translate("welcome.enter"));
+		frame.setTitle(translate("welcome.title"));
+		frame.pack();
 	}
 	
 	/**
@@ -438,7 +426,7 @@ public class WelcomeScreen extends JFrame {
 	 */
 	private void showGPL()
 	{
-		JFrame frame = new JFrame(Logo.messages.getString("menu.help.licence"));
+		JFrame frame = new JFrame(translate("menu.help.licence"));
 		frame.setIconImage(Toolkit.getDefaultToolkit().createImage(WebPage.class.getResource("Logo_xlogo4schools.png")));
 		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		frame.setSize(500, 500);
@@ -477,7 +465,7 @@ public class WelcomeScreen extends JFrame {
 
 	private void showInfo()
 	{
-		JFrame frame = new JFrame(Logo.messages.getString("menu.help.licence"));
+		JFrame frame = new JFrame(translate("menu.help.licence"));
 		frame.setIconImage(Toolkit.getDefaultToolkit().createImage(WebPage.class.getResource("Icon_x4s.png")));
 		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		frame.setSize(500, 500);

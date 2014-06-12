@@ -29,8 +29,6 @@ package xlogo.gui.welcome;
 
 import java.awt.Toolkit;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowStateListener;
 import java.io.IOException;
 
 import javax.swing.JFrame;
@@ -41,9 +39,6 @@ import xlogo.gui.welcome.settings.tabs.SyntaxHighlightingTab;
 import xlogo.gui.welcome.settings.tabs.ContestTab;
 import xlogo.gui.welcome.settings.tabs.GlobalTab;
 import xlogo.gui.welcome.settings.tabs.WorkspaceTab;
-import xlogo.messages.async.AsyncMediumAdapter;
-import xlogo.messages.async.AsyncMessage;
-import xlogo.messages.async.AsyncMessenger;
 import xlogo.messages.async.dialog.DialogMessenger;
 import xlogo.storage.WSManager;
 import xlogo.utils.Utils;
@@ -157,31 +152,5 @@ public class WorkspaceSettings extends X4SFrame {
 		appearanceTab.stopEventListeners();
 		contestTab.stopEventListeners();
 	}
-	
-	private void setMessageManagerParent()
-	{
-		DialogMessenger.getInstance().setMedium(new AsyncMediumAdapter<AsyncMessage<JFrame>, JFrame>(){
-			public boolean isReady()
-			{
-				return frame.isDisplayable();
-			}
-			public JFrame getMedium()
-			{
-				return frame;
-			}
-			public void addMediumReadyListener(final AsyncMessenger messenger)
-			{
-				frame.addWindowStateListener(new WindowStateListener(){
-					
-					@Override
-					public void windowStateChanged(WindowEvent e)
-					{
-						if (frame.isDisplayable())
-							messenger.onMediumReady();
-					}
-				});
-			}
-		});
-	}
-	
+		
 }

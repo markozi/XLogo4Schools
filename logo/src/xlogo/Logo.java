@@ -129,12 +129,13 @@ public class Logo {
 						public void actionPerformed(ActionEvent e) {
 							enterApplication();
 						}
-					});	
+					});
+					welcomeScreen.showFrame();
 				}
 			});
 			//UIManager.setLookAndFeel(new javax.swing.plaf.metal.MetalLookAndFeel());
 		} catch(Exception e){
-			System.out.println("here " + e.toString()); //TODO error m
+			e.printStackTrace(); //TODO error m
 		}
 		
 	}
@@ -145,7 +146,7 @@ public class Logo {
 	public void enterApplication(){
 		WorkspaceConfig wc = WSManager.getInstance().getWorkspaceConfigInstance();
 		
-		welcomeScreen.dispose();
+		welcomeScreen.closeFrame();
 		generateLanguage(wc.getLanguage());
 		
 		// Initialize frame

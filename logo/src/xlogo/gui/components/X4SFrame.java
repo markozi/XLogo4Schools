@@ -27,7 +27,15 @@
 
 package xlogo.gui.components;
 
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowStateListener;
+
 import javax.swing.JFrame;
+
+import xlogo.messages.async.AsyncMediumAdapter;
+import xlogo.messages.async.AsyncMessage;
+import xlogo.messages.async.AsyncMessenger;
+import xlogo.messages.async.dialog.DialogMessenger;
 
 public abstract class X4SFrame extends X4SGui{
 
@@ -36,5 +44,45 @@ public abstract class X4SFrame extends X4SGui{
 	}
 	
 	public abstract JFrame getFrame();
+	
+	public void showFrame()
+	{
+		setMessageManagerParent();
+		getFrame().setVisible(true);
+	}
+	
+	public void closeFrame()
+	{
+		getFrame().dispose();
+	}
+	
+	/**
+	 * Make this frame the parent for popups and dialogs
+	 */
+	protected void setMessageManagerParent()
+	{
+		DialogMessenger.getInstance().setMedium(new AsyncMediumAdapter<AsyncMessage<JFrame>, JFrame>(){
+			public boolean isReady()
+			{
+				return getFrame().isDisplayable();
+			}
+			public JFrame getMedium()
+			{
+				return getFrame();
+			}
+			public void addMediumReadyListener(final AsyncMessenger messenger)
+			{
+				getFrame().addWindowStateListener(new WindowStateListener(){
+					
+					@Override
+					public void windowStateChanged(WindowEvent e)
+					{
+						if (getFrame().isDisplayable())
+							messenger.onMediumReady();
+					}
+				});
+			}
+		});
+	}
 
 }
