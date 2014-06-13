@@ -110,13 +110,12 @@ public class WelcomeScreen extends X4SFrame {
 							translate("ws.error.title"),
 							translate("storage.could.not.store.gc"));
 				}
-
-				System.gc();
+				
 				super.dispose();
 			}
 		};
 		// Window
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setIconImage(Toolkit.getDefaultToolkit().createImage(Utils.class.getResource("Icon_x4s.png")));
 		frame.setTitle("XLogo4Schools");
 
