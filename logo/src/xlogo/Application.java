@@ -71,6 +71,7 @@ import xlogo.utils.WriteImage;
 import xlogo.gui.components.ProcedureSearch;
 import xlogo.gui.components.TurtleComboBox;
 import xlogo.gui.components.ProcedureSearch.ProcedureSearchRequestListener;
+import xlogo.gui.components.X4SFrame;
 import xlogo.gui.components.fileslist.FilesList;
 import xlogo.gui.*;
 import xlogo.kernel.Affichage;
@@ -80,9 +81,6 @@ import xlogo.kernel.perspective.Viewer3D;
 import xlogo.kernel.userspace.UserSpace;
 import xlogo.kernel.userspace.procedures.Procedure;
 import xlogo.messages.MessageKeys;
-import xlogo.messages.async.AsyncMediumAdapter;
-import xlogo.messages.async.AsyncMessage;
-import xlogo.messages.async.AsyncMessenger;
 import xlogo.messages.async.dialog.DialogMessenger;
 import xlogo.messages.async.history.HistoryMessenger;
 
@@ -90,29 +88,29 @@ import xlogo.messages.async.history.HistoryMessenger;
  * @author Marko
  * @author Loïc Le Coq
  */
-public class Application
+public class Application extends X4SFrame
 {	
 	private static final int	BG_COLOR	= 0xB3BCEA;
 	public static final String appName = "XLogo4Schools";
 	
-	private static Stack<String>	pile_historique			= new Stack<String>();
-	private int						index_historique		= 0;
+	private static Stack<String>	pile_historique;
+	private int						index_historique;
 	
 	private MenuListener			menulistener;
 	
-	public boolean					error					= false;
-	boolean							stop					= false;
+	public boolean					error;
+	boolean							stop;
 	
-	public Affichage				affichage				= null;
-	private Sound_Player			son						= new Sound_Player(this);
-	private Touche					touche					= new Touche();
+	public Affichage				affichage;
+	private Sound_Player			son;
+	private Touche					touche;
 	private Popup					jpop;
 	
 	// pref Box
 	/**
 	 * To display 3D View
 	 */
-	private Viewer3D				viewer3d				= null;
+	private Viewer3D				viewer3d;
 	
 	// Interpreter and drawer
 	private Kernel					kernel;
@@ -124,33 +122,33 @@ public class Application
 	 * My Layout
 	 */
 	
-	private JFrame					mainFrame				= new JFrame();
-	private JPanel					filesAndProcedures		= new JPanel();
+	private JFrame					mainFrame;
+	private JPanel					filesAndProcedures;
 	private JPanel	commandOrEditor;
 	private FilesList filesList;
 	private ProcedureSearch procedureSearch;
 	
 	// drawingOrEditor@Drawing
-	private JPanel					commandCard				= new JPanel();
-	private ZoneCommande			commandLine				= new ZoneCommande(this);
-	private JLabel					recordTimerLabel		= new JLabel();
-	private JButton					stopButton				= new JButton();
-	private JButton					menuButton				= new JButton();
-	public JSplitPane				drawingAndHistory		= new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+	private JPanel					commandCard;
+	private ZoneCommande			commandLine;
+	private JLabel					recordTimerLabel;
+	private JButton					stopButton;
+	private JButton					menuButton;
+	public JSplitPane				drawingAndHistory;
 		
-	private JPanel					drawingAndExtras		= new JPanel();
-	private HistoryPanel			history					= new HistoryPanel(this);
+	private JPanel					drawingAndExtras;
+	private HistoryPanel			history;
 
 	public JScrollPane				scrollArea;
 	private DrawPanel				drawPanel;
-	private JPanel					extrasPanel				= new JPanel();
-	private JSlider					speedSlider				= new JSlider(JSlider.VERTICAL);
+	private JPanel					extrasPanel;
+	private JSlider					speedSlider;
 	
 	// drawingOrEditor@Editor
-	public Editor					editeur  				= new Editor(this);
+	public Editor					editeur;
 	
 	// Extras Menu
-	private JPopupMenu				extras					= new JPopupMenu();
+	private JPopupMenu				extras;
 	
 	private static final String COMMAND_CARD_ID = "command_card";
 	private static final String EDITOR_CARD_ID = "editor_card";
@@ -160,28 +158,7 @@ public class Application
 	/** Builds the main frame */
 	public Application()
 	{
-		uc = WSManager.getUserConfig();
-		
-		userSpace = new UserSpace();
-		kernel = new Kernel(this, userSpace);
-		initMessenger();
-		kernel.initInterprete();
-		
-		menulistener = new MenuListener(this);
-		jpop = new Popup(menulistener, commandLine);
-		
-		try
-		{
-			initGUI();
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-		setText();
-		
-		initListeners(); 
-		
+		super();
 		showWelcomeMessage();
 	}
 	
@@ -190,7 +167,7 @@ public class Application
 	 * You defined a, b, c, d, ...
 	 */
 	public void showWelcomeMessage() {
-		HistoryMessenger.getInstance().dispatchComment(Logo.messages.getString(MessageKeys.APP_HELLO) + " " + uc.getUserName() + "!\n");
+		HistoryMessenger.getInstance().dispatchComment(translate(MessageKeys.APP_HELLO) + " " + uc.getUserName() + "!\n");
 				
 		StringBuilder sb = new StringBuilder();
 		for (String procedureName : userSpace.getAllProcedureNames())
@@ -204,7 +181,7 @@ public class Application
 		sb.delete(sb.length() - 2, sb.length());
 		
 		HistoryMessenger.getInstance().dispatchComment(
-				Logo.messages.getString("definir") + " " 
+				translate("definir") + " " 
 				+ sb.toString() + ".\n");
 	}
 	
@@ -213,65 +190,91 @@ public class Application
 		return mainFrame;
 	}
 	
-	private void initMessenger()
-	{	
-		
-		DialogMessenger.getInstance().setMedium(new AsyncMediumAdapter<AsyncMessage<JFrame>, JFrame>(){
-			public boolean isReady()
-			{
-				return getFrame().isDisplayable();
-			}
-			public JFrame getMedium()
-			{
-				return getFrame();
-			}
-			public void addMediumReadyListener(final AsyncMessenger messenger)
-			{
-				getFrame().addWindowStateListener(new WindowStateListener(){
-					
-					@Override
-					public void windowStateChanged(WindowEvent e)
-					{
-						if (getFrame().isDisplayable())
-							messenger.onMediumReady();
-					}
-				});
-			}
-		});
 
+
+	@Override
+	protected void initComponent()
+	{
+		pile_historique			= new Stack<String>();
+	
+		son						= new Sound_Player(this);
+		touche					= new Touche();
 		
+		mainFrame				= new JFrame();
+		filesAndProcedures		= new JPanel();
+
+		commandCard				= new JPanel();
+		commandLine				= new ZoneCommande(this);
+		recordTimerLabel		= new JLabel();
+		stopButton				= new JButton();
+		menuButton				= new JButton();
+		drawingAndHistory		= new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+			
+		drawingAndExtras		= new JPanel();
+		history					= new HistoryPanel(this);
+
+		extrasPanel				= new JPanel();
+		speedSlider				= new JSlider(JSlider.VERTICAL);
+		
+		editeur  				= new Editor(this);
+		
+		extras					= new JPopupMenu();
+		
+		try
+		{	
+			uc = WSManager.getUserConfig();
+			
+			userSpace = new UserSpace();
+			kernel = new Kernel(this, userSpace);
+			kernel.initInterprete();
+			
+			menulistener = new MenuListener(this);
+			jpop = new Popup(menulistener, commandLine);
+			
+			setTheme();
+			initFrame();
+			JPanel contentPane = (JPanel) mainFrame.getContentPane();
+			JPanel toplevel = new JPanel();
+			toplevel.setLayout(new BorderLayout());
+
+			filesList = new FilesList(userSpace);
+			procedureSearch = new ProcedureSearch(userSpace);
+			filesAndProcedures = new JPanel(new GridBagLayout());
+			
+			toplevel.add(filesAndProcedures, BorderLayout.WEST);
+			commandOrEditor	= new JPanel(new CardLayout());
+			toplevel.add(commandOrEditor, BorderLayout.CENTER);
+			
+			commandOrEditor.add(commandCard, COMMAND_CARD_ID);
+			commandOrEditor.add(editeur.getComponent(), EDITOR_CARD_ID);
+			//commandOrEditor.setPreferredSize(new Dimension(d.width-200, d.height));
+			showCommandCard();
+			
+			scrollArea = new JScrollPane();
+			DrawPanel.dessin=new BufferedImage(uc.getImageWidth(),uc.getImageHeight(),BufferedImage.TYPE_INT_RGB);
+			drawPanel = new DrawPanel(this);
+
+			initMenu();
+			
+			contentPane.add(toplevel);
+			showFrame();
+			initDrawingZone();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}	
 	}
-	
-	private void initGUI()
-	{	
-		setTheme();
-		initFrame();
-		JPanel contentPane = (JPanel) mainFrame.getContentPane();
-		JPanel toplevel = new JPanel();
-		toplevel.setLayout(new BorderLayout());
+
+	@Override
+	protected void layoutComponent()
+	{
 		layoutFilesAndProcedures();
-		toplevel.add(filesAndProcedures, BorderLayout.WEST);
-		commandOrEditor	= new JPanel(new CardLayout());
-		toplevel.add(commandOrEditor, BorderLayout.CENTER);
-		
-		commandOrEditor.add(commandCard, COMMAND_CARD_ID);
-		commandOrEditor.add(editeur.getComponent(), EDITOR_CARD_ID);
-		//commandOrEditor.setPreferredSize(new Dimension(d.width-200, d.height));
-		showCommandCard();
-		
-		scrollArea = new JScrollPane();
-		DrawPanel.dessin=new BufferedImage(uc.getImageWidth(),uc.getImageHeight(),BufferedImage.TYPE_INT_RGB);
-		drawPanel = new DrawPanel(this);
-	
 		layoutCommandCard();
 		layoutDrawingAndExtras();
 		layoutDrawingArea();
 		layoutExtras();
-		initMenu();
-		
-		contentPane.add(toplevel);
-		getFrame().setVisible(true);
-		initDrawingZone();
+		drawPanel.getGraphics().drawImage(DrawPanel.dessin,0,0,mainFrame);
 	}
 
 	private void initFrame()
@@ -317,15 +320,15 @@ public class Application
 		}
 		catch (Exception e1)
 		{
-			String message = Logo.messages.getString(MessageKeys.US_COULD_NOT_STORE_RECENT_DATA) + "\n\n" 
+			String message = translate(MessageKeys.US_COULD_NOT_STORE_RECENT_DATA) + "\n\n" 
 					+ e1.toString() + "\n\n"  
-					+ Logo.messages.getString("quitter?");
+					+ translate("quitter?");
 
-			String[] choix = { Logo.messages.getString(MessageKeys.DIALOG_YES), Logo.messages.getString(MessageKeys.DIALOG_NO) };
+			String[] choix = { translate(MessageKeys.DIALOG_YES), translate(MessageKeys.DIALOG_NO) };
 			int retval = JOptionPane.showOptionDialog(
 					mainFrame, 
 					message, 
-					Logo.messages.getString("general.error.title"),
+					translate("general.error.title"),
 					JOptionPane.YES_NO_OPTION,
 					JOptionPane.ERROR_MESSAGE,
 					null, choix, choix[0]);
@@ -350,7 +353,7 @@ public class Application
 		tracker.addImage(DrawPanel.dessin,0);
 		try{tracker.waitForID(0);}
 		catch(InterruptedException e){}
-		drawPanel.getGraphics().drawImage(DrawPanel.dessin,0,0,mainFrame);
+		//drawPanel.getGraphics().drawImage(DrawPanel.dessin,0,0,mainFrame);
 		scrollArea.validate();
 
 		setCommandLine(false);
@@ -402,9 +405,6 @@ public class Application
 	private void layoutFilesAndProcedures()
 	{
 		
-		filesList = new FilesList(userSpace);
-		procedureSearch = new ProcedureSearch(userSpace);
-		filesAndProcedures = new JPanel(new GridBagLayout());
 		
 		// Note : the following JPanel saved my day ...
 		// thanks to this The files list is finally position at the top :-)
@@ -584,8 +584,8 @@ public class Application
 
 		if (!uc.isVirtual()) // Contest Mode not available in virtual mode
 		{
-			startContestMenuItem = new JMenuItem(Logo.messages.getString(MessageKeys.CONTEST_MODE_START)); 
-			stopContestMenuItem = new JMenuItem(Logo.messages.getString(MessageKeys.CONTEST_MODE_STOP));
+			startContestMenuItem = new JMenuItem(translate(MessageKeys.CONTEST_MODE_START)); 
+			stopContestMenuItem = new JMenuItem(translate(MessageKeys.CONTEST_MODE_STOP));
 		    extras.add(startContestMenuItem,0);
 			
 		    startContestMenuItem.addActionListener(new ActionListener(){
@@ -597,11 +597,11 @@ public class Application
 					
 					String[] contestFileNames = new String[nOfFiles + nOfBonusFiles];
 					
-					String nameBase = Logo.messages.getString("contest.mode.filename") + " ";
+					String nameBase = translate("contest.mode.filename") + " ";
 					for (int i = 0; i < nOfFiles; i++)
 						contestFileNames[i] = nameBase + (i + 1);
 					
-					nameBase = Logo.messages.getString("contest.mode.bonus.filename") + " ";
+					nameBase = translate("contest.mode.bonus.filename") + " ";
 					
 					for (int i = 0; i < nOfBonusFiles; i++)
 						contestFileNames[nOfFiles + i] = nameBase + (i + 1);
@@ -611,8 +611,8 @@ public class Application
 					}
 					catch (IOException e1)
 					{
-						DialogMessenger.getInstance().dispatchMessage(Logo.messages.getString("contest.error.title"),
-								Logo.messages.getString("contest.could.not.create") + "\n" + e.toString());
+						DialogMessenger.getInstance().dispatchMessage(translate("contest.error.title"),
+								translate("contest.could.not.create") + "\n" + e.toString());
 						return;
 					}
 				}
@@ -625,7 +625,7 @@ public class Application
 			});
 		}
 		
-		importMenuItem = new JMenuItem(Logo.messages.getString(MessageKeys.US_IMPORT));
+		importMenuItem = new JMenuItem(translate(MessageKeys.US_IMPORT));
 	    extras.add(importMenuItem);
 	    importMenuItem.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e)
@@ -665,14 +665,14 @@ public class Application
 			}
 		});
 		
-	    exportMenuItem = new JMenuItem(Logo.messages.getString(MessageKeys.US_EXPORT));
+	    exportMenuItem = new JMenuItem(translate(MessageKeys.US_EXPORT));
 		extras.add(exportMenuItem);
 		exportMenuItem.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e)
 			{
 				
-				String fileName = (String) JOptionPane.showInputDialog(getFrame(), Logo.messages.getString(MessageKeys.US_EXPORT_MSG) + "\n",
-						Logo.messages.getString(MessageKeys.US_EXPORT), JOptionPane.PLAIN_MESSAGE, null, userSpace.getFileNames(), "ham");
+				String fileName = (String) JOptionPane.showInputDialog(getFrame(), translate(MessageKeys.US_EXPORT_MSG) + "\n",
+						translate(MessageKeys.US_EXPORT), JOptionPane.PLAIN_MESSAGE, null, userSpace.getFileNames(), "ham");
 				
 				//If a string was returned, say so.
 				if (fileName == null || fileName.length() == 0)
@@ -714,7 +714,7 @@ public class Application
 			}
 		});
 		
-		saveImage = new JMenuItem(Logo.messages.getString(MessageKeys.US_SAVE_IMAGE));
+		saveImage = new JMenuItem(translate(MessageKeys.US_SAVE_IMAGE));
 		extras.add(saveImage);
 		saveImage.addActionListener(new ActionListener(){
 			
@@ -743,7 +743,8 @@ public class Application
 	/**
 	 * This glues together models and the GUI controllers.
 	 */
-	private void initListeners()
+	@Override
+	protected void initEventListeners()
 	{		
 		commandLine.addMouseListener(new MouseAdapter(){
 			@Override
@@ -841,7 +842,7 @@ public class Application
 			{
 				HistoryMessenger.getInstance().dispatchComment(
 						fileName + " : " + 
-						Logo.messages.getString(MessageKeys.HIST_MSG_PROCEDURES_UNDEFINED) + " " + 
+						translate(MessageKeys.HIST_MSG_PROCEDURES_UNDEFINED) + " " + 
 						procedure + ".\n");
 			}
 			
@@ -887,7 +888,7 @@ public class Application
 				
 				HistoryMessenger.getInstance().dispatchComment(
 						fileName + " : " + 
-						Logo.messages.getString(MessageKeys.HIST_MSG_PROCEDURES_UNDEFINED) + " " 
+						translate(MessageKeys.HIST_MSG_PROCEDURES_UNDEFINED) + " " 
 						+ sb.toString() + ".\n");
 			}
 			
@@ -925,7 +926,7 @@ public class Application
 			{
 				HistoryMessenger.getInstance().dispatchComment(
 						fileName + " : " + 
-						Logo.messages.getString("definir") + " " + 
+						translate("definir") + " " + 
 						procedure + ".\n");
 			}
 			
@@ -974,7 +975,7 @@ public class Application
 				
 				HistoryMessenger.getInstance().dispatchComment(
 						fileName + " : " + 
-						Logo.messages.getString("definir") + " " 
+						translate("definir") + " " 
 						+ sb.toString() + ".\n");
 			}
 		});
@@ -1059,8 +1060,8 @@ public class Application
 				catch (IOException e)
 				{
 					DialogMessenger.getInstance().dispatchError(
-							Logo.messages.getString("general.error.title"),
-							Logo.messages.getString("ws.automatic.save.failed"));
+							translate("general.error.title"),
+							translate("ws.automatic.save.failed"));
 				}
 				showCommandCard(); 
 				commandLine.requestFocus();
@@ -1144,7 +1145,7 @@ public class Application
 			private void onErrorsDetected(String fileName)
 			{
 				HistoryMessenger.getInstance().dispatchError(fileName + " " + 
-						Logo.messages.getString(MessageKeys.FILE_CONTAINS_ERRORS) + "\n");
+						translate(MessageKeys.FILE_CONTAINS_ERRORS) + "\n");
 				
 				for(String msg : userSpace.getErrorMessages(fileName))
 					HistoryMessenger.getInstance().dispatchError(msg + "\n");
@@ -1340,7 +1341,7 @@ public class Application
 		{	
 			HistoryMessenger.getInstance().dispatchError(
 					procedureName + " : " +
-					Logo.messages.getString(MessageKeys.EDITOR_DISPLAY_PROC_NOT_FOUND)
+					translate(MessageKeys.EDITOR_DISPLAY_PROC_NOT_FOUND)
 					+ "\n");
 		}
 	}
@@ -1375,19 +1376,19 @@ public class Application
 	 */
 	public void setText()
 	{		
-	    stopButton.setToolTipText(Logo.messages.getString("interrompre_execution"));
+	    stopButton.setToolTipText(translate("interrompre_execution"));
 		
 		// Texte interne Ã  utiliser pour JFileChooser et JColorChooser
-		UIManager.put("FileChooser.cancelButtonText", Logo.messages.getString("pref.cancel"));
-		UIManager.put("FileChooser.cancelButtonToolTipText", Logo.messages.getString("pref.cancel"));
-		UIManager.put("FileChooser.fileNameLabelText", Logo.messages.getString("nom_du_fichier"));
-		UIManager.put("FileChooser.upFolderToolTipText", Logo.messages.getString("dossier_parent"));
-		UIManager.put("FileChooser.lookInLabelText", Logo.messages.getString("rechercher_dans"));
+		UIManager.put("FileChooser.cancelButtonText", translate("pref.cancel"));
+		UIManager.put("FileChooser.cancelButtonToolTipText", translate("pref.cancel"));
+		UIManager.put("FileChooser.fileNameLabelText", translate("nom_du_fichier"));
+		UIManager.put("FileChooser.upFolderToolTipText", translate("dossier_parent"));
+		UIManager.put("FileChooser.lookInLabelText", translate("rechercher_dans"));
 		
-		UIManager.put("FileChooser.newFolderToolTipText", Logo.messages.getString("nouveau_dossier"));
-		UIManager.put("FileChooser.homeFolderToolTipText", Logo.messages.getString("repertoire_accueil"));
-		UIManager.put("FileChooser.filesOfTypeLabelText", Logo.messages.getString("fichier_du_type"));
-		UIManager.put("FileChooser.helpButtonText", Logo.messages.getString("menu.help"));
+		UIManager.put("FileChooser.newFolderToolTipText", translate("nouveau_dossier"));
+		UIManager.put("FileChooser.homeFolderToolTipText", translate("repertoire_accueil"));
+		UIManager.put("FileChooser.filesOfTypeLabelText", translate("fichier_du_type"));
+		UIManager.put("FileChooser.helpButtonText", translate("menu.help"));
 		
 		history.updateText();
 		jpop.setText();
@@ -1481,8 +1482,8 @@ public class Application
 				}catch(Exception e)
 				{
 					DialogMessenger.getInstance().dispatchMessage(
-							Logo.messages.getString("contest.error.title"),
-							Logo.messages.getString("contest.could.not.store") + "\n" + e.toString());
+							translate("contest.error.title"),
+							translate("contest.could.not.store") + "\n" + e.toString());
 				}finally
 				{
 					if(out != null)
@@ -1560,52 +1561,7 @@ public class Application
 		});
 		
 	}
-		
-	/**
-	 * Change Syntax Highlighting for the editor, the command line and the
-	 * History zone
-	 * 
-	 * @param c_comment
-	 *            Comment Color
-	 * @param sty_comment
-	 *            Comment style
-	 * @param c_primitive
-	 *            Primitive Color
-	 * @param sty_primitive
-	 *            Primitive style
-	 * @param c_parenthese
-	 *            Parenthesis Color
-	 * @param sty_parenthese
-	 *            Parenthesis Style
-	 * @param c_operande
-	 *            Operand Color
-	 * @param sty_operande
-	 *            Operand style
-	 */
-	public void changeSyntaxHighlightingStyle(int c_comment, int sty_comment, int c_primitive, int sty_primitive,
-			int c_parenthese, int sty_parenthese, int c_operande, int sty_operande)
-	{
-		WorkspaceConfig uc = WSManager.getWorkspaceConfig();
-		editeur.initStyles(uc.getCommentColor(), uc.getCommentStyle(), uc.getPrimitiveColor(),
-				uc.getPrimitiveStyle(), uc.getBraceColor(), uc.getBraceStyle(),
-				uc.getOperatorColor(), uc.getOperatorStyle());
-		commandLine.initStyles(uc.getCommentColor(), uc.getCommentStyle(), uc.getPrimitiveColor(),
-				uc.getPrimitiveStyle(), uc.getBraceColor(), uc.getBraceStyle(),
-				uc.getOperatorColor(), uc.getOperatorStyle());
-		history.getDsd().initStyles(uc.getCommentColor(), uc.getCommentStyle(),
-				uc.getPrimitiveColor(), uc.getPrimitiveStyle(), uc.getBraceColor(),
-				uc.getBraceStyle(), uc.getOperatorColor(), uc.getOperatorStyle());
-	}
-	
-	/**
-	 * Enable or disable Syntax Highlighting
-	 */
-	public void setColoration(boolean b)
-	{
-		history.setColoration(b);
-		commandLine.setColoration(b);
-	}
-		
+					
 	/**
 	 * Return the drawing area
 	 * 
