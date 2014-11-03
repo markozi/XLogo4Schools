@@ -35,7 +35,7 @@
 
 	<!-- Version for this Build -->
 	
-	<property name="version" value="0.9.01beta-2014-06-12"/>
+	<property name="version" value="0.9.03beta-2014-11-03"/>
 
 	
     <!-- ================================= 

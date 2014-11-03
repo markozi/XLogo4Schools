@@ -630,7 +630,10 @@ public class Interprete
 						instructionBuffer.deleteFirstWord(element);
 					}
 					// Si c'est le mot pour
-					else if (element_minuscule.equals(Logo.messages.getString("pour")))
+					/**
+					 * TODO : Marko: Removed this to not cause a crash when "to" is encountered in the command line 
+					 */
+					/*else if (element_minuscule.equals(Logo.messages.getString("pour")))
 					{
 						instructionBuffer.deleteFirstWord(element);
 						if (instructionBuffer.getLength() != 0)
@@ -666,7 +669,7 @@ public class Interprete
 								app.editeur.setEditorStyledText(definition + "\n\n" + Logo.messages.getString("fin"));
 							}
 						}
-					}
+					}*/
 					else if (element.startsWith("\\l"))
 					{
 						if (operande)
