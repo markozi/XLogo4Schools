@@ -1,16 +1,16 @@
 <html>
 	<head>
-		<title>HTML Online Editor Sample</title>
+		<title>XLogo4Schools</title>
 	</head>
 	<body>
 		<h2>
 			XLogo4Schools</h2>
+			Version 0.9.03beta-2014-11-03
 		<p>
 			XLogo4Schools is a modified, extended and reengineered version of Lo&#239;c Le Coq&#39;s XLogo. It is the result of a six month Bachelor&#39;s thesis conducted by Marko &#381;ivkovi&#263; at ETHZ, D-INFK department from March 2013 until September 2013.</p>
 		<p>
-			I want to thank <a href="http://www.ite.ethz.ch/people/host/jhromkov">Prof. Juraj Hromkovi&#269;</a> for giving me the opportunity to dive into the world of Logo and for letting me do the reengineering of XLogo for my Bachelor&#39;s Thesis. Very special thanks go to <a href="http://www.ite.ethz.ch/people/fachdidaktik/serafing/curriculum">Giovanni Serafini</a> who acted as an excellent adviser and mentor during this project. I also want to thank <a href="http://www.inf.ethz.ch/personal/gebauerh/">Dr. Heidi Gebauer</a>, <a href="http://www.ite.ethz.ch/people/postdocs/ivanak">Dr. Ivana Kosirova</a>, <a href="http://www.ite.ethz.ch/people/researchassistants/lkeller">Lucia Keller</a>,&nbsp; and <a href="http://www.ite.ethz.ch/people/researchassistants/steffenb">Bj&ouml;rn Steffen</a> from Prof. Hromkovi&#269;&#39;s chair for their intensive contributions during the requirements analysis phase. I enjoyed the many talks and discussions and appreciated every new idea from you. And finally I want to thank the other Logo tutors, Lukas H&auml;fliger, Samuel Bryner,&nbsp; Alexander Viand, Petra Hromkovi&#269;ova, Stefan Dietiker, and Christine Zeller, who contributed in numerous inspiring talks during the many Logo projects.</p>
-		<h3>
-			What was reengineered?</h3>
+			I want to thank <a href="http://www.ite.ethz.ch/people/host/jhromkov" target="_blank">Prof. Juraj Hromkovi&#269;</a> for giving me the opportunity to dive into the world of Logo and for letting me do the reengineering of XLogo for my Bachelor&#39;s Thesis. Very special thanks go to <a href="http://www.ite.ethz.ch/people/fachdidaktik/serafing/curriculum" target="_blank">Giovanni Serafini</a> who acted as an excellent adviser and mentor during this project. I also want to thank <a href="http://www.inf.ethz.ch/personal/gebauerh/" target="_blank">Dr. Heidi Gebauer</a>, <a href="http://www.ite.ethz.ch/people/postdocs/ivanak" target="_blank">Dr. Ivana Kosirova</a>, <a href="http://www.ite.ethz.ch/people/researchassistants/lkeller" target="_blank">Lucia Keller</a>,&nbsp; and <a href="http://www.ite.ethz.ch/people/researchassistants/steffenb" target="_blank">Bj&ouml;rn Steffen</a> from Prof. Hromkovi&#269;&#39;s chair for their intensive contributions during the requirements analysis phase. I enjoyed the many talks and discussions and appreciated every new idea from you. And finally I want to thank the other Logo tutors, Lukas H&auml;fliger, Samuel Bryner,&nbsp; Alexander Viand, Petra Hromkovi&#269;ova, Stefan Dietiker, and Christine Zeller, who contributed in numerous inspiring talks during the many Logo projects.</p>
+		<h3>What was reengineered?</h3>
 		<p>
 			The new main features introduced are</p>
 		<ul>
@@ -27,16 +27,21 @@
 			<li>
 				A simple workspace management system. Workspaces consist of multiple projects or users. Certain settings apply to the whole workspace, others are per user or project.</li>
 		</ul>
-		<p>
-			What was changed?</p>
+		<h3>What was changed?</h3>
 		<ul>
 			<li>
-				The <strong>user interface</strong> has completely changed. I reduced the complexity of customizability to the minimum. Very necessary settings can be defined by the teachers, but not by the children. There is a simple password mechanism to hide these settings. The main window now includes everything that is needed. A command line, the drawing area, the history panel, and the list of files to the left. There is also a procedue search, that lets one more easily find the desired procedures amongst the files. The editor is now integrated in the same window. When a file is opened, the editor is shown instead of the drawing area and the command line. All the options menus and preferences have been removed. The turtle speed and the turtle icon can be changed in the main window directly. I removed these border-images that were used by XLogo, instead providing a larger view onto the drawing area.</li>
+				The <strong>user interface</strong> has completely changed. The complexity of customizability is reduced to the minimum. Very necessary settings can be defined by the teachers, but not by the children. There is a simple password mechanism to hide these settings. The main window now includes everything that is needed. A command line, the drawing area, the history panel, and the list of files to the left. There is also a procedue search, that lets one more easily find the desired procedures amongst the files. The editor is now integrated in the same window. When a file is opened, the editor is shown instead of the drawing area and the command line. All the options menus and preferences have been removed. The turtle speed and the turtle icon can be changed in the main window directly. The border-images that were used by XLogo were removed, instead providing a larger view onto the drawing area.</li>
 			<li>
-				The core of the application, the interpreter and drawing engine are left almost untouched. Things that I had to alter a lot have become replaced by loosely coupled components that can work independently of each other. The communication between different parts of the application is now event driven instead of static variables and similar anti-patterns.</li>
+				The core of the application, the interpreter and drawing engine are left almost untouched. Things that had to be altered a lot have become replaced by loosely coupled components that can work independently of each other. The communication between different parts of the application is now event driven instead of static variables and similar anti-patterns.</li>
 			<li>
 				The Graphics are much smoother due to another rendering configuration.</li>
 			<li>
 				Measured on a Sierpinski Triangle of depth 9, XLogo4Schools is around 25% faster than XLogo (16s vs. 21s on my machine). It is even faster, when many procedures are added to the workspace. XLogo used a stack to manage its procedures which took O(N) string comparisons to find a procedure. Interestingly, the designated stack operations push and pop are not really used. For the same purpose, XLogo4Schools uses now a HashMap that usually works in O(1).</li>
-		</ul></body>
+		</ul>
+		
+		<h3>Where can I find an XLogo language reference and documentation?</h3>
+		In most cases, XLogo4Schools is very similar to XLogo. Therefore you can use the <a href="http://downloads.tuxfamily.org/xlogo/downloads-en/manual-html-en/manual-en.html" target="_blank">XLogo language reference and documentation</a> found.
+		Currently, there is no <a href="https://sourceforge.net/p/xlogo4schools/wiki/Home/" target="_blank">XLogo4Schools documentation</a>, but it is planned. Thank you for your patience.
+		
+		</body>
 </html>

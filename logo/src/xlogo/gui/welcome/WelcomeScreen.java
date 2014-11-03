@@ -464,7 +464,7 @@ public class WelcomeScreen extends X4SFrame {
 
 	private void showInfo()
 	{
-		JFrame frame = new JFrame(translate("menu.help.licence"));
+		JFrame frame = new JFrame(translate("welcome.info.title"));
 		frame.setIconImage(Toolkit.getDefaultToolkit().createImage(WebPage.class.getResource("Icon_x4s.png")));
 		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		frame.setSize(500, 500);
