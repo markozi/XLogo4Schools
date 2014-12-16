@@ -5,6 +5,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import xlogo.storage.workspace.Language;
 import xlogo.storage.workspace.SyntaxHighlightConfig;
 
@@ -17,6 +20,8 @@ import xlogo.storage.workspace.SyntaxHighlightConfig;
  */
 public class AppSettings
 {
+	private static Logger logger = LogManager.getLogger(AppSettings.class.getSimpleName());
+	
 	private static AppSettings instance;
 	
 	public static AppSettings getInstance()
@@ -41,6 +46,7 @@ public class AppSettings
 	{
 		if (language == this.language)
 			return;
+		logger.trace("Change language from " + this.language + " to " + language);
 		this.language = language;
 		Logo.generateLanguage(language);
 		notifyLanguageChanged();

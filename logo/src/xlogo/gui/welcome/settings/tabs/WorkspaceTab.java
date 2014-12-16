@@ -1,4 +1,4 @@
-/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loïc Le Coq
+/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loic Le Coq
  * Copyright (C) 2013 Marko Zivkovic
  * 
  * Contact Information: marko88zivkovic at gmail dot com
@@ -16,10 +16,10 @@
  * 
  * 
  * This Java source code belongs to XLogo4Schools, written by Marko Zivkovic
- * during his Bachelor thesis at the computer science department of ETH Zürich,
+ * during his Bachelor thesis at the computer science department of ETH Zurich,
  * in the year 2013 and/or during future work.
  * 
- * It is a reengineered version of XLogo written by Loïc Le Coq, published
+ * It is a reengineered version of XLogo written by Loic Le Coq, published
  * under the GPL License at http://xlogo.tuxfamily.org/
  * 
  * Contents of this file were entirely written by Marko Zivkovic
@@ -31,6 +31,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.GroupLayout;
@@ -94,7 +95,8 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 	protected JComboBox getWorkspaceSelection() {
 		return workspaceSelection;
 	}
-	
+
+	@Override
 	protected void initComponent()
 	{
 		component = new JPanel();
@@ -126,6 +128,7 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 		setValues();
 	}
 
+	@Override
 	protected void layoutComponent()
 	{
 		workspaceSelection.setMinimumSize(new Dimension(150,25));
@@ -407,8 +410,6 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 		userCreatable.setEnabled(true);
 	}
 	
-	
-
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * USER : ADD, REMOVE, IMPORT
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -419,8 +420,13 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 		WorkspaceConfig wc = WSManager.getInstance().getWorkspaceConfigInstance();
 		String[] users = wc.getUserList();
 		userSelection.setModel(new DefaultComboBoxModel(users));
-		String lastUser = wc.getLastActiveUser();
-		userSelection.setSelectedItem(lastUser);
+		try {
+			wc.enterInitialUserSpace();
+			String lastUser = wc.getLastActiveUser();
+			userSelection.setSelectedItem(lastUser);
+		}
+		catch (IOException ignore) {
+		}
 	}
 	
 	private void addUser()

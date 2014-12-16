@@ -1,4 +1,4 @@
-/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loïc Le Coq
+/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loic Le Coq
  * Copyright (C) 2013 Marko Zivkovic
  * 
  * Contact Information: marko88zivkovic at gmail dot com
@@ -16,10 +16,10 @@
  * 
  * 
  * This Java source code belongs to XLogo4Schools, written by Marko Zivkovic
- * during his Bachelor thesis at the computer science department of ETH Zürich,
+ * during his Bachelor thesis at the computer science department of ETH Zurich,
  * in the year 2013 and/or during future work.
  * 
- * It is a reengineered version of XLogo written by Loïc Le Coq, published
+ * It is a reengineered version of XLogo written by Loic Le Coq, published
  * under the GPL License at http://xlogo.tuxfamily.org/
  * 
  * Contents of this file were entirely written by Marko Zivkovic
@@ -50,7 +50,7 @@ import xlogo.storage.global.GlobalConfig;
  * to refactor the existing interpreter. It is for sure something that should be done in the future, when the entire interpreter is refactored.
  * 
  * @author Marko Zivkovic - 
- * @author Loïc Le Coq - methods inherited from XLogo are marked with author-tag
+ * @author Loic Le Coq - methods inherited from XLogo are marked with author-tag
  */
 public class LogoContext
 {	
@@ -243,7 +243,7 @@ public class LogoContext
 	/**
 	 * That's the String that is sent via TCP, and interpreted by the receiver in {@link NetworkContext},
 	 * using {@link #setWorkspace(String)}
-	 * @author Loïc Le Coq
+	 * @author Loic Le Coq
 	 * @author Marko Zivkovic
 	 * refactored using the new data structures.
 	 */

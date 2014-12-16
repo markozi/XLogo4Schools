@@ -1,4 +1,4 @@
-/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loïc Le Coq
+/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loic Le Coq
  * Copyright (C) 2013 Marko Zivkovic
  * 
  * Contact Information: marko88zivkovic at gmail dot com
@@ -16,10 +16,10 @@
  * 
  * 
  * This Java source code belongs to XLogo4Schools, written by Marko Zivkovic
- * during his Bachelor thesis at the computer science department of ETH Zürich,
+ * during his Bachelor thesis at the computer science department of ETH Zurich,
  * in the year 2013 and/or during future work.
  * 
- * It is a reengineered version of XLogo written by Loïc Le Coq, published
+ * It is a reengineered version of XLogo written by Loic Le Coq, published
  * under the GPL License at http://xlogo.tuxfamily.org/
  * 
  * Contents of this file were entirely written by Marko Zivkovic
@@ -58,7 +58,7 @@ public class NetworkContext extends LogoContext
 	 * <p>
 	 * Initially, in remote mode, the workspace was temporarily replaced by a new one.
 	 * To indicate that the workspace with its procedures should not be displayed
-	 * in the editor, Loïc had added setAffichable(false), meaning not displayable.<br>
+	 * in the editor, Loic had added setAffichable(false), meaning not displayable.<br>
 	 * 
 	 * Note that in XLogo, the workspace contained exactly one file. Therefore
 	 * a simple swap in swap would do. However, in XLogo4Schools, we need more 

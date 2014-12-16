@@ -5,10 +5,16 @@
 	<body>
 		<h2>
 			XLogo4Schools</h2>
-			Version 0.9.03beta-2014-11-03
+			Version 0.9.04beta-2014-12-16
 		<p>
 			XLogo4Schools is a modified, extended and reengineered version of Lo&#239;c Le Coq&#39;s XLogo. It is the result of a six month Bachelor&#39;s thesis conducted by Marko &#381;ivkovi&#263; at ETHZ, D-INFK department from March 2013 until September 2013.</p>
-		<p>
+				
+		<h3>Where can I find an XLogo language reference and documentation?</h3>
+		In most cases, XLogo4Schools is very similar to XLogo. Therefore you can use the <a href="http://downloads.tuxfamily.org/xlogo/downloads-en/manual-html-en/manual-en.html" target="_blank">XLogo language reference and documentation</a> found.
+		Currently, there is no <a href="https://sourceforge.net/p/xlogo4schools/wiki/Home/" target="_blank">XLogo4Schools documentation</a>, but it is planned. Thank you for your patience.
+		
+		<h3>Credits</h3>
+		
 			I want to thank <a href="http://www.ite.ethz.ch/people/host/jhromkov" target="_blank">Prof. Juraj Hromkovi&#269;</a> for giving me the opportunity to dive into the world of Logo and for letting me do the reengineering of XLogo for my Bachelor&#39;s Thesis. Very special thanks go to <a href="http://www.ite.ethz.ch/people/fachdidaktik/serafing/curriculum" target="_blank">Giovanni Serafini</a> who acted as an excellent adviser and mentor during this project. I also want to thank <a href="http://www.inf.ethz.ch/personal/gebauerh/" target="_blank">Dr. Heidi Gebauer</a>, <a href="http://www.ite.ethz.ch/people/postdocs/ivanak" target="_blank">Dr. Ivana Kosirova</a>, <a href="http://www.ite.ethz.ch/people/researchassistants/lkeller" target="_blank">Lucia Keller</a>,&nbsp; and <a href="http://www.ite.ethz.ch/people/researchassistants/steffenb" target="_blank">Bj&ouml;rn Steffen</a> from Prof. Hromkovi&#269;&#39;s chair for their intensive contributions during the requirements analysis phase. I enjoyed the many talks and discussions and appreciated every new idea from you. And finally I want to thank the other Logo tutors, Lukas H&auml;fliger, Samuel Bryner,&nbsp; Alexander Viand, Petra Hromkovi&#269;ova, Stefan Dietiker, and Christine Zeller, who contributed in numerous inspiring talks during the many Logo projects.</p>
 		<h3>What was reengineered?</h3>
 		<p>
@@ -38,10 +44,5 @@
 			<li>
 				Measured on a Sierpinski Triangle of depth 9, XLogo4Schools is around 25% faster than XLogo (16s vs. 21s on my machine). It is even faster, when many procedures are added to the workspace. XLogo used a stack to manage its procedures which took O(N) string comparisons to find a procedure. Interestingly, the designated stack operations push and pop are not really used. For the same purpose, XLogo4Schools uses now a HashMap that usually works in O(1).</li>
 		</ul>
-		
-		<h3>Where can I find an XLogo language reference and documentation?</h3>
-		In most cases, XLogo4Schools is very similar to XLogo. Therefore you can use the <a href="http://downloads.tuxfamily.org/xlogo/downloads-en/manual-html-en/manual-en.html" target="_blank">XLogo language reference and documentation</a> found.
-		Currently, there is no <a href="https://sourceforge.net/p/xlogo4schools/wiki/Home/" target="_blank">XLogo4Schools documentation</a>, but it is planned. Thank you for your patience.
-		
 		</body>
 </html>

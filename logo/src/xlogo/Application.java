@@ -1,4 +1,4 @@
-/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loïc Le Coq
+/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loic Le Coq
  * Copyright (C) 2013 Marko Zivkovic
  * 
  * Contact Information: marko88zivkovic at gmail dot com
@@ -16,13 +16,13 @@
  * 
  * 
  * This Java source code belongs to XLogo4Schools, written by Marko Zivkovic
- * during his Bachelor thesis at the computer science department of ETH Zürich,
+ * during his Bachelor thesis at the computer science department of ETH Zurich,
  * in the year 2013 and/or during future work.
  * 
- * It is a reengineered version of XLogo written by Loïc Le Coq, published
+ * It is a reengineered version of XLogo written by Loic Le Coq, published
  * under the GPL License at http://xlogo.tuxfamily.org/
  * 
- * Contents of this file were initially written by Loïc Le Coq,
+ * Contents of this file were initially written by Loic Le Coq,
  * a lot of modifications, extensions, refactorings might been applied by Marko Zivkovic 
  */
 
@@ -86,7 +86,7 @@ import xlogo.messages.async.history.HistoryMessenger;
 
 /**
  * @author Marko
- * @author Loïc Le Coq
+ * @author Loic Le Coq
  */
 public class Application extends X4SFrame
 {	
@@ -1397,7 +1397,7 @@ public class Application extends X4SFrame
 	// Ce qu'il se passe en validant dans la zone de texte
 	/**
 	 * When the user types "Enter" in the Command Line
-	 * @author Loïc Le Coq
+	 * @author Loic Le Coq
 	 */
 	public void commande_actionPerformed()
 	{
@@ -1498,7 +1498,7 @@ public class Application extends X4SFrame
 	 * 
 	 * @param st
 	 *            List of instructions
-	 * @author Loïc Le Coq
+	 * @author Loic Le Coq
 	 * @author Marko Zivkovic - renamed (it was affichage_Start)
 	 */
 	public void startInterpretation(StringBuffer st)

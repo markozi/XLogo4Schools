@@ -1,4 +1,4 @@
-/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loïc Le Coq
+/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loic Le Coq
  * Copyright (C) 2013 Marko Zivkovic
  * 
  * Contact Information: marko88zivkovic at gmail dot com
@@ -16,10 +16,10 @@
  * 
  * 
  * This Java source code belongs to XLogo4Schools, written by Marko Zivkovic
- * during his Bachelor thesis at the computer science department of ETH Zürich,
+ * during his Bachelor thesis at the computer science department of ETH Zurich,
  * in the year 2013 and/or during future work.
  * 
- * It is a reengineered version of XLogo written by Loïc Le Coq, published
+ * It is a reengineered version of XLogo written by Loic Le Coq, published
  * under the GPL License at http://xlogo.tuxfamily.org/
  * 
  * Contents of this file were entirely written by Marko Zivkovic
@@ -51,11 +51,15 @@ public abstract class AbstractWorkspacePanel extends X4SComponent{
 		
 	protected abstract JComboBox getWorkspaceSelection();
 
+	private boolean ignoreGuiEvents = false;
+	
 	@Override
 	protected void initEventListeners()
 	{
 		getWorkspaceSelection().addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				if (ignoreGuiEvents)
+					return;
 				new Thread(new Runnable() {
 					public void run() {
 						String wsName = (String) getWorkspaceSelection().getSelectedItem();
@@ -70,14 +74,18 @@ public abstract class AbstractWorkspacePanel extends X4SComponent{
 		gc.addWorkspaceListChangeListener(workspaceListChangeListener = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
+				ignoreGuiEvents = true;
 				populateWorkspaceList();
+				ignoreGuiEvents = false;
 			}
 		});
 		
 		gc.addEnterWorkspaceListener(enterWorkspaceListener = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				getWorkspaceSelection().setSelectedItem(gc.getLastUsedWorkspace());
+				ignoreGuiEvents = true;
+				selectCurrentWorkspace();
+				ignoreGuiEvents = false;
 			}
 		});
 	}
@@ -91,6 +99,7 @@ public abstract class AbstractWorkspacePanel extends X4SComponent{
 		gc.removeWorkspaceListChangeListener(workspaceListChangeListener);
 		
 	}
+	
 	protected abstract void setValues();
 	
 	protected abstract void enableComponents();
@@ -101,9 +110,14 @@ public abstract class AbstractWorkspacePanel extends X4SComponent{
 		GlobalConfig gc = WSManager.getInstance().getGlobalConfigInstance();
 		String[] workspaces = gc.getAllWorkspaces();
 		getWorkspaceSelection().setModel(new DefaultComboBoxModel(workspaces));
+		selectCurrentWorkspace();
+	}
+	
+	protected void selectCurrentWorkspace(){
+		GlobalConfig gc = WSManager.getInstance().getGlobalConfigInstance();
 		String lastUsed = gc.getLastUsedWorkspace();
-		enterWorkspace(lastUsed);
 		getWorkspaceSelection().setSelectedItem(lastUsed);
+		setValues();
 	}
 
 	protected void deleteWorkspace() {

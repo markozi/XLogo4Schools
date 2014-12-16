@@ -17,7 +17,7 @@
 	Does the Jar has to be signed ? 
 	================================-->
 	
-	<property name="signJar" value="false" />
+	<property name="signJar" value="true" />
 	
 	<!-- Property platform:
 	================================================
@@ -35,8 +35,7 @@
 
 	<!-- Version for this Build -->
 	
-	<property name="version" value="0.9.03beta-2014-11-03"/>
-
+	<property name="version" value="0.9.04beta-2014-12-16"/>
 	
     <!-- ================================= 
          default target: deploy              
@@ -74,6 +73,8 @@
     			<include name="vecmath.jar"/>
     			<include name="j3dutils.jar"/>
 				<include name="jl1.0.1.jar"/>
+				<include name="log4j-api-2.1.jar"/>
+				<include name="log4j-core-2.1.jar"/>
 				<include name="manifest_xlogo"/>
 				<include name="manifest_start"/>
 				<include name="build.xml"/>
@@ -96,7 +97,7 @@
      	<input
     	 	message="Password"
      		addproperty="pwd"/>
-    	  <signjar keystore="keystore.ks" storepass="${pwd}" alias="myalias">
+    	  <signjar keystore=".keystore" storepass="${pwd}" alias="xlogo4schools">
         	    	<fileset dir="deploy">
         	    		<include name="XLogo4Schools.jar"/>
         			</fileset>
@@ -111,16 +112,20 @@
 		<jar destfile="deploy/tmp_xlogo.jar"
 	 		manifest="manifest_xlogo">
 	 		<fileset dir="deploy/">
+				<include name="net/**"/>
 				<include name="xlogo/**"/>
 	 			<include name="*.properties"/>
+	 			<include name="*.xml"/>
 	 		</fileset>
 	 	</jar>
 		
 		<!-- Delete Used files -->
 		<delete includeemptydirs="true">
 			<fileset dir="deploy/">
+				<include name="net/**"/>
 				<include name="xlogo/**"/>
 	 			<include name="*.properties"/>
+	 			<include name="*.xml"/>
 		    </fileset>
 	    </delete>
 		
@@ -149,13 +154,16 @@
     	<javac 
     		source="1.5" encoding="utf8"
     		target="1.5"
-    		srcdir="src" destdir="deploy/">
+    		srcdir="src" destdir="deploy/"
+    		includeantruntime="false">
     		 <classpath>
 		        <pathelement location="vecmath.jar"/>
 		        <pathelement location="j3dcore.jar"/>
 		        <pathelement location="j3dutils.jar"/>
     		    <pathelement location="jh.jar"/>
    			 	<pathelement location="jl1.0.1.jar"/> 
+   			 	<pathelement location="log4j-api-2.1.jar"/> 
+   			 	<pathelement location="log4j-core-2.1.jar"/> 
    		      </classpath>
     	</javac>
 	</target>
@@ -171,11 +179,14 @@
         			<include name="j3dutils.jar"/>
 	      			<include name="jl1.0.1.jar"/>
         			<include name="jh.jar"/>
+        			<include name="log4j-api-2.1.jar"/>
+        			<include name="log4j-core-2.1.jar"/>
         		</fileset>
         		<fileset dir="src/">
         			<include name="**.properties"/>
            			<include name="**/*.png"/>
         			<include name="**/*.html"/>
+        			<include name="**/*.xml"/>
         			<include name="**/genericPrimitive"/>
         		</fileset>
             </copy>

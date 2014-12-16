@@ -1,4 +1,4 @@
-/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loïc Le Coq
+/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loic Le Coq
  * Copyright (C) 2013 Marko Zivkovic
  * 
  * Contact Information: marko88zivkovic at gmail dot com
@@ -16,13 +16,13 @@
  * 
  * 
  * This Java source code belongs to XLogo4Schools, written by Marko Zivkovic
- * during his Bachelor thesis at the computer science department of ETH Zürich,
+ * during his Bachelor thesis at the computer science department of ETH Zurich,
  * in the year 2013 and/or during future work.
  * 
- * It is a reengineered version of XLogo written by Loïc Le Coq, published
+ * It is a reengineered version of XLogo written by Loic Le Coq, published
  * under the GPL License at http://xlogo.tuxfamily.org/
  * 
- * Contents of this file were initially written by Loïc Le Coq,
+ * Contents of this file were initially written by Loic Le Coq,
  * modifications, extensions, refactorings might have been applied by Marko Zivkovic 
  */
 
@@ -68,7 +68,7 @@ public class Lanceur
 	 * The temporary folder which contains all files to start XLogo
 	 */
 	private File			tmpFolder				= null;
-	private File[]			files					= new File[10];
+	private File[]			files					= new File[12];
 	
 	/**
 	 * Main method
@@ -285,12 +285,23 @@ public class Lanceur
 		b = copier(src, files[4]);
 		System.out.println("Copying j3dutils.jar - success: " + b);
 		
-		// extract the file jl1.0.1 in this folder (JLayer library for mp3
-		// playing)
+		// extract the file jl1.0.1 in this folder (JLayer library for mp3 playing)
 		src = Lanceur.class.getResourceAsStream("jl1.0.1.jar");
 		files[5] = new File(tmpFolder.getAbsolutePath() + File.separator + "jl1.0.1.jar");
 		b = copier(src, files[5]);
 		System.out.println("Copying jl1.0.1.jar - success: " + b);
+		
+		// extract the file jl1.0.1 in this folder (JLayer library for mp3 playing)
+		src = Lanceur.class.getResourceAsStream("log4j-api-2.1.jar");
+		files[6] = new File(tmpFolder.getAbsolutePath() + File.separator + "log4j-api-2.1.jar");
+		b = copier(src, files[6]);
+		System.out.println("Copying log4j-api-2.1.jar - success: " + b);
+		
+		// extract the file jl1.0.1 in this folder (JLayer library for mp3 playing)
+		src = Lanceur.class.getResourceAsStream("log4j-core-2.1.jar");
+		files[7] = new File(tmpFolder.getAbsolutePath() + File.separator + "log4j-core-2.1.jar");
+		b = copier(src, files[7]);
+		System.out.println("Copying log4j-core-2.1.jar - success: " + b);
 		
 		// extract the native driver for java 3d in this folder
 		String os = System.getProperty("os.name").toLowerCase();
@@ -304,17 +315,17 @@ public class Lanceur
 			if (arch.indexOf("86") != -1)
 			{
 				InputStream lib = Lanceur.class.getResourceAsStream("linux/x86/libj3dcore-ogl.so");
-				files[6] = new File(tmpFolder.getAbsolutePath() + File.separator + "libj3dcore-ogl.so");
-				copier(lib, files[6]);
+				files[8] = new File(tmpFolder.getAbsolutePath() + File.separator + "libj3dcore-ogl.so");
+				copier(lib, files[8]);
 				lib = Lanceur.class.getResourceAsStream("linux/x86/libj3dcore-ogl-cg.so");
-				files[7] = new File(tmpFolder.getAbsolutePath() + File.separator + "libj3dcore-ogl-cg.so");
-				copier(lib, files[7]);
+				files[9] = new File(tmpFolder.getAbsolutePath() + File.separator + "libj3dcore-ogl-cg.so");
+				copier(lib, files[9]);
 			}
 			else
 			{
 				InputStream lib = Lanceur.class.getResourceAsStream("linux/amd64/libj3dcore-ogl.so");
-				files[6] = new File(tmpFolder.getAbsolutePath() + File.separator + "libj3dcore-ogl.so");
-				copier(lib, files[6]);
+				files[8] = new File(tmpFolder.getAbsolutePath() + File.separator + "libj3dcore-ogl.so");
+				copier(lib, files[8]);
 			}
 		}
 		// windows
@@ -323,27 +334,27 @@ public class Lanceur
 			if (arch.indexOf("86") != -1)
 			{
 				InputStream lib = Lanceur.class.getResourceAsStream("windows/x86/j3dcore-d3d.dll");
-				files[6] = new File(tmpFolder.getAbsolutePath() + File.separator + "j3dcore-d3d.dll");
-				b = copier(lib, files[6]);
+				files[8] = new File(tmpFolder.getAbsolutePath() + File.separator + "j3dcore-d3d.dll");
+				b = copier(lib, files[8]);
 				System.out.println("Copying library 1 - success: " + b);
 				lib = Lanceur.class.getResourceAsStream("windows/x86/j3dcore-ogl.dll");
-				files[7] = new File(tmpFolder.getAbsolutePath() + File.separator + "j3dcore-ogl.dll");
-				b = copier(lib, files[7]);
+				files[9] = new File(tmpFolder.getAbsolutePath() + File.separator + "j3dcore-ogl.dll");
+				b = copier(lib, files[9]);
 				System.out.println("Copying library 2 - success: " + b);
 				lib = Lanceur.class.getResourceAsStream("windows/x86/j3dcore-ogl-cg.dll");
-				files[8] = new File(tmpFolder.getAbsolutePath() + File.separator + "j3dcore-ogl-cg.dll");
-				b = copier(lib, files[8]);
+				files[10] = new File(tmpFolder.getAbsolutePath() + File.separator + "j3dcore-ogl-cg.dll");
+				b = copier(lib, files[10]);
 				System.out.println("Copying library 3 - success: " + b);
 				lib = Lanceur.class.getResourceAsStream("windows/x86/j3dcore-ogl-chk.dll");
-				files[9] = new File(tmpFolder.getAbsolutePath() + File.separator + "j3dcore-ogl-chk.dll");
-				b = copier(lib, files[9]);
+				files[11] = new File(tmpFolder.getAbsolutePath() + File.separator + "j3dcore-ogl-chk.dll");
+				b = copier(lib, files[11]);
 				System.out.println("Copying library 4 - success: " + b);
 			}
 			else
 			{
 				InputStream lib = Lanceur.class.getResourceAsStream("windows/amd64/j3dcore-ogl.dll");
-				files[6] = new File(tmpFolder.getAbsolutePath() + File.separator + "j3dcore-ogl.dll");
-				b = copier(lib, files[6]);
+				files[8] = new File(tmpFolder.getAbsolutePath() + File.separator + "j3dcore-ogl.dll");
+				b = copier(lib, files[8]);
 				System.out.println("Copying library 1 - success: " + b);
 			}
 		}
@@ -358,15 +369,15 @@ public class Lanceur
 			if (arch.indexOf("86") != -1)
 			{
 				InputStream lib = Lanceur.class.getResourceAsStream("solaris/i386/libj3dcore-ogl.so");
-				files[6] = new File(tmpFolder.getAbsolutePath() + File.separator + "libj3dcore-ogl.so");
-				b = copier(lib, files[6]);
+				files[8] = new File(tmpFolder.getAbsolutePath() + File.separator + "libj3dcore-ogl.so");
+				b = copier(lib, files[8]);
 				System.out.println("Copying library 1 - success: " + b);
 			}
 			else if (arch.indexOf("amd64") != -1)
 			{
 				InputStream lib = Lanceur.class.getResourceAsStream("solaris/amd64/libj3dcore-ogl.so");
-				files[6] = new File(tmpFolder.getAbsolutePath() + File.separator + "libj3dcore-ogl.so");
-				b = copier(lib, files[6]);
+				files[8] = new File(tmpFolder.getAbsolutePath() + File.separator + "libj3dcore-ogl.so");
+				b = copier(lib, files[8]);
 				System.out.println("Copying library 1 - success: " + b);
 			}
 		}

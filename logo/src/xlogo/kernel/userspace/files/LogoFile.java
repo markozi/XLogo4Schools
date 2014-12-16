@@ -1,4 +1,4 @@
-/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loïc Le Coq
+/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loic Le Coq
  * Copyright (C) 2013 Marko Zivkovic
  * 
  * Contact Information: marko88zivkovic at gmail dot com
@@ -16,10 +16,10 @@
  * 
  * 
  * This Java source code belongs to XLogo4Schools, written by Marko Zivkovic
- * during his Bachelor thesis at the computer science department of ETH Zürich,
+ * during his Bachelor thesis at the computer science department of ETH Zurich,
  * in the year 2013 and/or during future work.
  * 
- * It is a reengineered version of XLogo written by Loïc Le Coq, published
+ * It is a reengineered version of XLogo written by Loic Le Coq, published
  * under the GPL License at http://xlogo.tuxfamily.org/
  * 
  * Contents of this file were entirely written by Marko Zivkovic
@@ -36,6 +36,9 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import xlogo.Logo;
 import xlogo.interfaces.ErrorDetector;
@@ -65,7 +68,7 @@ import xlogo.utils.Utils;
  * The file's text can be set using {@link #setTextFromReader(BufferedReader)}} (preferred) or {@link #setText(String)}}.
  * Both will try to parse the signature of all procedures using the constructor of {@link xlogo.kernel.userspace.procedures.Procedure}
  * 
- * @author Marko Zivkovic, (Loïc Le Coq's parsing of procedures is not recognizable anymore.)
+ * @author Marko Zivkovic, (Loic Le Coq's parsing of procedures is not recognizable anymore.)
  * 
  */
 public class LogoFile extends StorableDocument implements ExecutablesContainer, ProcedureMapper, ErrorDetector
@@ -75,6 +78,8 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 	 * 
 	 */
 	private static final long		serialVersionUID	= 1117062836862782516L;
+	
+	private static Logger logger = LogManager.getLogger(LogoFile.class.getSimpleName());
 	
 	/**
 	 * UserConfig of the owner of this file
@@ -120,6 +125,7 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 	
 	public static LogoFile createNewVirtualFile(String fileName)
 	{
+		logger.trace("Creating new virtual file " + fileName);
 		LogoFile file = null;
 		try
 		{
@@ -136,6 +142,8 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 	 */
 	public static LogoFile createNewFile(String fileName) throws IOException, IllegalArgumentException
 	{
+		logger.trace("Creating new file " + fileName);
+		
 		LogoFile file = new LogoFile(fileName);
 		file.setupFileSystem();
 		return file;
@@ -149,6 +157,8 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 	 */
 	public static LogoFile loadFile(String fileName) throws IOException
 	{
+		logger.trace("Loading " + fileName + " from current workspace");
+		
 		UserConfig userConfig = WSManager.getUserConfig();
 		File path = userConfig.getLogoFilePath(fileName);
 		String text = Utils.readLogoFile(path.toString());
@@ -168,6 +178,8 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 	 */
 	public static LogoFile importFile(File path, String newFileName) throws IOException
 	{
+		logger.trace("Importing " + newFileName + " from " +  path.getAbsolutePath() + "into current workspace");
+		
 		String text = Utils.readLogoFile(path.toString());
 		LogoFile file = new LogoFile(newFileName);
 		file.setText(text);
@@ -190,6 +202,8 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 	@Override
 	public void setFileName(String newFileName)
 	{
+		logger.trace("Renaming file " + getPlainName() + " to " + newFileName);
+		
 		if (newFileName == null || newFileName.length() == 0)
 		{
 			DialogMessenger.getInstance().dispatchError(
@@ -268,6 +282,8 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 	@Override
 	public void delete()
 	{
+		logger.trace("Deleting file " + getPlainName());
+		
 		super.delete();
 		Collection<String> procedures = new ArrayList<String>(executables.keySet());
 		executables.clear();
@@ -285,6 +301,8 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 	 */
 	private void doBackup() throws IOException
 	{
+		logger.trace("Creating backup file of current version of " + getPlainName());
+		
 		WorkspaceConfig wc = WSManager.getInstance().getWorkspaceConfigInstance();
 		NumberOfBackups nob = wc.getNumberOfBackups();
 

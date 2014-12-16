@@ -1,4 +1,4 @@
-/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loïc Le Coq
+/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loic Le Coq
  * Copyright (C) 2013 Marko Zivkovic
  * 
  * Contact Information: marko88zivkovic at gmail dot com
@@ -16,10 +16,10 @@
  * 
  * 
  * This Java source code belongs to XLogo4Schools, written by Marko Zivkovic
- * during his Bachelor thesis at the computer science department of ETH Zürich,
+ * during his Bachelor thesis at the computer science department of ETH Zurich,
  * in the year 2013 and/or during future work.
  * 
- * It is a reengineered version of XLogo written by Loïc Le Coq, published
+ * It is a reengineered version of XLogo written by Loic Le Coq, published
  * under the GPL License at http://xlogo.tuxfamily.org/
  * 
  * Contents of this file were entirely written by Marko Zivkovic
@@ -40,7 +40,6 @@ import java.util.Date;
 
 import javax.swing.Timer;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import xlogo.Logo;
 import xlogo.interfaces.MessageBroadcaster;
 import xlogo.messages.async.dialog.DialogMessenger;
@@ -78,11 +77,12 @@ public class RecordFile extends LogoFile implements MessageBroadcaster
 	
 	
 	/**
+	 * @throws Exception 
 	 * @throws NotImplementedException A virtual contest/record mode makes no sense.
 	 */
-	public static RecordFile createNewVirtualFile(UserConfig userConfig, String fileName)
+	public static RecordFile createNewVirtualFile(UserConfig userConfig, String fileName) throws Exception
 	{
-		throw new NotImplementedException();
+		throw new Exception("Not implemented");
 	}
 	
 	@Override

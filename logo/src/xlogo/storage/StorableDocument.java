@@ -1,4 +1,4 @@
-/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loïc Le Coq
+/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loic Le Coq
  * Copyright (C) 2013 Marko Zivkovic
  * 
  * Contact Information: marko88zivkovic at gmail dot com
@@ -16,10 +16,10 @@
  * 
  * 
  * This Java source code belongs to XLogo4Schools, written by Marko Zivkovic
- * during his Bachelor thesis at the computer science department of ETH Zürich,
+ * during his Bachelor thesis at the computer science department of ETH Zurich,
  * in the year 2013 and/or during future work.
  * 
- * It is a reengineered version of XLogo written by Loïc Le Coq, published
+ * It is a reengineered version of XLogo written by Loic Le Coq, published
  * under the GPL License at http://xlogo.tuxfamily.org/
  * 
  * Contents of this file were entirely written by Marko Zivkovic
@@ -37,6 +37,9 @@ import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.util.Calendar;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import xlogo.storage.user.UserConfig;
 import xlogo.storage.workspace.WorkspaceConfig;
 
@@ -47,6 +50,8 @@ public abstract class StorableDocument extends Storable
 	 * 
 	 */
 	private static final long	serialVersionUID	= 8218323197066522297L;
+	
+	private static Logger logger = LogManager.getLogger(StorableDocument.class.getSimpleName());
 
 	/**
 	 * Contents of the file
@@ -87,6 +92,7 @@ public abstract class StorableDocument extends Storable
 			return;
 		
 		File file = getFilePath();
+		logger.trace("Storing document: " + file.getAbsolutePath());
 		
 		if (!file.getParentFile().exists())
 			file.getParentFile().mkdirs();
@@ -108,8 +114,10 @@ public abstract class StorableDocument extends Storable
 	@Override
 	public void storeCopyToFile(File file) throws IOException, IllegalArgumentException
 	{
+		logger.trace("Storing copy of " + getFileName() + " to " + file.getAbsolutePath());
 		try
 		{
+			mkParentDirs(file);
 			FileOutputStream f = new FileOutputStream(file);
 			BufferedOutputStream b = new BufferedOutputStream(f);
 			OutputStreamWriter osw = new OutputStreamWriter(b, "UTF8");

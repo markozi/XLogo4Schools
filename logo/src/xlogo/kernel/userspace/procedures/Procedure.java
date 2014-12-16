@@ -1,4 +1,4 @@
-/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loïc Le Coq
+/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loic Le Coq
  * Copyright (C) 2013 Marko Zivkovic
  * 
  * Contact Information: marko88zivkovic at gmail dot com
@@ -16,13 +16,13 @@
  * 
  * 
  * This Java source code belongs to XLogo4Schools, written by Marko Zivkovic
- * during his Bachelor thesis at the computer science department of ETH Zürich,
+ * during his Bachelor thesis at the computer science department of ETH Zurich,
  * in the year 2013 and/or during future work.
  * 
- * It is a reengineered version of XLogo written by Loïc Le Coq, published
+ * It is a reengineered version of XLogo written by Loic Le Coq, published
  * under the GPL License at http://xlogo.tuxfamily.org/
  * 
- * Contents of this file were initially written Loïc Le Coq.
+ * Contents of this file were initially written Loic Le Coq.
  * The were heavily refactored, changed and extended by Marko Zivkovic
  */
 
@@ -265,7 +265,7 @@ public class Procedure
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 	/**
-	 * @author Loïc Le Coq
+	 * @author Loic Le Coq
 	 */
 	public void decoupe()
 	{
@@ -316,7 +316,7 @@ public class Procedure
 	}
 
 	/**
-	 * @author Loïc Le Coq
+	 * @author Loic Le Coq
 	 */
 	private String deleteComments(String line)
 	{
@@ -338,7 +338,7 @@ public class Procedure
 	}
 
 	/**
-	 * @author Loïc Le Coq
+	 * @author Loic Le Coq
 	 */
 	public String toString()
 	{
@@ -369,7 +369,7 @@ public class Procedure
 	}
 	
 	/**
-	 * @author Loïc Le Coq
+	 * @author Loic Le Coq
 	 */
 	public StringBuffer cutInList()
 	{
@@ -546,7 +546,7 @@ public class Procedure
 	/**
 	 * Reads from sb into args the name and the default value of an optional variable [:a value]. <br>
 	 * value can be expression: number, word, list, ...
-	 * @author Loïc Le Coq
+	 * @author Loic Le Coq
 	 * @author Marko Zivkovic refactored
 	 */
 	void extractOptionalVariable(StringBuffer sb, String[] args)
