@@ -30,7 +30,6 @@ package xlogo.kernel.userspace;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import xlogo.AppSettings;
 import xlogo.Logo;
 import xlogo.interfaces.BroadcasterErrorFileContainer;
 import xlogo.interfaces.X4SModeSwitcher;
@@ -300,10 +299,6 @@ public class UserSpace implements X4SModeSwitcher, LogoFileContainer, Broadcaste
 	@Override
 	public void createFile(String fileName) throws IOException
 	{
-		if (contextManager.getContext().hasTooManyEmptyFiles()){
-			DialogMessenger.getInstance().dispatchMessage(AppSettings.getInstance().translate("message.too.many.empty.files"));
-			return;
-		}
 		try
 		{
 			filesManager.createFile(fileName);
@@ -460,6 +455,10 @@ public class UserSpace implements X4SModeSwitcher, LogoFileContainer, Broadcaste
 		}
 		catch (Exception e)	{ showErrorDialog(e); }
 		return true;
+	}
+	
+	public boolean hasTooManyEmptyFiles(){
+		return contextManager.getContext().hasTooManyEmptyFiles();
 	}
 	
 	public boolean hasErrors(String fileName)

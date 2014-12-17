@@ -67,6 +67,8 @@ public interface BasicFileContainer
 	public String getOpenFileName();
 	
 	public boolean isFilesListEditable();
+	
+	public boolean hasTooManyEmptyFiles();
 
 	//public boolean hasErrors(String fileName);
 

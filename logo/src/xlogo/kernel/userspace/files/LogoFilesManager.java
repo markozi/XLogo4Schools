@@ -384,7 +384,11 @@ public class LogoFilesManager implements LogoFileContainer, FileErrorCollector
 	{
 		return context.isFilesListEditAllowed();
 	}
-		
+	
+	public boolean hasTooManyEmptyFiles(){
+		return context.hasTooManyEmptyFiles();
+	}
+	
 	/**
 	 * the name of the file that was edited last in this context.
 	 */

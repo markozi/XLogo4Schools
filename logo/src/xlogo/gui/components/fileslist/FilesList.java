@@ -44,6 +44,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
+import xlogo.AppSettings;
 import xlogo.Logo;
 import xlogo.interfaces.BasicFileContainer;
 import xlogo.interfaces.BasicFileContainer.FileContainerChangeListener;
@@ -651,7 +652,14 @@ public class FilesList extends JPanel
 				String name = model.makeUniqueFileName(Logo.messages.getString("new.file")); // TODO remove dependency
 				try
 				{
+					if (model.hasTooManyEmptyFiles()){
+						DialogMessenger.getInstance().dispatchMessage(AppSettings.getInstance().translate("message.too.many.empty.files"));
+						return;
+					}
 					model.createFile(name);
+					model.openFile(name);
+					IFilesListItem item = listItems.get(name);
+					item.setEditing(true);
 				}
 				catch (Exception e)
 				{

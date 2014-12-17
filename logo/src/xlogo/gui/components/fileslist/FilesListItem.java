@@ -454,6 +454,10 @@ public class FilesListItem extends JPanel implements IFilesListItem
 
 		this.setBorder(BorderFactory.createLineBorder(state.getBorderColor(), state.getBorderThickness()) );
 		
+		if (isEditing){
+			textField.requestFocusInWindow();
+			textField.selectAll();
+		}
 	}
 			
 	/*
