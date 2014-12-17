@@ -302,14 +302,14 @@ public class HistoryPanel extends JPanel implements HistoryWriter
 						select(borneinf + 1, bornesup - 2);
 						cadre.setCommandText(getSelectedText());
 						// historique.setCaretPosition(historique.getDocument().getLength());
-						cadre.focus_Commande();
+						cadre.focusCommandLine();
 					}
 				}
 				
 				public void mouseReleased(MouseEvent e)
 				{
 					maybeShowPopup(e);
-					cadre.focus_Commande();
+					cadre.focusCommandLine();
 				}
 				
 				public void mousePressed(MouseEvent e)
@@ -367,7 +367,7 @@ public class HistoryPanel extends JPanel implements HistoryWriter
 			{   // Selectionner tout
 				requestFocus();
 				selectAll();
-				cadre.focus_Commande();
+				cadre.focusCommandLine();
 			}
 			else if (cmd.equals(Logo.messages.getString("menu.file.textzone.rtf")))
 			{

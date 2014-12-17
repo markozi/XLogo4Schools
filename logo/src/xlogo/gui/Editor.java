@@ -369,7 +369,7 @@ public class Editor implements ActionListener
 		}
 	}
 	
-	public void focus_textZone()
+	public void requestFocus()
 	{
 		textZone.requestFocus();
 	}

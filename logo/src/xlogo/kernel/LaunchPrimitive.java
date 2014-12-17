@@ -1206,9 +1206,9 @@ public class LaunchPrimitive
 					donne(param);
 					String texte = liste + "\n" + phrase;
 					HistoryMessenger.getInstance().dispatchComment(Utils.SortieTexte(texte) + "\n");
-					cadre.focus_Commande();
+					cadre.focusCommandLine();
 					lis.dispose();
-					cadre.focus_Commande();
+					cadre.focusCommandLine();
 					break;
 				case 94: // touche?
 					Interprete.operande = true;

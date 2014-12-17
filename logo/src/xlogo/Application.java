@@ -137,9 +137,10 @@ public class Application extends X4SFrame {
 	private DrawPanel				drawPanel;
 	private JPanel					extrasPanel;
 	private JSlider					speedSlider;
+	private TurtleComboBox 			turtleCombo;
 	
 	// drawingOrEditor@Editor
-	public Editor					editeur;
+	private Editor					editor;
 	
 	// Extras Menu
 	private JPopupMenu				extras;
@@ -151,32 +152,16 @@ public class Application extends X4SFrame {
 	public Application() {
 		super();
 		showWelcomeMessage();
-	}
-	
-	/**
-	 * Hello Username
-	 * You defined a, b, c, d, ...
-	 */
-	public void showWelcomeMessage() {
-		HistoryMessenger.getInstance().dispatchComment(
-				translate(MessageKeys.APP_HELLO) + " " + uc.getUserName() + "!\n");
-		
-		StringBuilder sb = new StringBuilder();
-		for (String procedureName : userSpace.getAllProcedureNames()) {
-			sb.append(procedureName);
-			sb.append(", ");
-		}
-		if (sb.length() == 0)
-			return;
-		
-		sb.delete(sb.length() - 2, sb.length());
-		
-		HistoryMessenger.getInstance().dispatchComment(translate("definir") + " " + sb.toString() + ".\n");
+		focusCommandLine();
 	}
 	
 	public JFrame getFrame() {
 		return mainFrame;
 	}
+	
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * INIT
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 	
 	@Override
 	protected void initComponent() {
@@ -201,7 +186,7 @@ public class Application extends X4SFrame {
 		extrasPanel = new JPanel();
 		speedSlider = new JSlider(JSlider.VERTICAL);
 		
-		editeur = new Editor(this);
+		editor = new Editor(this);
 		
 		extras = new JPopupMenu();
 		
@@ -231,7 +216,7 @@ public class Application extends X4SFrame {
 			toplevel.add(commandOrEditor, BorderLayout.CENTER);
 			
 			commandOrEditor.add(commandCard, COMMAND_CARD_ID);
-			commandOrEditor.add(editeur.getComponent(), EDITOR_CARD_ID);
+			commandOrEditor.add(editor.getComponent(), EDITOR_CARD_ID);
 			//commandOrEditor.setPreferredSize(new Dimension(d.width-200, d.height));
 			showCommandCard();
 			
@@ -248,16 +233,6 @@ public class Application extends X4SFrame {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-	
-	@Override
-	protected void layoutComponent() {
-		layoutFilesAndProcedures();
-		layoutCommandCard();
-		layoutDrawingAndExtras();
-		layoutDrawingArea();
-		layoutExtras();
-		drawPanel.getGraphics().drawImage(DrawPanel.dessin, 0, 0, mainFrame);
 	}
 	
 	private void initFrame() {
@@ -301,35 +276,6 @@ public class Application extends X4SFrame {
 		}
 	}
 	
-	/**
-	 * @author Marko Zivkovic - new impl
-	 */
-	public void closeWindow() {
-		WSManager storageManager = WSManager.getInstance();
-		try {
-			if (!uc.isVirtual()) {
-				String openFile = userSpace.getOpenFileName();
-				if (openFile != null) {
-					userSpace.writeFileText(openFile, editeur.getText());
-					userSpace.storeFile(openFile);
-				}
-				storageManager.getUserConfigInstance().store();
-			}
-			System.exit(0);
-		}
-		catch (Exception e1) {
-			String message = translate(MessageKeys.US_COULD_NOT_STORE_RECENT_DATA) + "\n\n" + e1.toString() + "\n\n"
-					+ translate("quitter?");
-			
-			String[] choix = { translate(MessageKeys.DIALOG_YES), translate(MessageKeys.DIALOG_NO) };
-			int retval = JOptionPane.showOptionDialog(mainFrame, message, translate("general.error.title"),
-					JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE, null, choix, choix[0]);
-			
-			if (retval == JOptionPane.OK_OPTION)
-				System.exit(0);
-		}
-	}
-	
 	private void initDrawingZone() {
 		// on centre la tortue
 		// Centering turtle
@@ -351,9 +297,13 @@ public class Application extends X4SFrame {
 		genere_primitive();
 		uc.setHeure_demarrage(Calendar.getInstance().getTimeInMillis());
 		setCommandLine(true);
-		focus_Commande();
+		focusCommandLine();
 		resizeDrawingZone();
 	}
+	
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * THEME
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 	
 	private void setTheme() {
 		Font font = WSManager.getWorkspaceConfig().getFont();
@@ -384,6 +334,20 @@ public class Application extends X4SFrame {
 			catch (Exception ignore) {}
 		}
 		UIManager.put("defaultFont", font);
+	}
+	
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * LAYOUT
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+	@Override
+	protected void layoutComponent() {
+		layoutFilesAndProcedures();
+		layoutCommandCard();
+		layoutDrawingAndExtras();
+		layoutDrawingArea();
+		layoutExtras();
+		drawPanel.getGraphics().drawImage(DrawPanel.dessin, 0, 0, mainFrame);
 	}
 	
 	private void layoutFilesAndProcedures() {
@@ -504,36 +468,18 @@ public class Application extends X4SFrame {
 		speedSlider.setMaximumSize(new Dimension(20, 200));
 		speedSlider.setValue(speedSlider.getMaximum() - uc.getTurtleSpeed());
 		
-		final TurtleComboBox turtleCombo = new TurtleComboBox();
+		turtleCombo = new TurtleComboBox();
 		extrasPanel.add(speedSlider);
 		extrasPanel.add(turtleCombo);
 		turtleCombo.setBackground(new Color(BG_COLOR));
 		
 		turtleCombo.getComboBox().setSelectedIndex(uc.getActiveTurtle());
 		
-		turtleCombo.getComboBox().addActionListener(new ActionListener(){
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int i = turtleCombo.getComboBox().getSelectedIndex();
-				System.out.println(i);
-				uc.setActiveTurtle(i);
-				getKernel().getActiveTurtle().setShape(uc.getActiveTurtle());
-				getKernel().change_image_tortue("tortue" + i + ".png");
-			}
-		});
-		
 	}
 	
-	public void showCommandCard() {
-		CardLayout cardLayout = (CardLayout) commandOrEditor.getLayout();
-		cardLayout.show(commandOrEditor, COMMAND_CARD_ID);
-	}
-	
-	public void showEditorCard() {
-		CardLayout cardLayout = (CardLayout) commandOrEditor.getLayout();
-		cardLayout.show(commandOrEditor, EDITOR_CARD_ID);
-	}
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * EXTRAS MENU
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 	
 	private JMenuItem	startContestMenuItem;
 	private JMenuItem	stopContestMenuItem;
@@ -575,11 +521,13 @@ public class Application extends X4SFrame {
 								translate("contest.could.not.create") + "\n" + e.toString());
 						return;
 					}
+					commandLine.requestFocus();
 				}
 			});
 			stopContestMenuItem.addActionListener(new ActionListener(){
 				public void actionPerformed(ActionEvent e) {
 					userSpace.stopRecordMode();
+					commandLine.requestFocus();
 				}
 			});
 		}
@@ -615,7 +563,7 @@ public class Application extends X4SFrame {
 						DialogMessenger.getInstance().dispatchError(MessageKeys.GENERAL_ERROR_TITLE, e1.toString());
 					}
 				}
-				
+				commandLine.requestFocus();
 			}
 		});
 		
@@ -660,13 +608,13 @@ public class Application extends X4SFrame {
 								"Could not export file : \n " + e1.toString());
 					}
 				}
+				commandLine.requestFocus();
 			}
 		});
 		
 		saveImage = new JMenuItem(translate(MessageKeys.US_SAVE_IMAGE));
 		extras.add(saveImage);
 		saveImage.addActionListener(new ActionListener(){
-			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				WriteImage writeImage = new WriteImage(getFrame(), getDrawPanel().getSelectionImage());
@@ -674,6 +622,7 @@ public class Application extends X4SFrame {
 				if (value == JFileChooser.APPROVE_OPTION) {
 					writeImage.start();
 				}
+				commandLine.requestFocus();
 			}
 		});
 	}
@@ -683,15 +632,16 @@ public class Application extends X4SFrame {
 		return new ImageIcon(img.getScaledInstance(width, heigth, Image.SCALE_SMOOTH));
 	}
 	
-	/*
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * CHANGE LISTENERS
-	 */
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 	
 	/**
 	 * This glues together models and the GUI controllers.
 	 */
 	@Override
 	protected void initEventListeners() {
+		
 		commandLine.addMouseListener(new MouseAdapter(){
 			@Override
 			public void mousePressed(MouseEvent e) {
@@ -717,6 +667,19 @@ public class Application extends X4SFrame {
 				JSlider source = (JSlider) e.getSource();
 				int value = source.getValue();
 				uc.setTurtleSpeed(source.getMaximum() - value);
+				commandLine.requestFocus();
+			}
+		});
+		
+		turtleCombo.getComboBox().addActionListener(new ActionListener(){
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int i = turtleCombo.getComboBox().getSelectedIndex();
+				uc.setActiveTurtle(i);
+				getKernel().getActiveTurtle().setShape(uc.getActiveTurtle());
+				getKernel().change_image_tortue("tortue" + i + ".png");
+				focusCommandLine();
 			}
 		});
 		
@@ -813,7 +776,7 @@ public class Application extends X4SFrame {
 					@Override
 					public void run() {
 						showEditorCard();
-						editeur.setText(userSpace.readFile(fileName));
+						editor.setText(userSpace.readFile(fileName));
 						mainFrame.setTitle(appName + " - " + uc.getUserName() + " - " + fileName);
 						filesList.openFile(fileName);
 					}
@@ -827,7 +790,7 @@ public class Application extends X4SFrame {
 						try {
 							if (userSpace.existsFile(fileName)) // It is possibly deleted, and the editor is therefore closed.
 							{
-								userSpace.writeFileText(fileName, editeur.getText());
+								userSpace.writeFileText(fileName, editor.getText());
 								userSpace.storeFile(fileName);
 							}
 						}
@@ -836,7 +799,7 @@ public class Application extends X4SFrame {
 									translate("ws.automatic.save.failed"));
 						}
 						showCommandCard();
-						commandLine.requestFocus();
+						focusCommandLine();
 						//commandLine.requestFocus();
 						mainFrame.setTitle(appName + " - " + uc.getUserName());
 						filesList.closeFile(fileName);
@@ -870,6 +833,7 @@ public class Application extends X4SFrame {
 					@Override
 					public void run() {
 						filesList.renameFile(oldName, newName);
+						focusEditor();
 					}
 				});
 			}
@@ -1065,6 +1029,27 @@ public class Application extends X4SFrame {
 		}
 	}
 	
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * COMMANDS
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+	public void showWelcomeMessage() {
+		HistoryMessenger.getInstance().dispatchComment(
+				translate(MessageKeys.APP_HELLO) + " " + uc.getUserName() + "!\n");
+		
+		StringBuilder sb = new StringBuilder();
+		for (String procedureName : userSpace.getAllProcedureNames()) {
+			sb.append(procedureName);
+			sb.append(", ");
+		}
+		if (sb.length() == 0)
+			return;
+		
+		sb.delete(sb.length() - 2, sb.length());
+		
+		HistoryMessenger.getInstance().dispatchComment(translate("definir") + " " + sb.toString() + ".\n");
+	}
+	
 	public void displayProcedure(String procedureName) {
 		Procedure proc = userSpace.getExecutable(procedureName);
 		if (proc != null)
@@ -1080,7 +1065,7 @@ public class Application extends X4SFrame {
 		
 		if (openFile != null) {
 			try {
-				userSpace.writeFileText(openFile, editeur.getText());
+				userSpace.writeFileText(openFile, editor.getText());
 				userSpace.storeFile(openFile);
 				userSpace.closeFile(openFile);
 			}
@@ -1090,11 +1075,57 @@ public class Application extends X4SFrame {
 		String fileName = proc.getOwnerName();
 		if (userSpace.existsFile(fileName)) {
 			userSpace.openFile(fileName);
-			editeur.displayProcedure(proc.getName());
+			editor.displayProcedure(proc.getName());
 		}
 	}
 	
-	// BELOW IS MOSTLY XLOGO LEGACY CODE
+	public void showCommandCard() {
+		CardLayout cardLayout = (CardLayout) commandOrEditor.getLayout();
+		cardLayout.show(commandOrEditor, COMMAND_CARD_ID);
+	}
+	
+	public void showEditorCard() {
+		CardLayout cardLayout = (CardLayout) commandOrEditor.getLayout();
+		cardLayout.show(commandOrEditor, EDITOR_CARD_ID);
+	}
+
+	public void focusCommandLine() {
+		commandLine.requestFocus();
+	}
+	
+	public void focusEditor(){
+		editor.requestFocus();
+	}
+
+	public void closeWindow() {
+		WSManager storageManager = WSManager.getInstance();
+		try {
+			if (!uc.isVirtual()) {
+				String openFile = userSpace.getOpenFileName();
+				if (openFile != null) {
+					userSpace.writeFileText(openFile, editor.getText());
+					userSpace.storeFile(openFile);
+				}
+				storageManager.getUserConfigInstance().store();
+			}
+			System.exit(0);
+		}
+		catch (Exception e1) {
+			String message = translate(MessageKeys.US_COULD_NOT_STORE_RECENT_DATA) + "\n\n" + e1.toString() + "\n\n"
+					+ translate("quitter?");
+			
+			String[] choix = { translate(MessageKeys.DIALOG_YES), translate(MessageKeys.DIALOG_NO) };
+			int retval = JOptionPane.showOptionDialog(mainFrame, message, translate("general.error.title"),
+					JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE, null, choix, choix[0]);
+			
+			if (retval == JOptionPane.OK_OPTION)
+				System.exit(0);
+		}
+	}
+	
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * BELOW IS MOSTLY XLOGO LEGACY CODE
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 	
 	/**
 	 * Called by the constructor or when language has been modified
@@ -1274,14 +1305,6 @@ public class Application extends X4SFrame {
 	 */
 	public DrawPanel getDrawPanel() {
 		return drawPanel;
-	}
-	
-	/**
-	 * Set Focus on the command line
-	 */
-	public void focus_Commande() {
-		commandLine.requestFocus();
-		commandLine.getCaret().setVisible(true);
 	}
 	
 	/**

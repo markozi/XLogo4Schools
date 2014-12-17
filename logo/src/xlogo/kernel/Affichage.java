@@ -149,7 +149,7 @@ public class Affichage extends Thread
 		}
 		cadre.setCommandLine(true);
 		if (!cadre.viewer3DVisible())
-			cadre.focus_Commande();
+			cadre.focusCommandLine();
 		execution_lancee = false;
 		memoryChecker.kill();
 		cadre.error = false;
@@ -159,7 +159,7 @@ public class Affichage extends Thread
 	
 	private void abortExecution()
 	{
-		cadre.focus_Commande();
+		cadre.focusCommandLine();
 		cadre.error = true;
 		Interprete.calcul = new Stack<String>();
 		cadre.getKernel().getInstructionBuffer().clear();
