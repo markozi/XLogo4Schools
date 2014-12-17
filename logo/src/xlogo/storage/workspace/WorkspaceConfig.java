@@ -73,6 +73,7 @@ public class WorkspaceConfig extends StorableObject implements Serializable {
 	public static final String	VIRTUAL_WORKSPACE		= "Guest Workspace (no automatic save)";
 	public static final String	USB_DEFAULT_WORKSPACE	= "XLogo4Schools";
 	public static final String	USER_DEFAULT_WORKSPACE	= "XLogo4Schools-Workspace";
+	public static final int		MAX_EMPTY_FILES			= 4;
 	
 	private static Logger		logger					= LogManager.getLogger(WorkspaceConfig.class.getSimpleName());
 	
@@ -325,12 +326,13 @@ public class WorkspaceConfig extends StorableObject implements Serializable {
 			store();
 		}
 		catch (IOException e) {
-			DialogMessenger.getInstance().dispatchError("Workspace Error", "Could not store workspace."); // TODO translate
+			String title = AppSettings.getInstance().translate("general.error.title");
+			String message = AppSettings.getInstance().translate("error.could.not.store.ws");
+			DialogMessenger.getInstance().dispatchError(title, message);
 		}
 		if (!existsUserPhysically(username)){
 			UserConfig.createNewUser(this, username);
 		}
-		
 		lastActiveUser = username;
 	}
 	
@@ -390,8 +392,11 @@ public class WorkspaceConfig extends StorableObject implements Serializable {
 	public UserConfig loadUser(String username) throws IOException {
 		logger.trace("Loading user: " + username);
 		if (!existsUserLogically(username)) {
-			DialogMessenger.getInstance().dispatchError("Workspace Error",
-					"Attempt to load inexistent user: " + username + ". Try to import this user.");
+			AppSettings as = AppSettings.getInstance();
+			String title = as.translate("general.error.title");
+			String msg1 = as.translate("error.attempt.load.inexistent.user");
+			String msg2 = as.translate("error.suggest.try.to.import.user");
+			DialogMessenger.getInstance().dispatchError(title, msg1 + username + ". " + msg2);
 			return null;
 		}
 		
@@ -404,7 +409,10 @@ public class WorkspaceConfig extends StorableObject implements Serializable {
 			// but it does exist logically => it must have been corrupted externally.
 			// => restore it.
 			if (!getLocation().mkdirs()) {
-				DialogMessenger.getInstance().dispatchError("Workspace Error", "Could not make required directories.");
+				AppSettings as = AppSettings.getInstance();
+				String title = as.translate("general.error.title");
+				String msg = as.translate("error.could.not.make.directories");
+				DialogMessenger.getInstance().dispatchError(title, msg);
 				return null;
 			}
 			// user creation requires existence of the workspace on file system
@@ -412,7 +420,10 @@ public class WorkspaceConfig extends StorableObject implements Serializable {
 				store();
 			}
 			catch (IOException e) {
-				DialogMessenger.getInstance().dispatchError("Workspace Error", "Could not store workspace.");
+				AppSettings as = AppSettings.getInstance();
+				String title = as.translate("general.error.title");
+				String msg = as.translate("error.could.not.store.ws");
+				DialogMessenger.getInstance().dispatchError(title, msg);
 			}
 			return UserConfig.createNewUser(this, username);
 		}
@@ -432,14 +443,16 @@ public class WorkspaceConfig extends StorableObject implements Serializable {
 		ArrayList<String> users = new ArrayList<String>();
 		
 		if (WSManager.isWorkspaceDirectory(getLocation())) {
-			DialogMessenger.getInstance().dispatchError("Workspace Error",
-					"Current workspace was probably deleted. I will recreate it.");
+			AppSettings as = AppSettings.getInstance();
+			String title = as.translate("general.error.title");
+			String msg = as.translate("error.current.ws.deleted.I.will.recreate.it");
+			DialogMessenger.getInstance().dispatchError(title, msg);
 			try {
 				store();
 			}
 			catch (IOException e) {
-				DialogMessenger.getInstance().dispatchError("Workspace Error",
-						"I could not recreate the Workspace. Try to delete the Workspace and recreate it manually.");
+				String msg2 = as.translate("error.could.not.recreate.try.manually");
+				DialogMessenger.getInstance().dispatchError(title, msg2);
 				return users;
 			}
 		}
@@ -660,6 +673,10 @@ public class WorkspaceConfig extends StorableObject implements Serializable {
 	
 	public void setNOfContestBonusFiles(int nOfContestBonusFiles) {
 		getContestSettings().setNOfContestBonusFiles(nOfContestBonusFiles);
+	}
+	
+	public int getMaxEmptyFiles(){
+		return MAX_EMPTY_FILES;
 	}
 	
 	/*

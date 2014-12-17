@@ -359,6 +359,14 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 		return userConfig.getSourceDirectory();
 	}
 
+	/**
+	 * More efficient test without generating entire text
+	 */
+	@Override
+	public boolean isEmpty(){
+		return allProcedures.isEmpty() || (allProcedures.size() == 1 && allProcedures.get(0).getText().isEmpty());
+	}
+	
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * SERIALIZATION AND DESERIALIZATION
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -373,6 +381,9 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 		{
 			text.append(proc.getText());
 			text.append("\n");
+		}
+		if (text.length() > 0){
+			text.deleteCharAt(text.length() - 1);
 		}
 		
 		return text.toString();
@@ -768,6 +779,5 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 		for (ProcedureMapListener listener : procedureMapListeners)
 			listener.undefined(getPlainName(), procedure);
 	}
-	
-			
+		
 }

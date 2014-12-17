@@ -40,6 +40,7 @@ import xlogo.kernel.userspace.GlobalVariableTable;
 import xlogo.kernel.userspace.PropertyListTable;
 import xlogo.kernel.userspace.files.LogoFile;
 import xlogo.kernel.userspace.procedures.Procedure;
+import xlogo.storage.WSManager;
 import xlogo.storage.global.GlobalConfig;
 /**
  * A LogoContext contains all the symbol tables for execution of Logo programs <p>
@@ -120,6 +121,20 @@ public class LogoContext
 	public GuiMap getGuiMap()
 	{
 		return guiMap;
+	}
+	
+	public boolean hasTooManyEmptyFiles(){
+		int max = WSManager.getWorkspaceConfig().getMaxEmptyFiles();
+		int count = 0;
+		for(LogoFile file: files.values()){
+			if (file.isEmpty()){
+				count++;
+				if(count >= max){
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
 	/*

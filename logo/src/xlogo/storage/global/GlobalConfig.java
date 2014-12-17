@@ -93,10 +93,9 @@ public class GlobalConfig extends StorableObject implements Serializable {
 			}
 			catch (Exception e) {
 				logger.error("GlobalConfig was corrupted.");
-				DialogMessenger.getInstance().dispatchError(
-						"Error while loading configuration files",
-						"Could not read GlobalConfig file " + e.toString()
-								+ "\n Instead creating a new one.\nYou might need to import you workspaces manually.");
+				String title = AppSettings.getInstance().translate("error.loading.config.files.title");
+				String message = AppSettings.getInstance().translate("error.loading.config.files");
+				DialogMessenger.getInstance().dispatchError(title, message + e.toString());
 				gcf.delete();
 				globalConfig = null;
 			}
@@ -112,8 +111,9 @@ public class GlobalConfig extends StorableObject implements Serializable {
 				// Best effort : We will try to operate the program without storing anything on disk
 				logger.error("Cannot store global config at " + gcf.getAbsolutePath() + ". Running in virtual mode.");
 				globalConfig = getNewVirtualInstance();
-				DialogMessenger.getInstance().dispatchError("Error while setting up XLogo4Schools",
-						"Could not create or open GlobalConfig file at default location: " + e.toString());
+				String title = AppSettings.getInstance().translate("error.setting.up.x4s.title");
+				String message = AppSettings.getInstance().translate("error.setting.up.x4s");
+				DialogMessenger.getInstance().dispatchError(title, message + e.toString());
 			}
 		}
 		globalConfig.init();
@@ -155,9 +155,13 @@ public class GlobalConfig extends StorableObject implements Serializable {
 		
 		if (lostWorkspaces.size() > 0) {
 			StringBuilder msg = new StringBuilder();
-			msg.append("Some workspaces could not be found:\n"); // TODO translate
+			String message = AppSettings.getInstance().translate("message.some.workspaces.not.found");
+			String at = AppSettings.getInstance().translate("word.at.filesystem.location");
+			msg.append(message);
 			for (Entry<String, String> e : lostWorkspaces.entrySet()) {
-				msg.append("\t").append(e.getKey()).append(" at ").append(e.getValue()).append("\n");
+				msg.append('\t').append(e.getKey())
+					.append(' ').append(at).append(' ')
+					.append(e.getValue()).append('\n');
 			}
 			DialogMessenger.getInstance().dispatchMessage(msg.toString());
 		}
@@ -467,7 +471,7 @@ public class GlobalConfig extends StorableObject implements Serializable {
 	 */
 	public void leaveWorkspace() throws IOException {
 		if (currentWorkspace == null)
-			throw new IllegalStateException("Attempt to leave workspace without being in one.");
+			throw new IllegalStateException(AppSettings.getInstance().translate("error.leaving.ws.without.being.in.one"));
 		logger.trace("Leaving workspace: " + currentWorkspace.getWorkspaceName());
 		
 		if (currentWorkspace.getActiveUser() != null) {

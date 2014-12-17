@@ -30,6 +30,7 @@ package xlogo.storage;
 import java.io.File;
 import java.io.IOException;
 
+import xlogo.AppSettings;
 import xlogo.messages.async.dialog.DialogMessenger;
 import xlogo.storage.global.GlobalConfig;
 import xlogo.storage.user.UserConfig;
@@ -384,9 +385,9 @@ public class WSManager {
 		
 		if (!isGlobalConfigDirectory(victim) && !isWorkspaceDirectory(victim) && !isUserDirectory(victim))
 		{
-			DialogMessenger.getInstance().dispatchError(
-					"Security Violation",
-					"Attempt to delete a directory that is not under control of this application: " + victim.toString());
+			String title = AppSettings.getInstance().translate("error.security.violation.title");
+			String message = AppSettings.getInstance().translate("error.attempt.delete.non.x4s.file");
+			DialogMessenger.getInstance().dispatchError(title, message + ' ' + victim.toString());
 			throw new SecurityException();
 		}
 		

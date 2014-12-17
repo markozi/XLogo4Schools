@@ -403,8 +403,6 @@ public class UserConfig extends StorableObject implements Serializable
 	// The below properties are essentially copied from the old XLogo
 	// they might get (re)moved or changed
 
-	final String version="0.9.96pre 27/06/12"; // TODO not needed? new version?
-
 	/**
 	 * Drawing Quality
 	 */

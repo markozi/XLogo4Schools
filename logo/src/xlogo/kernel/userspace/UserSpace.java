@@ -30,6 +30,7 @@ package xlogo.kernel.userspace;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import xlogo.AppSettings;
 import xlogo.Logo;
 import xlogo.interfaces.BroadcasterErrorFileContainer;
 import xlogo.interfaces.X4SModeSwitcher;
@@ -89,7 +90,7 @@ public class UserSpace implements X4SModeSwitcher, LogoFileContainer, Broadcaste
 	 * The application can still be used or terminated normally. At least the user has discovered a new bug and he or she
 	 * can report it.
 	 * 
-	 * TODO write a log file?
+	 * TODO write a log file? Send an e-mail?
 	 * 
 	 * @param e
 	 */
@@ -293,9 +294,16 @@ public class UserSpace implements X4SModeSwitcher, LogoFileContainer, Broadcaste
 		return false;
 	}
 	
+	/**
+	 * Fails with a message if there are more than the maximum allowed empty files in the current context
+	 */
 	@Override
 	public void createFile(String fileName) throws IOException
 	{
+		if (contextManager.getContext().hasTooManyEmptyFiles()){
+			DialogMessenger.getInstance().dispatchMessage(AppSettings.getInstance().translate("message.too.many.empty.files"));
+			return;
+		}
 		try
 		{
 			filesManager.createFile(fileName);

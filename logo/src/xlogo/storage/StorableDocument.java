@@ -178,6 +178,14 @@ public abstract class StorableDocument extends Storable
 	}
 	
 	/**
+	 * Whether the underlying text representation is the empty string
+	 * @return
+	 */
+	public boolean isEmpty(){
+		return getText().equals("");
+	}
+	
+	/**
 	 * Setting text will invalidate the current text.
 	 * The new text is then parsed to the concrete document structure.
 	 * @param br
