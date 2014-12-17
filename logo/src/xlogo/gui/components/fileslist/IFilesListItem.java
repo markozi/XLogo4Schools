@@ -45,7 +45,7 @@ public interface IFilesListItem
 	
 	public void setRequestHandler(ItemRequestHandler handler);
 	
-	public void setEditEnabled(boolean enabled);
+	public void setEditable(boolean enabled);
 	
 	public interface ItemRequestHandler
 	{

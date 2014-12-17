@@ -530,7 +530,7 @@ public class FilesListItem extends JPanel implements IFilesListItem
 	}
 	
 
-	public void setEditEnabled(boolean enabled)
+	public void setEditable(boolean enabled)
 	{
 		isEditEnabled = enabled;
 		validate();

@@ -1,38 +1,31 @@
-/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loic Le Coq
+/*
+ * XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loic Le Coq
  * Copyright (C) 2013 Marko Zivkovic
- * 
  * Contact Information: marko88zivkovic at gmail dot com
- * 
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.  This program is distributed in the hope that it will be 
- * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General 
- * Public License for more details.  You should have received a copy of the 
- * GNU General Public License along with this program; if not, write to the Free 
- * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, 
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version. This program is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details. You should have received a copy of the
+ * GNU General Public License along with this program; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301, USA.
- * 
- * 
  * This Java source code belongs to XLogo4Schools, written by Marko Zivkovic
  * during his Bachelor thesis at the computer science department of ETH Zurich,
  * in the year 2013 and/or during future work.
- * 
  * It is a reengineered version of XLogo written by Loic Le Coq, published
  * under the GPL License at http://xlogo.tuxfamily.org/
- * 
  * Contents of this file were initially written by Loic Le Coq,
- * a lot of modifications, extensions, refactorings might been applied by Marko Zivkovic 
+ * a lot of modifications, extensions, refactorings might been applied by Marko Zivkovic
  */
 
-/**
- * Title : XLogo
+/** Title : XLogo
  * Description : XLogo is an interpreter for the Logo
  * programming language
  * 
- * @author Loïc Le Coq
- */
+ * @author Loïc Le Coq */
 package xlogo;
 
 import java.awt.*;
@@ -59,6 +52,7 @@ import java.util.Stack;
 
 import xlogo.interfaces.BasicFileContainer.FileContainerChangeListener;
 import xlogo.interfaces.ErrorDetector.FileErrorCollector.ErrorListener;
+import xlogo.interfaces.MessageBroadcaster.MessageListener;
 import xlogo.interfaces.ProcedureMapper.ProcedureMapListener;
 import xlogo.interfaces.X4SModeSwitcher.ModeChangeListener;
 import xlogo.kernel.DrawPanel;
@@ -73,6 +67,7 @@ import xlogo.gui.components.TurtleComboBox;
 import xlogo.gui.components.ProcedureSearch.ProcedureSearchRequestListener;
 import xlogo.gui.components.X4SFrame;
 import xlogo.gui.components.fileslist.FilesList;
+import xlogo.gui.components.fileslist.FilesListEventListener;
 import xlogo.gui.*;
 import xlogo.kernel.Affichage;
 import xlogo.kernel.Kernel;
@@ -88,10 +83,9 @@ import xlogo.messages.async.history.HistoryMessenger;
  * @author Marko
  * @author Loic Le Coq
  */
-public class Application extends X4SFrame
-{	
-	private static final int	BG_COLOR	= 0xB3BCEA;
-	public static final String appName = "XLogo4Schools";
+public class Application extends X4SFrame {
+	private static final int		BG_COLOR		= 0xB3BCEA;
+	public static final String		appName			= "XLogo4Schools";
 	
 	private static Stack<String>	pile_historique;
 	private int						index_historique;
@@ -124,9 +118,9 @@ public class Application extends X4SFrame
 	
 	private JFrame					mainFrame;
 	private JPanel					filesAndProcedures;
-	private JPanel	commandOrEditor;
-	private FilesList filesList;
-	private ProcedureSearch procedureSearch;
+	private JPanel					commandOrEditor;
+	private FilesList				filesList;
+	private ProcedureSearch			procedureSearch;
 	
 	// drawingOrEditor@Drawing
 	private JPanel					commandCard;
@@ -135,10 +129,10 @@ public class Application extends X4SFrame
 	private JButton					stopButton;
 	private JButton					menuButton;
 	public JSplitPane				drawingAndHistory;
-		
+	
 	private JPanel					drawingAndExtras;
 	private HistoryPanel			history;
-
+	
 	public JScrollPane				scrollArea;
 	private DrawPanel				drawPanel;
 	private JPanel					extrasPanel;
@@ -149,15 +143,12 @@ public class Application extends X4SFrame
 	
 	// Extras Menu
 	private JPopupMenu				extras;
-	
-	private static final String COMMAND_CARD_ID = "command_card";
-	private static final String EDITOR_CARD_ID = "editor_card";
-	
-	
+		
+	private static final String		COMMAND_CARD_ID	= "command_card";
+	private static final String		EDITOR_CARD_ID	= "editor_card";
 	
 	/** Builds the main frame */
-	public Application()
-	{
+	public Application() {
 		super();
 		showWelcomeMessage();
 	}
@@ -167,11 +158,11 @@ public class Application extends X4SFrame
 	 * You defined a, b, c, d, ...
 	 */
 	public void showWelcomeMessage() {
-		HistoryMessenger.getInstance().dispatchComment(translate(MessageKeys.APP_HELLO) + " " + uc.getUserName() + "!\n");
-				
+		HistoryMessenger.getInstance().dispatchComment(
+				translate(MessageKeys.APP_HELLO) + " " + uc.getUserName() + "!\n");
+		
 		StringBuilder sb = new StringBuilder();
-		for (String procedureName : userSpace.getAllProcedureNames())
-		{
+		for (String procedureName : userSpace.getAllProcedureNames()) {
 			sb.append(procedureName);
 			sb.append(", ");
 		}
@@ -180,48 +171,41 @@ public class Application extends X4SFrame
 		
 		sb.delete(sb.length() - 2, sb.length());
 		
-		HistoryMessenger.getInstance().dispatchComment(
-				translate("definir") + " " 
-				+ sb.toString() + ".\n");
+		HistoryMessenger.getInstance().dispatchComment(translate("definir") + " " + sb.toString() + ".\n");
 	}
 	
-	public JFrame getFrame()
-	{
+	public JFrame getFrame() {
 		return mainFrame;
 	}
 	
-
-
 	@Override
-	protected void initComponent()
-	{
-		pile_historique			= new Stack<String>();
-	
-		son						= new Sound_Player(this);
-		touche					= new Touche();
+	protected void initComponent() {
+		pile_historique = new Stack<String>();
 		
-		mainFrame				= new JFrame();
-		filesAndProcedures		= new JPanel();
-
-		commandCard				= new JPanel();
-		commandLine				= new ZoneCommande(this);
-		recordTimerLabel		= new JLabel();
-		stopButton				= new JButton();
-		menuButton				= new JButton();
-		drawingAndHistory		= new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-			
-		drawingAndExtras		= new JPanel();
-		history					= new HistoryPanel(this);
-
-		extrasPanel				= new JPanel();
-		speedSlider				= new JSlider(JSlider.VERTICAL);
+		son = new Sound_Player(this);
+		touche = new Touche();
 		
-		editeur  				= new Editor(this);
+		mainFrame = new JFrame();
+		filesAndProcedures = new JPanel();
 		
-		extras					= new JPopupMenu();
+		commandCard = new JPanel();
+		commandLine = new ZoneCommande(this);
+		recordTimerLabel = new JLabel();
+		stopButton = new JButton();
+		menuButton = new JButton();
+		drawingAndHistory = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		
-		try
-		{	
+		drawingAndExtras = new JPanel();
+		history = new HistoryPanel(this);
+		
+		extrasPanel = new JPanel();
+		speedSlider = new JSlider(JSlider.VERTICAL);
+		
+		editeur = new Editor(this);
+		
+		extras = new JPopupMenu();
+		
+		try {
 			uc = WSManager.getUserConfig();
 			
 			userSpace = new UserSpace();
@@ -236,13 +220,14 @@ public class Application extends X4SFrame
 			JPanel contentPane = (JPanel) mainFrame.getContentPane();
 			JPanel toplevel = new JPanel();
 			toplevel.setLayout(new BorderLayout());
-
-			filesList = new FilesList(userSpace);
+			
+			initFilesList();
+			
 			procedureSearch = new ProcedureSearch(userSpace);
 			filesAndProcedures = new JPanel(new GridBagLayout());
 			
 			toplevel.add(filesAndProcedures, BorderLayout.WEST);
-			commandOrEditor	= new JPanel(new CardLayout());
+			commandOrEditor = new JPanel(new CardLayout());
 			toplevel.add(commandOrEditor, BorderLayout.CENTER);
 			
 			commandOrEditor.add(commandCard, COMMAND_CARD_ID);
@@ -251,66 +236,80 @@ public class Application extends X4SFrame
 			showCommandCard();
 			
 			scrollArea = new JScrollPane();
-			DrawPanel.dessin=new BufferedImage(uc.getImageWidth(),uc.getImageHeight(),BufferedImage.TYPE_INT_RGB);
+			DrawPanel.dessin = new BufferedImage(uc.getImageWidth(), uc.getImageHeight(), BufferedImage.TYPE_INT_RGB);
 			drawPanel = new DrawPanel(this);
-
+			
 			initMenu();
 			
 			contentPane.add(toplevel);
 			showFrame();
 			initDrawingZone();
 		}
-		catch (Exception e)
-		{
+		catch (Exception e) {
 			e.printStackTrace();
-		}	
+		}
 	}
-
+	
 	@Override
-	protected void layoutComponent()
-	{
+	protected void layoutComponent() {
 		layoutFilesAndProcedures();
 		layoutCommandCard();
 		layoutDrawingAndExtras();
 		layoutDrawingArea();
 		layoutExtras();
-		drawPanel.getGraphics().drawImage(DrawPanel.dessin,0,0,mainFrame);
+		drawPanel.getGraphics().drawImage(DrawPanel.dessin, 0, 0, mainFrame);
 	}
-
-	private void initFrame()
-	{
+	
+	private void initFrame() {
 		Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
 		mainFrame.setSize(new Dimension(d.width, d.height * 9 / 10));
 		mainFrame.setTitle("XLogo4Schools" + " - " + uc.getUserName());
 		mainFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		mainFrame.setIconImage(Toolkit.getDefaultToolkit().createImage(Utils.class.getResource("Icon_x4s.png")));
 		mainFrame.addWindowListener(new WindowListener(){
-			public void windowOpened(WindowEvent e){}
-			public void windowIconified(WindowEvent e){}
-			public void windowDeiconified(WindowEvent e){}
-			public void windowActivated(WindowEvent e){}
-			public void windowDeactivated(WindowEvent e){}
-			public void windowClosing(WindowEvent e)
-			{
+			public void windowOpened(WindowEvent e) {
+			}
+			
+			public void windowIconified(WindowEvent e) {
+			}
+			
+			public void windowDeiconified(WindowEvent e) {
+			}
+			
+			public void windowActivated(WindowEvent e) {
+			}
+			
+			public void windowDeactivated(WindowEvent e) {
+			}
+			
+			public void windowClosing(WindowEvent e) {
 				closeWindow();
 			}
-			public void windowClosed(WindowEvent e){}
+			
+			public void windowClosed(WindowEvent e) {
+			}
 		});
+	}
+	
+	private void initFilesList(){
+		filesList = new FilesList();
+		boolean isEditable = userSpace.isFilesListEditable();
+		filesList.setEditable(isEditable);
+		for (String fileName : userSpace.getFileNames()){
+			boolean hasErrors = userSpace.hasErrors(fileName);
+			filesList.addFile(fileName, isEditable, hasErrors);
+		}
 	}
 	
 	/**
 	 * @author Marko Zivkovic - new impl
 	 */
-	public void closeWindow()
-	{
+	public void closeWindow() {
 		WSManager storageManager = WSManager.getInstance();
-		try
-		{
-			if (!uc.isVirtual())
-			{
+		try {
+			if (!uc.isVirtual()) {
 				String openFile = userSpace.getOpenFileName();
-				if (openFile != null)
-				{
+				if (openFile != null) {
 					userSpace.writeFileText(openFile, editeur.getText());
 					userSpace.storeFile(openFile);
 				}
@@ -318,44 +317,36 @@ public class Application extends X4SFrame
 			}
 			System.exit(0);
 		}
-		catch (Exception e1)
-		{
-			String message = translate(MessageKeys.US_COULD_NOT_STORE_RECENT_DATA) + "\n\n" 
-					+ e1.toString() + "\n\n"  
+		catch (Exception e1) {
+			String message = translate(MessageKeys.US_COULD_NOT_STORE_RECENT_DATA) + "\n\n" + e1.toString() + "\n\n"
 					+ translate("quitter?");
-
+			
 			String[] choix = { translate(MessageKeys.DIALOG_YES), translate(MessageKeys.DIALOG_NO) };
-			int retval = JOptionPane.showOptionDialog(
-					mainFrame, 
-					message, 
-					translate("general.error.title"),
-					JOptionPane.YES_NO_OPTION,
-					JOptionPane.ERROR_MESSAGE,
-					null, choix, choix[0]);
+			int retval = JOptionPane.showOptionDialog(mainFrame, message, translate("general.error.title"),
+					JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE, null, choix, choix[0]);
 			
 			if (retval == JOptionPane.OK_OPTION)
 				System.exit(0);
 		}
 	}
-
-	private void initDrawingZone()
-	{
+	
+	private void initDrawingZone() {
 		// on centre la tortue
 		// Centering turtle
-		Dimension dim=scrollArea.getViewport().getViewRect().getSize();
-		Point p=new Point(Math.abs(
-				uc.getImageWidth()/2-dim.width/2),
-				Math.abs(uc.getImageHeight()/2-dim.height/2));
-		scrollArea.getViewport().setViewPosition(p);  	
-
-
-		MediaTracker tracker=new MediaTracker(getFrame());
-		tracker.addImage(DrawPanel.dessin,0);
-		try{tracker.waitForID(0);}
-		catch(InterruptedException e){}
+		Dimension dim = scrollArea.getViewport().getViewRect().getSize();
+		Point p = new Point(Math.abs(uc.getImageWidth() / 2 - dim.width / 2), Math.abs(uc.getImageHeight() / 2
+				- dim.height / 2));
+		scrollArea.getViewport().setViewPosition(p);
+		
+		MediaTracker tracker = new MediaTracker(getFrame());
+		tracker.addImage(DrawPanel.dessin, 0);
+		try {
+			tracker.waitForID(0);
+		}
+		catch (InterruptedException e) {}
 		//drawPanel.getGraphics().drawImage(DrawPanel.dessin,0,0,mainFrame);
 		scrollArea.validate();
-
+		
 		setCommandLine(false);
 		genere_primitive();
 		uc.setHeure_demarrage(Calendar.getInstance().getTimeInMillis());
@@ -364,15 +355,11 @@ public class Application extends X4SFrame
 		resizeDrawingZone();
 	}
 	
-	private void setTheme()
-	{
+	private void setTheme() {
 		Font font = WSManager.getWorkspaceConfig().getFont();
-		try
-		{
-			for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels())
-			{
-				if ("Nimbus".equals(info.getName()))
-				{
+		try {
+			for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+				if ("Nimbus".equals(info.getName())) {
 					UIManager.setLookAndFeel(info.getClassName());
 					UIManager.put("defaultFont", font);
 					//UIManager.put("defaultFont", new Font(Font.SANS_SERIF, 0, 18));
@@ -380,8 +367,7 @@ public class Application extends X4SFrame
 				}
 			}
 			
-			switch (uc.getLooknfeel())
-			{
+			switch (uc.getLooknfeel()) {
 				case JAVA:
 					//MetalLookAndFeel.setCurrentTheme(uc.getColorTheme().getTheme());
 					UIManager.setLookAndFeel(new MetalLookAndFeel());
@@ -391,25 +377,21 @@ public class Application extends X4SFrame
 			}
 			
 		}
-		catch (Exception e)
-		{
-			try
-			{
+		catch (Exception e) {
+			try {
 				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			}
-			catch (Exception ignore){}
+			catch (Exception ignore) {}
 		}
 		UIManager.put("defaultFont", font);
 	}
-
-	private void layoutFilesAndProcedures()
-	{
-		
+	
+	private void layoutFilesAndProcedures() {
 		
 		// Note : the following JPanel saved my day ...
 		// thanks to this The files list is finally position at the top :-)
 		JPanel layoutHelper = new JPanel(new BorderLayout());
-		layoutHelper.add(filesList, BorderLayout.NORTH);
+		layoutHelper.add(filesList.getComponent(), BorderLayout.NORTH);
 		
 		JScrollPane scroller = new JScrollPane(layoutHelper);
 		scroller.getViewport().setBackground(new Color(BG_COLOR));
@@ -431,16 +413,15 @@ public class Application extends X4SFrame
 		c.weightx = 1;
 		
 		c.fill = GridBagConstraints.BOTH;
-				
+		
 		c.anchor = GridBagConstraints.NORTHWEST;
 		
 		filesAndProcedures.add(scroller, c);
 		
 	}
 	
-	private void layoutCommandCard()
-	{
-
+	private void layoutCommandCard() {
+		
 		int preferredHeight = WSManager.getWorkspaceConfig().getFont().getSize() * 15 / 10;
 		
 		stopButton.setIcon(createImageIcon("stop.png", 20, 20));
@@ -472,29 +453,23 @@ public class Application extends X4SFrame
 		commandCardLayout.setAutoCreateContainerGaps(false);
 		commandCardLayout.setAutoCreateGaps(false);
 		
-		commandCardLayout.setVerticalGroup(
-			commandCardLayout.createSequentialGroup()
-				.addGroup(commandCardLayout.createParallelGroup()
-						.addComponent(commandLine)// TODO GAP?
-						.addComponent(recordTimerLabel)
-						.addGap(2)
-						.addComponent(stopButton)
-						.addGap(2)
-						.addComponent(menuButton))
-				.addComponent(drawingAndHistory));
+		commandCardLayout.setVerticalGroup(commandCardLayout
+				.createSequentialGroup()
+				.addGroup(
+						commandCardLayout.createParallelGroup().addComponent(commandLine)
+								// TODO GAP?
+								.addComponent(recordTimerLabel).addGap(2).addComponent(stopButton).addGap(2)
+								.addComponent(menuButton)).addComponent(drawingAndHistory));
 		
-		commandCardLayout.setHorizontalGroup(
-			commandCardLayout.createParallelGroup()
-				.addGroup(commandCardLayout.createSequentialGroup()
-						.addComponent(commandLine)
-						.addComponent(recordTimerLabel)
-						.addComponent(stopButton)
-						.addComponent(menuButton))
+		commandCardLayout.setHorizontalGroup(commandCardLayout
+				.createParallelGroup()
+				.addGroup(
+						commandCardLayout.createSequentialGroup().addComponent(commandLine)
+								.addComponent(recordTimerLabel).addComponent(stopButton).addComponent(menuButton))
 				.addComponent(drawingAndHistory));
 	}
-
-	private void layoutDrawingAndExtras()
-	{		
+	
+	private void layoutDrawingAndExtras() {
 		history.setMinimumSize(new Dimension(600, 40));
 		drawingAndExtras.setBackground(new Color(BG_COLOR));
 		
@@ -507,21 +482,15 @@ public class Application extends X4SFrame
 		drawingAndExtrasLayout.setAutoCreateContainerGaps(false);
 		drawingAndExtrasLayout.setAutoCreateGaps(false);
 		
-		drawingAndExtrasLayout.setVerticalGroup(
-			drawingAndExtrasLayout.createParallelGroup()
-				.addComponent(scrollArea)
+		drawingAndExtrasLayout.setVerticalGroup(drawingAndExtrasLayout.createParallelGroup().addComponent(scrollArea)
 				.addComponent(extrasPanel));
 		
-		drawingAndExtrasLayout.setHorizontalGroup(
-			drawingAndExtrasLayout.createSequentialGroup()
-				.addComponent(scrollArea)
-				.addComponent(extrasPanel));
+		drawingAndExtrasLayout.setHorizontalGroup(drawingAndExtrasLayout.createSequentialGroup()
+				.addComponent(scrollArea).addComponent(extrasPanel));
 	}
-
-	private void layoutDrawingArea()
-	{
-		drawPanel.setSize(new Dimension(
-				(int) (uc.getImageWidth() * DrawPanel.zoom),
+	
+	private void layoutDrawingArea() {
+		drawPanel.setSize(new Dimension((int) (uc.getImageWidth() * DrawPanel.zoom),
 				(int) (uc.getImageHeight() * DrawPanel.zoom)));
 		scrollArea.getViewport().add(drawPanel);
 		scrollArea.getHorizontalScrollBar().setBlockIncrement(5);
@@ -529,11 +498,10 @@ public class Application extends X4SFrame
 		scrollArea.setPreferredSize(drawPanel.getPreferredSize());
 	}
 	
-	private void layoutExtras()
-	{
+	private void layoutExtras() {
 		extrasPanel.setBackground(new Color(BG_COLOR));
 		extrasPanel.setLayout(new BoxLayout(extrasPanel, BoxLayout.Y_AXIS));
-		speedSlider.setMaximumSize(new Dimension(20,200));
+		speedSlider.setMaximumSize(new Dimension(20, 200));
 		speedSlider.setValue(speedSlider.getMaximum() - uc.getTurtleSpeed());
 		
 		final TurtleComboBox turtleCombo = new TurtleComboBox();
@@ -542,55 +510,49 @@ public class Application extends X4SFrame
 		turtleCombo.setBackground(new Color(BG_COLOR));
 		
 		turtleCombo.getComboBox().setSelectedIndex(uc.getActiveTurtle());
-
 		
 		turtleCombo.getComboBox().addActionListener(new ActionListener(){
 			
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				int i = turtleCombo.getComboBox().getSelectedIndex(); 
+			public void actionPerformed(ActionEvent e) {
+				int i = turtleCombo.getComboBox().getSelectedIndex();
 				System.out.println(i);
 				uc.setActiveTurtle(i);
 				getKernel().getActiveTurtle().setShape(uc.getActiveTurtle());
 				getKernel().change_image_tortue("tortue" + i + ".png");
 			}
 		});
-			
+		
 	}
 	
-	public void showCommandCard()
-	{
+	public void showCommandCard() {
 		CardLayout cardLayout = (CardLayout) commandOrEditor.getLayout();
 		cardLayout.show(commandOrEditor, COMMAND_CARD_ID);
 	}
-
-	public void showEditorCard()
-	{
+	
+	public void showEditorCard() {
 		CardLayout cardLayout = (CardLayout) commandOrEditor.getLayout();
 		cardLayout.show(commandOrEditor, EDITOR_CARD_ID);
 	}
-		
-	private JMenuItem startContestMenuItem;
-	private JMenuItem stopContestMenuItem;
-	private JMenuItem importMenuItem;
-	private JMenuItem exportMenuItem;
-	private JMenuItem saveImage;
 	
-	public void initMenu()
-	{
-	    //Create the popup menu.
+	private JMenuItem	startContestMenuItem;
+	private JMenuItem	stopContestMenuItem;
+	private JMenuItem	importMenuItem;
+	private JMenuItem	exportMenuItem;
+	private JMenuItem	saveImage;
+	
+	public void initMenu() {
+		//Create the popup menu.
 		extras = new JPopupMenu();
-
+		
 		if (!uc.isVirtual()) // Contest Mode not available in virtual mode
 		{
-			startContestMenuItem = new JMenuItem(translate(MessageKeys.CONTEST_MODE_START)); 
+			startContestMenuItem = new JMenuItem(translate(MessageKeys.CONTEST_MODE_START));
 			stopContestMenuItem = new JMenuItem(translate(MessageKeys.CONTEST_MODE_STOP));
-		    extras.add(startContestMenuItem,0);
+			extras.add(startContestMenuItem, 0);
 			
-		    startContestMenuItem.addActionListener(new ActionListener(){
-				public void actionPerformed(ActionEvent e)
-				{
+			startContestMenuItem.addActionListener(new ActionListener(){
+				public void actionPerformed(ActionEvent e) {
 					WorkspaceConfig wc = WSManager.getWorkspaceConfig();
 					int nOfFiles = wc.getNOfContestFiles();
 					int nOfBonusFiles = wc.getNOfContestBonusFiles();
@@ -605,59 +567,51 @@ public class Application extends X4SFrame
 					
 					for (int i = 0; i < nOfBonusFiles; i++)
 						contestFileNames[nOfFiles + i] = nameBase + (i + 1);
-					try
-					{
+					try {
 						userSpace.startRecordMode(contestFileNames);
 					}
-					catch (IOException e1)
-					{
+					catch (IOException e1) {
 						DialogMessenger.getInstance().dispatchMessage(translate("contest.error.title"),
 								translate("contest.could.not.create") + "\n" + e.toString());
 						return;
 					}
 				}
 			});
-		    stopContestMenuItem.addActionListener(new ActionListener(){
-				public void actionPerformed(ActionEvent e)
-				{
+			stopContestMenuItem.addActionListener(new ActionListener(){
+				public void actionPerformed(ActionEvent e) {
 					userSpace.stopRecordMode();
 				}
 			});
 		}
 		
 		importMenuItem = new JMenuItem(translate(MessageKeys.US_IMPORT));
-	    extras.add(importMenuItem);
-	    importMenuItem.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e)
-			{
+		extras.add(importMenuItem);
+		importMenuItem.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
 				final JFileChooser fc = new JFileChooser();
 				fc.setFileSelectionMode(JFileChooser.OPEN_DIALOG);
 				fc.setFileFilter(new FileFilter(){
 					
 					@Override
-					public String getDescription()
-					{
+					public String getDescription() {
 						return GlobalConfig.LOGO_FILE_EXTENSION;
 					}
 					
 					@Override
-					public boolean accept(File f)
-					{
+					public boolean accept(File f) {
 						return f.isDirectory() || f.getName().endsWith(GlobalConfig.LOGO_FILE_EXTENSION);
 					}
-				});;
+				});
+				;
 				
 				int returnVal = fc.showOpenDialog(getFrame());
 				
-				if(returnVal == JFileChooser.APPROVE_OPTION)
-				{
+				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					File file = fc.getSelectedFile();
-					try
-					{
+					try {
 						userSpace.importFile(file);
 					}
-					catch (IOException e1)
-					{
+					catch (IOException e1) {
 						DialogMessenger.getInstance().dispatchError(MessageKeys.GENERAL_ERROR_TITLE, e1.toString());
 					}
 				}
@@ -665,14 +619,14 @@ public class Application extends X4SFrame
 			}
 		});
 		
-	    exportMenuItem = new JMenuItem(translate(MessageKeys.US_EXPORT));
+		exportMenuItem = new JMenuItem(translate(MessageKeys.US_EXPORT));
 		extras.add(exportMenuItem);
 		exportMenuItem.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				
-				String fileName = (String) JOptionPane.showInputDialog(getFrame(), translate(MessageKeys.US_EXPORT_MSG) + "\n",
-						translate(MessageKeys.US_EXPORT), JOptionPane.PLAIN_MESSAGE, null, userSpace.getFileNames(), "ham");
+				String fileName = (String) JOptionPane.showInputDialog(getFrame(), translate(MessageKeys.US_EXPORT_MSG)
+						+ "\n", translate(MessageKeys.US_EXPORT), JOptionPane.PLAIN_MESSAGE, null,
+						userSpace.getFileNames(), "ham");
 				
 				//If a string was returned, say so.
 				if (fileName == null || fileName.length() == 0)
@@ -683,14 +637,12 @@ public class Application extends X4SFrame
 				fc.setFileFilter(new FileFilter(){
 					
 					@Override
-					public String getDescription()
-					{
+					public String getDescription() {
 						return GlobalConfig.LOGO_FILE_EXTENSION;
 					}
 					
 					@Override
-					public boolean accept(File f)
-					{
+					public boolean accept(File f) {
 						return f.isDirectory() || f.getName().endsWith(GlobalConfig.LOGO_FILE_EXTENSION);
 					}
 				});
@@ -698,15 +650,12 @@ public class Application extends X4SFrame
 				
 				int returnVal = fc.showOpenDialog(getFrame());
 				
-				if (returnVal == JFileChooser.APPROVE_OPTION)
-				{
+				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					File file = fc.getSelectedFile();
-					try
-					{
+					try {
 						userSpace.exportFile(fileName, file);
 					}
-					catch (IOException e1)
-					{
+					catch (IOException e1) {
 						DialogMessenger.getInstance().dispatchError(MessageKeys.GENERAL_ERROR_TITLE,
 								"Could not export file : \n " + e1.toString());
 					}
@@ -719,10 +668,8 @@ public class Application extends X4SFrame
 		saveImage.addActionListener(new ActionListener(){
 			
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				WriteImage writeImage = new WriteImage(getFrame(), getDrawPanel()
-						.getSelectionImage());
+			public void actionPerformed(ActionEvent e) {
+				WriteImage writeImage = new WriteImage(getFrame(), getDrawPanel().getSelectionImage());
 				int value = writeImage.chooseFile();
 				if (value == JFileChooser.APPROVE_OPTION) {
 					writeImage.start();
@@ -744,24 +691,20 @@ public class Application extends X4SFrame
 	 * This glues together models and the GUI controllers.
 	 */
 	@Override
-	protected void initEventListeners()
-	{		
+	protected void initEventListeners() {
 		commandLine.addMouseListener(new MouseAdapter(){
 			@Override
-			public void mousePressed(MouseEvent e)
-			{
+			public void mousePressed(MouseEvent e) {
 				maybeShowPopup(e);
 			}
+			
 			@Override
-			public void mouseReleased(MouseEvent e)
-			{
+			public void mouseReleased(MouseEvent e) {
 				maybeShowPopup(e);
 			}
-
-			private void maybeShowPopup(MouseEvent e)
-			{
-				if (e.isPopupTrigger())
-				{
+			
+			private void maybeShowPopup(MouseEvent e) {
+				if (e.isPopupTrigger()) {
 					jpop.show(e.getComponent(), e.getX(), e.getY());
 				}
 			}
@@ -769,601 +712,383 @@ public class Application extends X4SFrame
 		
 		commandLine.addKeyListener(touche);
 		
-		speedSlider.addChangeListener(new ChangeListener()
-		{
-			public void stateChanged(ChangeEvent e)
-			{
+		speedSlider.addChangeListener(new ChangeListener(){
+			public void stateChanged(ChangeEvent e) {
 				JSlider source = (JSlider) e.getSource();
 				int value = source.getValue();
 				uc.setTurtleSpeed(source.getMaximum() - value);
 			}
 		});
 		
-		stopButton.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent arg0)
-			{
-			    error=true;
-			    if (NetworkServer.isActive){
-			    	NetworkServer.stopServer();
-			    }
-			    setCommandLine(true);
-			    commandLine.requestFocus();
+		stopButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent arg0) {
+				error = true;
+				if (NetworkServer.isActive) {
+					NetworkServer.stopServer();
+				}
+				setCommandLine(true);
+				commandLine.requestFocus();
 			}
 		});
 		
-		menuButton.addActionListener(new ActionListener()
-		{			
-			public void actionPerformed(ActionEvent e)
-			{
+		menuButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
 				extras.show(menuButton, 0, 0);
 			}
 		});
-						
-		userSpace.addProcedureMapListener(new ProcedureMapListener()
-		{	
+		
+		userSpace.addProcedureMapListener(new ProcedureMapListener(){
 			@Override
-			public void ownerRenamed(String oldName, String newName)
-			{
+			public void ownerRenamed(String oldName, String newName) {
 				// ignore
 			}
 			
 			@Override
-			public void undefined(final String fileName, final String procedure)
-			{
-				if(SwingUtilities.isEventDispatchThread())
-				{
-					onUndefined(fileName, procedure);
-					return;
-				}
-				
-				try
-				{
-					SwingUtilities.invokeAndWait(new Runnable(){
-						
-						@Override
-						public void run()
-						{
-							onUndefined(fileName, procedure);
-						}
-					});
-				}
-				catch (InterruptedException e)
-				{
-					undefined(fileName, procedure);
-				}
-				catch (InvocationTargetException e)
-				{
-					e.printStackTrace();
-				}
-			}
-
-			private void onUndefined(String fileName, String procedure)
-			{
-				HistoryMessenger.getInstance().dispatchComment(
-						fileName + " : " + 
-						translate(MessageKeys.HIST_MSG_PROCEDURES_UNDEFINED) + " " + 
-						procedure + ".\n");
-			}
-			
-			@Override
-			public void undefined(final String fileName, final Collection<String> procedures)
-			{
-				if(SwingUtilities.isEventDispatchThread())
-				{
-					onUndefined(fileName, procedures);
-					return;
-				}
-				
-				try
-				{
-					SwingUtilities.invokeAndWait(new Runnable(){
-						
-						@Override
-						public void run()
-						{
-							onUndefined(fileName, procedures);
-						}
-					});
-				}
-				catch (InterruptedException e)
-				{
-					undefined(fileName, procedures);
-				}
-				catch (InvocationTargetException e)
-				{
-					e.printStackTrace();
-				}
-			}
-
-			private void onUndefined(String fileName, Collection<String> procedures)
-			{
-				StringBuilder sb = new StringBuilder();
-				for (String procedureName : procedures)
-				{
-					sb.append(procedureName);
-					sb.append(", ");
-				}
-				sb.delete(sb.length() - 2, sb.length() - 1);
-				
-				HistoryMessenger.getInstance().dispatchComment(
-						fileName + " : " + 
-						translate(MessageKeys.HIST_MSG_PROCEDURES_UNDEFINED) + " " 
-						+ sb.toString() + ".\n");
-			}
-			
-			@Override
-			public void defined(final String fileName, final String procedure)
-			{	
-				if(SwingUtilities.isEventDispatchThread())
-				{
-					onDefined(fileName, procedure);
-					return;
-				}
-				
-				try
-				{
-					SwingUtilities.invokeAndWait(new Runnable(){
-						
-						@Override
-						public void run()
-						{
-							onDefined(fileName, procedure);
-						}
-					});
-				}
-				catch (InterruptedException e)
-				{
-					defined(fileName, procedure);
-				}
-				catch (InvocationTargetException e)
-				{
-					e.printStackTrace();
-				}
-			}
-
-			private void onDefined(String fileName, String procedure)
-			{
-				HistoryMessenger.getInstance().dispatchComment(
-						fileName + " : " + 
-						translate("definir") + " " + 
-						procedure + ".\n");
-			}
-			
-			@Override
-			public void defined(final String fileName, final Collection<String> procedures)
-			{
-				if(SwingUtilities.isEventDispatchThread())
-				{
-					onDefined(fileName, procedures);
-					return;
-				}
-				
-				try
-				{
-					SwingUtilities.invokeAndWait(new Runnable(){
-						
-						@Override
-						public void run()
-						{
-							onDefined(fileName, procedures);
-						}
-					});
-				}
-				catch (InterruptedException e)
-				{
-					defined(fileName, procedures);
-				}
-				catch (InvocationTargetException e)
-				{
-					e.printStackTrace();
-				}
-			}
-
-			private void onDefined(String fileName, Collection<String> procedures)
-			{
-				if (procedures.size() == 0)
-					return;
-				
-				StringBuilder sb = new StringBuilder();
-				for (String procedureName : procedures)
-				{
-					sb.append(procedureName);
-					sb.append(", ");
-				}
-				sb.delete(sb.length() - 2, sb.length());
-				
-				HistoryMessenger.getInstance().dispatchComment(
-						fileName + " : " + 
-						translate("definir") + " " 
-						+ sb.toString() + ".\n");
-			}
-		});
-		
-		userSpace.addFileListener(new FileContainerChangeListener()
-		{	
-			public void fileOpened(final String fileName)
-			{
-				if(SwingUtilities.isEventDispatchThread())
-				{
-					onFileOpened(fileName);
-					return;
-				}
-				
-				try
-				{
-					SwingUtilities.invokeAndWait(new Runnable(){
-						
-						@Override
-						public void run()
-						{
-							onFileOpened(fileName);
-						}
-					});
-				}
-				catch (InterruptedException e)
-				{
-					fileOpened(fileName);
-				}
-				catch (InvocationTargetException e)
-				{
-					e.printStackTrace();
-				}
-			}
-
-			private void onFileOpened(String fileName)
-			{
-				showEditorCard();
-				editeur.setText(userSpace.readFile(fileName));
-				mainFrame.setTitle(appName + " - " + uc.getUserName() + " - " + fileName);
-			}
-			
-			public void fileClosed(final String fileName)
-			{
-				if(SwingUtilities.isEventDispatchThread())
-				{
-					onFileClosed(fileName);
-					return;
-				}
-				
-				try
-				{
-					SwingUtilities.invokeAndWait(new Runnable(){
-						
-						@Override
-						public void run()
-						{
-							onFileClosed(fileName);
-						}
-					});
-				}
-				catch (InterruptedException e)
-				{
-					fileClosed(fileName);
-				}
-				catch (InvocationTargetException e)
-				{
-					e.printStackTrace();
-				}
-			}
-
-			private void onFileClosed(String fileName)
-			{
-				try
-				{
-					if (userSpace.existsFile(fileName)) // It is possibly deleted, and the editor is therefore closed.
-					{
-						userSpace.writeFileText(fileName, editeur.getText());
-						userSpace.storeFile(fileName);
-					}
-				}
-				catch (IOException e)
-				{
-					DialogMessenger.getInstance().dispatchError(
-							translate("general.error.title"),
-							translate("ws.automatic.save.failed"));
-				}
-				showCommandCard(); 
-				commandLine.requestFocus();
-				//commandLine.requestFocus();
-				mainFrame.setTitle(appName + " - " + uc.getUserName());
-			}
-			
-			@Override
-			public void fileAdded(String fileName) { }
-			
-			@Override
-			public void fileRemoved(String fileName)
-			{
-				if(SwingUtilities.isEventDispatchThread())
-				{
-					showCommandCard();
-					return;
-				}
-				
-				try
-				{
-					SwingUtilities.invokeAndWait(new Runnable(){
-						
-						@Override
-						public void run()
-						{
-							showCommandCard();
-						}
-					});
-				}
-				catch (InterruptedException e)
-				{
-					fileRemoved(fileName);
-				}
-				catch (InvocationTargetException e)
-				{
-					e.printStackTrace();
-				}
-			}
-			
-			@Override
-			public void fileRenamed(String oldName, String newName) { }
-
-			@Override
-			public void editRightsChanged(boolean editEnabled) { }
-
-		});
-		
-		userSpace.addErrorListener(new ErrorListener()
-		{	
-			@Override
-			public void errorsDetected(final String fileName)
-			{
-				if(SwingUtilities.isEventDispatchThread())
-				{
-					onErrorsDetected(fileName);
-					return;
-				}
-				
-				try
-				{
-					SwingUtilities.invokeAndWait(new Runnable(){
-						
-						@Override
-						public void run()
-						{
-							onErrorsDetected(fileName);
-						}
-					});
-				}
-				catch (InterruptedException e)
-				{
-					errorsDetected(fileName);
-				}
-				catch (InvocationTargetException e)
-				{
-					e.printStackTrace();
-				}
-			}
-
-			private void onErrorsDetected(String fileName)
-			{
-				HistoryMessenger.getInstance().dispatchError(fileName + " " + 
-						translate(MessageKeys.FILE_CONTAINS_ERRORS) + "\n");
-				
-				for(String msg : userSpace.getErrorMessages(fileName))
-					HistoryMessenger.getInstance().dispatchError(msg + "\n");
-			}
-			
-			@Override
-			public void allErrorsCorrected(String fileName)
-			{
-				// ignore
-			}
-		});
-
-		userSpace.addModeChangedListener(new ModeChangeListener()
-		{			
-			@Override
-			public void recordModeStopped()
-			{
-				if (SwingUtilities.isEventDispatchThread())
-				{
-					onRecordModeStopped();
-					return;
-				}
-				try
-				{
-					SwingUtilities.invokeAndWait(new Runnable(){
-						
-						@Override
-						public void run()
-						{
-							onRecordModeStopped();
-						}
-					});
-				}
-				catch (InterruptedException e)
-				{
-					recordModeStopped();
-				}
-				catch (InvocationTargetException e)
-				{
-					e.printStackTrace();
-				}
-			}
-
-			private void onRecordModeStopped()
-			{
-				extras.remove(stopContestMenuItem);
-				extras.add(startContestMenuItem, 0);
-				importMenuItem.setEnabled(true);
-				exportMenuItem.setEnabled(true);
-				recordTimer.stop();
-				recordTimerLabel.setText(null);
-			}
-			
-			@Override
-			public void recordModeStarted()
-			{
-				if (SwingUtilities.isEventDispatchThread())
-				{
-					onRecordModeStarted();
-					return;
-				}
-				try
-				{
-					SwingUtilities.invokeAndWait(new Runnable(){
-						
-						@Override
-						public void run()
-						{
-							onRecordModeStarted();
-						}
-					});
-				}
-				catch (InterruptedException e)
-				{
-					recordModeStarted();
-				}
-				catch (InvocationTargetException e)
-				{
-					e.printStackTrace();
-				}
-			}
-			
-			private Timer recordTimer;
-			
-			private void onRecordModeStarted()
-			{
-				extras.remove(startContestMenuItem);
-				extras.add(stopContestMenuItem, 0);
-				importMenuItem.setEnabled(false);
-				exportMenuItem.setEnabled(false);
-				recordTimer = new Timer(1000, new ActionListener(){
-					private Date start = Calendar.getInstance().getTime();
+			public void undefined(final String fileName, final String procedure) {
+				runOnGuiThread(new Runnable(){
 					@Override
-					public void actionPerformed(ActionEvent e)
-					{
-
-						Date now = Calendar.getInstance().getTime();
-						
-						long diff = now.getTime() - start.getTime();
-						
-						recordTimerLabel.setText(UserConfig.getMinSec(diff));
+					public void run() {
+						HistoryMessenger.getInstance().dispatchComment(
+								fileName + " : " + translate(MessageKeys.HIST_MSG_PROCEDURES_UNDEFINED) + " " + procedure
+										+ ".\n");
 					}
 				});
-				recordTimer.start();
 			}
 			
 			@Override
-			public void networkModeStopped()
-			{
-				if (SwingUtilities.isEventDispatchThread())
-				{
-					onNetworkModeStopped();
-					return;
-				}
-				try
-				{
-					SwingUtilities.invokeAndWait(new Runnable(){
-						
-						@Override
-						public void run()
-						{
-							onNetworkModeStopped();
+			public void undefined(final String fileName, final Collection<String> procedures) {
+				runOnGuiThread(new Runnable(){
+					@Override
+					public void run() {
+						StringBuilder sb = new StringBuilder();
+						for (String procedureName : procedures) {
+							sb.append(procedureName);
+							sb.append(", ");
 						}
-					});
-				}
-				catch (InterruptedException e)
-				{
-					networkModeStopped();
-				}
-				catch (InvocationTargetException e)
-				{
-					e.printStackTrace();
-				}
-			}
-
-			private void onNetworkModeStopped()
-			{
-				filesList.setEnabled(true);
-				extras.setEnabled(true);
+						sb.delete(sb.length() - 2, sb.length() - 1);
+						
+						HistoryMessenger.getInstance().dispatchComment(
+								fileName + " : " + translate(MessageKeys.HIST_MSG_PROCEDURES_UNDEFINED) + " " + sb.toString()
+										+ ".\n");
+					}
+				});
 			}
 			
 			@Override
-			public void networkModeStarted()
-			{	
-
-				if (SwingUtilities.isEventDispatchThread())
-				{
-					onNetworkModeStarted();
-					return;
-				}
-				try
-				{
-					SwingUtilities.invokeAndWait(new Runnable(){
+			public void defined(final String fileName, final String procedure) {
+				runOnGuiThread(new Runnable(){
+					@Override
+					public void run() {
+						HistoryMessenger.getInstance().dispatchComment(
+								fileName + " : " + translate("definir") + " " + procedure + ".\n");
+					}
+				});
+			}
+			
+			@Override
+			public void defined(final String fileName, final Collection<String> procedures) {
+				runOnGuiThread(new Runnable(){
+					@Override
+					public void run() {
+						if (procedures.size() == 0)
+							return;
 						
-						@Override
-						public void run()
-						{
-							onNetworkModeStarted();
+						StringBuilder sb = new StringBuilder();
+						for (String procedureName : procedures) {
+							sb.append(procedureName);
+							sb.append(", ");
 						}
-					});
-				}
-				catch (InterruptedException e)
-				{
-					networkModeStarted();
-				}
-				catch (InvocationTargetException e)
-				{
-					e.printStackTrace();
-				}
+						sb.delete(sb.length() - 2, sb.length());
+						
+						HistoryMessenger.getInstance().dispatchComment(
+								fileName + " : " + translate("definir") + " " + sb.toString() + ".\n");
+					}
+				});
+			}
+		});
+		
+		userSpace.addFileListener(new FileContainerChangeListener(){
+			public void fileOpened(final String fileName) {
+				runOnGuiThread(new Runnable(){
+					@Override
+					public void run() {
+						showEditorCard();
+						editeur.setText(userSpace.readFile(fileName));
+						mainFrame.setTitle(appName + " - " + uc.getUserName() + " - " + fileName);
+						filesList.openFile(fileName);
+					}
+				});
+			}
+			
+			public void fileClosed(final String fileName) {
+				runOnGuiThread(new Runnable(){
+					@Override
+					public void run() {
+						try {
+							if (userSpace.existsFile(fileName)) // It is possibly deleted, and the editor is therefore closed.
+							{
+								userSpace.writeFileText(fileName, editeur.getText());
+								userSpace.storeFile(fileName);
+							}
+						}
+						catch (IOException e) {
+							DialogMessenger.getInstance().dispatchError(translate("general.error.title"),
+									translate("ws.automatic.save.failed"));
+						}
+						showCommandCard();
+						commandLine.requestFocus();
+						//commandLine.requestFocus();
+						mainFrame.setTitle(appName + " - " + uc.getUserName());
+						filesList.closeFile(fileName);
+					}
+				});
+			}
+			
+			@Override
+			public void fileAdded(final String fileName) {
+				runOnGuiThread(new Runnable(){
+					@Override
+					public void run() {
+						filesList.addFile(fileName, userSpace.isFilesListEditable(), userSpace.hasErrors(fileName));
+					}
+				});
+			}
+			
+			@Override
+			public void fileRemoved(final String fileName) {
+				runOnGuiThread(new Runnable(){
+					@Override
+					public void run() {
+						filesList.removeFile(fileName);
+					}
+				});
+			}
+			
+			@Override
+			public void fileRenamed(final String oldName, final String newName) {
+				runOnGuiThread(new Runnable(){
+					@Override
+					public void run() {
+						filesList.renameFile(oldName, newName);
+					}
+				});
+			}
+			
+			@Override
+			public void editRightsChanged(final boolean editEnabled) {
+				runOnGuiThread(new Runnable(){
+					@Override
+					public void run() {
+						filesList.setEditable(editEnabled);
+					}
+				});
+			}
+			
+		});
+		
+		userSpace.addErrorListener(new ErrorListener(){
+			@Override
+			public void errorsDetected(final String fileName) {
+				runOnGuiThread(new Runnable(){
+					@Override
+					public void run() {
+						filesList.markError(fileName, true);
+						// TODO: Think about not showing this message
+						HistoryMessenger.getInstance().dispatchError(
+								fileName + " " + translate(MessageKeys.FILE_CONTAINS_ERRORS) + "\n");
+						
+						for (String msg : userSpace.getErrorMessages(fileName))
+							HistoryMessenger.getInstance().dispatchError(msg + "\n");
+					}
+				});
+			}
+			
+			@Override
+			public void allErrorsCorrected(final String fileName) {
+				runOnGuiThread(new Runnable(){
+					@Override
+					public void run() {
+						filesList.markError(fileName, false);
+					}
+				});
+			}
+		});
+		
+		userSpace.addModeChangedListener(new ModeChangeListener(){
+			@Override
+			public void recordModeStopped() {
+				runOnGuiThread(new Runnable(){
+					@Override
+					public void run() {
+						extras.remove(stopContestMenuItem);
+						extras.add(startContestMenuItem, 0);
+						importMenuItem.setEnabled(true);
+						exportMenuItem.setEnabled(true);
+						recordTimer.stop();
+						recordTimerLabel.setText(null);
+					}
+				});
 			}
 
-			private void onNetworkModeStarted()
-			{
-				filesList.setEnabled(false);
-				extras.setEnabled(false);
+			private Timer	recordTimer;
+			
+			@Override
+			public void recordModeStarted() {
+				runOnGuiThread(new Runnable(){
+					@Override
+					public void run() {
+						extras.remove(startContestMenuItem);
+						extras.add(stopContestMenuItem, 0);
+						importMenuItem.setEnabled(false);
+						exportMenuItem.setEnabled(false);
+						recordTimer = new Timer(1000, new ActionListener(){
+							private Date	start	= Calendar.getInstance().getTime();
+							
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								
+								Date now = Calendar.getInstance().getTime();
+								
+								long diff = now.getTime() - start.getTime();
+								
+								recordTimerLabel.setText(UserConfig.getMinSec(diff));
+							}
+						});
+						recordTimer.start();
+					}
+				});
+			}
+			
+			@Override
+			public void networkModeStopped() {
+				runOnGuiThread(new Runnable(){
+					@Override
+					public void run() {
+						filesList.getComponent().setEnabled(true);
+						extras.setEnabled(true);
+					}
+				});
+			}
+			
+			@Override
+			public void networkModeStarted() {
+				runOnGuiThread(new Runnable(){
+					@Override
+					public void run() {
+						filesList.getComponent().setEnabled(false);
+						extras.setEnabled(false);
+					}
+				});
 			}
 		});
 		
 		procedureSearch.addSearchRequestListener(new ProcedureSearchRequestListener(){
-			public void requestProcedureSearch(String procedureName)
-			{
+			public void requestProcedureSearch(String procedureName) {
 				displayProcedure(procedureName);
+			}
+		});
+		
+		filesList.addEventListener(new FilesListEventListener(){
+			
+			@Override
+			public void onFileDeleteRequest(String fileName) {
+				userSpace.closeFile(fileName);
+				userSpace.removeFile(fileName);
+			}
+			
+			@Override
+			public void onFileRenameRequest(String oldName, String newName) {
+				userSpace.renameFile(oldName, newName);
+			}
+			
+			@Override
+			public void onFileCreateRequest() {
+				String newFileName = AppSettings.getInstance().translate("new.file");
+				String fileName = userSpace.makeUniqueFileName(newFileName);
+				try {
+					if (userSpace.hasTooManyEmptyFiles()) {
+						String msg = AppSettings.getInstance().translate("message.too.many.empty.files");
+						DialogMessenger.getInstance().dispatchMessage(msg);
+						return;
+					}
+					userSpace.createFile(fileName);
+					userSpace.openFile(fileName);
+					filesList.editFile(fileName);
+				}
+				catch (Exception e) {
+					String title = AppSettings.getInstance().translate("ws.error.title");
+					String msg = AppSettings.getInstance().translate("ws.error.could.not.create.logo.file");
+					DialogMessenger.getInstance().dispatchError(Logo.messages.getString(title),
+							Logo.messages.getString(msg) + "\n" + e.toString());
+				}
+			}
+			
+			@Override
+			public void onFileOpened(String fileName) {
+				userSpace.openFile(fileName);
+			}
+			
+			@Override
+			public void onFileClosed(String fileName) {
+				userSpace.closeFile(fileName);
+			}
+		});
+	
+		userSpace.addBroadcastListener(new MessageListener(){
+			
+			@Override
+			public void messageEvent(final String fileName, final String message) {
+				runOnGuiThread(new Runnable(){
+					@Override
+					public void run() {
+						filesList.setItemMessage(fileName, message);
+					}
+				});
 			}
 		});
 	}
 	
-	public void displayProcedure(String procedureName)
-	{		
-		Procedure proc = userSpace.getExecutable(procedureName);
-		if (proc != null)
-			displayProcedure(proc);
-		else
-		{	
-			HistoryMessenger.getInstance().dispatchError(
-					procedureName + " : " +
-					translate(MessageKeys.EDITOR_DISPLAY_PROC_NOT_FOUND)
-					+ "\n");
+	public static void runOnGuiThread(Runnable runnable){
+		if (SwingUtilities.isEventDispatchThread()) {
+			runnable.run();
+			return;
+		}
+		
+		try {
+			SwingUtilities.invokeAndWait(runnable);
+		}
+		catch (InterruptedException e) {
+			runOnGuiThread(runnable);
+		}
+		catch (InvocationTargetException e) {
+			e.printStackTrace();
 		}
 	}
 	
-	public void displayProcedure(Procedure proc)
-	{
+	public void displayProcedure(String procedureName) {
+		Procedure proc = userSpace.getExecutable(procedureName);
+		if (proc != null)
+			displayProcedure(proc);
+		else {
+			HistoryMessenger.getInstance().dispatchError(
+					procedureName + " : " + translate(MessageKeys.EDITOR_DISPLAY_PROC_NOT_FOUND) + "\n");
+		}
+	}
+	
+	public void displayProcedure(Procedure proc) {
 		String openFile = userSpace.getOpenFileName();
 		
-		if (openFile != null)
-		{
-			try
-			{
+		if (openFile != null) {
+			try {
 				userSpace.writeFileText(openFile, editeur.getText());
 				userSpace.storeFile(openFile);
 				userSpace.closeFile(openFile);
 			}
-			catch (IOException e){}
+			catch (IOException e) {}
 		}
 		
 		String fileName = proc.getOwnerName();
-		if (userSpace.existsFile(fileName))
-		{	
+		if (userSpace.existsFile(fileName)) {
 			userSpace.openFile(fileName);
 			editeur.displayProcedure(proc.getName());
 		}
@@ -1374,9 +1099,8 @@ public class Application extends X4SFrame
 	/**
 	 * Called by the constructor or when language has been modified
 	 */
-	public void setText()
-	{		
-	    stopButton.setToolTipText(translate("interrompre_execution"));
+	public void setText() {
+		stopButton.setToolTipText(translate("interrompre_execution"));
 		
 		// Texte interne à utiliser pour JFileChooser et JColorChooser
 		UIManager.put("FileChooser.cancelButtonText", translate("pref.cancel"));
@@ -1393,14 +1117,13 @@ public class Application extends X4SFrame
 		history.updateText();
 		jpop.setText();
 	}
-			
+	
 	// Ce qu'il se passe en validant dans la zone de texte
 	/**
 	 * When the user types "Enter" in the Command Line
 	 * @author Loic Le Coq
 	 */
-	public void commande_actionPerformed()
-	{
+	public void commande_actionPerformed() {
 		// System.out.println("commandeTotal :"+Runtime.getRuntime().totalMemory()/1024/1024+" Free "+Runtime.getRuntime().freeMemory()/1024/1024);
 		// Si une parenthese était sélectionnée, on désactive la
 		// décoloration
@@ -1409,10 +1132,8 @@ public class Application extends X4SFrame
 		if (stop)
 			stop = false;
 		String texte = commandLine.getText();
-		if (!texte.equals("") && commandLine.isEditable())
-		{
-			if (touche.tape)
-			{
+		if (!texte.equals("") && commandLine.isEditable()) {
+			if (touche.tape) {
 				touche.tape = false;
 				pile_historique.pop();
 			}
@@ -1429,22 +1150,19 @@ public class Application extends X4SFrame
 			int a = texte.indexOf("#");
 			
 			// LogoParser lp=new LogoParser(texte);
-			while (a != -1)
-			{
-				if (a == 0)
-				{
+			while (a != -1) {
+				if (a == 0) {
 					texte = "";
 					break;
 				}
-				else if (!texte.substring(a - 1, a).equals("\\"))
-				{
+				else if (!texte.substring(a - 1, a).equals("\\")) {
 					texte = texte.substring(0, a);
 					break;
 				}
 				a = texte.indexOf("#", a + 1);
 			}
 			
-			if(userSpace.isRecordMode())
+			if (userSpace.isRecordMode())
 				recordCommandLine(texte);
 			
 			Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
@@ -1452,8 +1170,7 @@ public class Application extends X4SFrame
 			
 			// On efface la ligne de commande
 			SwingUtilities.invokeLater(new Runnable(){
-				public void run()
-				{
+				public void run() {
 					commandLine.setText("");
 				}
 			});
@@ -1465,28 +1182,24 @@ public class Application extends X4SFrame
 	 * @author Marko Zivkovic
 	 * @param text
 	 */
-	public void recordCommandLine(final String text)
-	{
+	public void recordCommandLine(final String text) {
 		new Thread(new Runnable(){
 			
 			@Override
-			public void run()
-			{
+			public void run() {
 				PrintWriter out = null;
 				File logoFile = uc.getCommandLineContestFile();
 				String line = UserConfig.getTimeStamp() + " : " + text;
-				try
-				{
+				try {
 					out = new PrintWriter(new BufferedWriter(new FileWriter(logoFile, true)));
 					out.println(line);
-				}catch(Exception e)
-				{
-					DialogMessenger.getInstance().dispatchMessage(
-							translate("contest.error.title"),
+				}
+				catch (Exception e) {
+					DialogMessenger.getInstance().dispatchMessage(translate("contest.error.title"),
 							translate("contest.could.not.store") + "\n" + e.toString());
-				}finally
-				{
-					if(out != null)
+				}
+				finally {
+					if (out != null)
 						out.close();
 				}
 			}
@@ -1501,8 +1214,7 @@ public class Application extends X4SFrame
 	 * @author Loic Le Coq
 	 * @author Marko Zivkovic - renamed (it was affichage_Start)
 	 */
-	public void startInterpretation(StringBuffer st)
-	{
+	public void startInterpretation(StringBuffer st) {
 		affichage = new Affichage(this, st);
 		affichage.start();
 	}
@@ -1512,35 +1224,29 @@ public class Application extends X4SFrame
 	 * 
 	 * @return The Sound Player
 	 */
-	public Sound_Player getSon()
-	{
+	public Sound_Player getSon() {
 		return son;
 	}
-			
+	
 	/**
 	 * Resize the dawing area
 	 */
-	public void resizeDrawingZone()
-	{
-		if (null != affichage)
-		{
+	public void resizeDrawingZone() {
+		if (null != affichage) {
 			affichage.setPause(true);
 		}
 		// resize the drawing image
 		SwingUtilities.invokeLater(new Runnable(){
-			public void run()
-			{				
+			public void run() {
 				DrawPanel.dessin = new BufferedImage(uc.getImageWidth(), uc.getImageHeight(),
 						BufferedImage.TYPE_INT_RGB);
 				// System.out.println("Total :"+Runtime.getRuntime().totalMemory()/1024+" max "+Runtime.getRuntime().maxMemory()/1024+" Free "+Runtime.getRuntime().freeMemory()/1024);
 				MediaTracker tracker = new MediaTracker(drawPanel);
 				tracker.addImage(DrawPanel.dessin, 0);
-				try
-				{
+				try {
 					tracker.waitForID(0);
 				}
-				catch (InterruptedException e)
-				{}
+				catch (InterruptedException e) {}
 				// ardoise1.getGraphics().drawImage(Ardoise.dessin,0,0,ardoise1);
 				
 				drawPanel.setPreferredSize(new Dimension(uc.getImageWidth(), uc.getImageHeight()));
@@ -1550,8 +1256,7 @@ public class Application extends X4SFrame
 				//calculateMargin(); TODOD maybe return this
 				
 				Dimension d = scrollArea.getViewport().getViewRect().getSize();
-				Point p = new Point(
-						Math.abs((uc.getImageWidth() - d.width) / 2),
+				Point p = new Point(Math.abs((uc.getImageWidth() - d.width) / 2),
 						Math.abs((uc.getImageHeight() - d.height) / 2));
 				scrollArea.getViewport().setViewPosition(p);
 				if (null != affichage)
@@ -1561,22 +1266,20 @@ public class Application extends X4SFrame
 		});
 		
 	}
-					
+	
 	/**
 	 * Return the drawing area
 	 * 
 	 * @return The drawing area
 	 */
-	public DrawPanel getDrawPanel()
-	{
+	public DrawPanel getDrawPanel() {
 		return drawPanel;
 	}
-		
+	
 	/**
 	 * Set Focus on the command line
 	 */
-	public void focus_Commande()
-	{
+	public void focus_Commande() {
 		commandLine.requestFocus();
 		commandLine.getCaret().setVisible(true);
 	}
@@ -1586,8 +1289,7 @@ public class Application extends X4SFrame
 	 * 
 	 * @return true if Command Line is editable, false otherwise
 	 */
-	public boolean commande_isEditable()
-	{
+	public boolean commande_isEditable() {
 		return commandLine.isEditable();
 	}
 	
@@ -1597,8 +1299,7 @@ public class Application extends X4SFrame
 	 * @param txt
 	 *            The text to write
 	 */
-	public void setCommandText(String txt)
-	{
+	public void setCommandText(String txt) {
 		commandLine.setText(txt);
 	}
 	
@@ -1607,28 +1308,22 @@ public class Application extends X4SFrame
 	 * 
 	 * @return The HistoryPanel
 	 */
-	public HistoryPanel getHistoryPanel()
-	{
+	public HistoryPanel getHistoryPanel() {
 		return history;
 	}
 	
 	/**
 	 * Enable or disable the command line and the play button
 	 */
-	public void setCommandLine(boolean b)
-	{
-		if (b)
-		{
-			if (SwingUtilities.isEventDispatchThread())
-			{
+	public void setCommandLine(boolean b) {
+		if (b) {
+			if (SwingUtilities.isEventDispatchThread()) {
 				commandLine.setEditable(true);
 				commandLine.setBackground(Color.WHITE);
 			}
-			else
-			{
+			else {
 				SwingUtilities.invokeLater(new Runnable(){
-					public void run()
-					{
+					public void run() {
 						commandLine.setEditable(true);
 						// commande.requestFocus();
 						commandLine.setBackground(Color.WHITE);
@@ -1636,8 +1331,7 @@ public class Application extends X4SFrame
 				});
 			}
 		}
-		else
-		{
+		else {
 			commandLine.setEditable(false);
 			commandLine.setBackground(new Color(250, 232, 217));
 		}
@@ -1646,32 +1340,28 @@ public class Application extends X4SFrame
 	/**
 	 * This method copy the selected Text in the command line
 	 */
-	protected void copy()
-	{
+	protected void copy() {
 		commandLine.copy();
 	}
 	
 	/**
 	 * This methos cut the selected Text in the command line
 	 */
-	protected void cut()
-	{
+	protected void cut() {
 		commandLine.cut();
 	}
 	
 	/**
 	 * This methos paste the selected Text into the command line
 	 */
-	protected void paste()
-	{
+	protected void paste() {
 		commandLine.paste();
 	}
 	
 	/**
 	 * This methos selects all the Text in the command line
 	 */
-	protected void select_all()
-	{
+	protected void select_all() {
 		commandLine.selectAll();
 	}
 	
@@ -1682,8 +1372,7 @@ public class Application extends X4SFrame
 	 * 
 	 * @author Marko Zivkovic
 	 */
-	protected void genere_primitive()
-	{
+	protected void genere_primitive() {
 		kernel.initPrimitive();
 	}
 	
@@ -1693,8 +1382,7 @@ public class Application extends X4SFrame
 	 * @param i
 	 *            The key code
 	 */
-	public void setCar(int i)
-	{
+	public void setCar(int i) {
 		touche.setCar(i);
 	}
 	
@@ -1703,18 +1391,16 @@ public class Application extends X4SFrame
 	 * 
 	 * @return the int representing the last key pressed
 	 */
-	public int getCar()
-	{
+	public int getCar() {
 		return touche.getCar();
 	}
-			
+	
 	/**
 	 * This boolean indicates if the viewer3D is visible
 	 * 
 	 * @return true or false
 	 */
-	public boolean viewer3DVisible()
-	{
+	public boolean viewer3DVisible() {
 		if (null != viewer3d)
 			return viewer3d.isVisible();
 		return false;
@@ -1723,31 +1409,25 @@ public class Application extends X4SFrame
 	/**
 	 * Initialize the 3D Viewer
 	 */
-	public void initViewer3D()
-	{
-		if (null == viewer3d)
-		{
+	public void initViewer3D() {
+		if (null == viewer3d) {
 			viewer3d = new Viewer3D(drawPanel.getWorld3D(), drawPanel.getBackgroundColor());
 		}
 		
 	}
 	
-	public Viewer3D getViewer3D()
-	{
+	public Viewer3D getViewer3D() {
 		return viewer3d;
 	}
 	
 	/**
 	 * Open the Viewer3D Frame
 	 */
-	public void viewerOpen()
-	{
-		if (null == viewer3d)
-		{
+	public void viewerOpen() {
+		if (null == viewer3d) {
 			viewer3d = new Viewer3D(drawPanel.getWorld3D(), drawPanel.getBackgroundColor());
 		}
-		else
-		{
+		else {
 			viewer3d.setVisible(false);
 		}
 		viewer3d.insertBranch();
@@ -1760,45 +1440,36 @@ public class Application extends X4SFrame
 	 * 
 	 * @return The Kernel Object associated to main frame
 	 */
-	public Kernel getKernel()
-	{
+	public Kernel getKernel() {
 		return kernel;
 	}
-			
+	
 	/**
 	 * 
 	 * @author loic This class is the Controller for the Command Line<br>
 	 *         It looks for key event, Upper and Lower Arrow for History<br>
 	 *         And all other Characters
 	 */
-	class Touche extends KeyAdapter
-	{
+	class Touche extends KeyAdapter {
 		int				car		= -1;
 		
 		private boolean	tape	= false;
 		
-		public void setCar(int i)
-		{
+		public void setCar(int i) {
 			car = i;
 		}
 		
-		public int getCar()
-		{
+		public int getCar() {
 			return car;
 		}
 		
-		public void keyPressed(KeyEvent e)
-		{
+		public void keyPressed(KeyEvent e) {
 			int ch = e.getKeyChar();
 			int code = e.getKeyCode();
-			if (commandLine.isEditable())
-			{
-				if (code == KeyEvent.VK_UP)
-				{
-					if (index_historique > 0)
-					{
-						if (index_historique == pile_historique.size())
-						{
+			if (commandLine.isEditable()) {
+				if (code == KeyEvent.VK_UP) {
+					if (index_historique > 0) {
+						if (index_historique == pile_historique.size()) {
 							tape = true;
 							pile_historique.push(commandLine.getText());
 						}
@@ -1808,10 +1479,8 @@ public class Application extends X4SFrame
 					else
 						index_historique = 0;
 				}
-				else if (code == KeyEvent.VK_DOWN)
-				{
-					if (index_historique < pile_historique.size() - 1)
-					{
+				else if (code == KeyEvent.VK_DOWN) {
+					if (index_historique < pile_historique.size() - 1) {
 						index_historique++;
 						commandLine.setText(pile_historique.get(index_historique));
 					}
@@ -1819,8 +1488,7 @@ public class Application extends X4SFrame
 						index_historique = pile_historique.size() - 1;
 				}
 			}
-			else
-			{
+			else {
 				if (ch != 65535)
 					car = ch;
 				else
