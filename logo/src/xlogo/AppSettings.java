@@ -60,6 +60,9 @@ public class AppSettings
 	 */
 	public String translate(String key)
 	{
+		if (Logo.messages == null) {
+			Logo.generateLanguage(Language.LANGUAGE_ENGLISH); // TODO this is a temporary bug fix
+		}
 		return Logo.messages.getString(key);
 	}
 	
