@@ -33,6 +33,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -574,9 +575,17 @@ public class GlobalConfig extends StorableObject implements Serializable {
 	 * */
 	
 	public boolean isUSBDrive(String workspaceName) {
-		for (USBStorageDevice device : driveDetector.getRemovableDevices()) {
-			if (workspaceName.equals(device.getSystemDisplayName())) { return true; }
+		List<USBStorageDevice> devices = driveDetector.getRemovableDevices();
+		logger.trace("Is '" + workspaceName + "' on a USB Drive?");
+		for (USBStorageDevice device : devices) {
+			if (workspaceName.equals(device.getSystemDisplayName())) { 
+				logger.trace("\t = Yes, corresponding USB Device found.");
+				return true; 
+			} else {
+				logger.trace("\t Does not corresponding to " + device.getSystemDisplayName());
+			}
 		}
+		logger.trace("\t = No, could not find corresponding USB Drive.");
 		return false;
 	}
 	

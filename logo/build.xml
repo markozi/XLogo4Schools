@@ -35,7 +35,7 @@
 
 	<!-- Version for this Build -->
 	
-	<property name="version" value="0.9.04beta-2014-12-16"/>
+	<property name="version" value="0.9.05beta-2014-12-22"/>
 	
     <!-- ================================= 
          default target: deploy              
