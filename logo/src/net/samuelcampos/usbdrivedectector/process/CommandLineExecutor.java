@@ -12,6 +12,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ * 
+ * Changed by Marko Zivkovic: Introduced ThreadLocal variable for input.
+ * Access is now thread safe, working on each thread individually (and thus requires to call all methods on each thread separately)
  */
 package net.samuelcampos.usbdrivedectector.process;
 
@@ -32,7 +35,7 @@ public class CommandLineExecutor implements Closeable {
     private static final Logger logger = LogManager.getLogger(CommandLineExecutor.class);
 
     private Process process = null;
-    private BufferedReader input = null;
+    private final ThreadLocal<BufferedReader> input = new ThreadLocal<BufferedReader>();
 
     public void executeCommand(String command) throws IOException {
         if (logger.isTraceEnabled()) {
@@ -41,14 +44,14 @@ public class CommandLineExecutor implements Closeable {
         
         process = Runtime.getRuntime().exec(command);
 
-        input = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        input.set(new BufferedReader(new InputStreamReader(process.getInputStream())));
     }
     
     public String readOutputLine() throws IOException {
         if(input == null)
             throw new IllegalStateException("You need to call 'executeCommand' method first");
         
-         String outputLine = input.readLine();
+         String outputLine = input.get().readLine();
          
          if(outputLine != null)
             return outputLine.trim();
@@ -60,7 +63,7 @@ public class CommandLineExecutor implements Closeable {
     public void close() throws IOException {
         if (input != null) {
             try {
-                input.close();
+                input.get().close();
             } catch (IOException e) {
                 logger.error(e.getMessage(), e);
             }
@@ -70,7 +73,7 @@ public class CommandLineExecutor implements Closeable {
             process.destroy();
         }
 
-        input = null;
+        input.set(null);
         process = null;
     }
 
