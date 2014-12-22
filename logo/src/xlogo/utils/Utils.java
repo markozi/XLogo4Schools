@@ -316,6 +316,7 @@ public class Utils {
               	sb.append("\n");
               }
               txt=new String(sb);
+              brd.close();
            }
            catch(FileNotFoundException e1){
              // tentative fichier réseau 
