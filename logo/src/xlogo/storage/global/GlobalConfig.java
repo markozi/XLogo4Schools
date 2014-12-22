@@ -63,7 +63,7 @@ public class GlobalConfig extends StorableObject implements Serializable {
 	private static Logger		logger				= LogManager.getLogger(GlobalConfig.class.getSimpleName());
 	
 	public static final String	LOGO_FILE_EXTENSION	= ".lgo";
-	public static boolean		DEBUG				= true;													// TODO set false
+	public static boolean		DEBUG				= true;	// TODO set false
 																												
 	/**
 	 * Creates the global config at default location, together with a virtual workspace
@@ -75,7 +75,7 @@ public class GlobalConfig extends StorableObject implements Serializable {
 		catch (IllegalArgumentException ignore) {} // This is thrown if name illegal, but it is legal
 		workspaces = new TreeMap<String, String>();
 		workspaces.put(WorkspaceConfig.VIRTUAL_WORKSPACE, "");
-		workspaces.put(WorkspaceConfig.USER_DEFAULT_WORKSPACE, WorkspaceConfig.getDefaultWorkspaceDirectory().getAbsolutePath());
+		workspaces.put(WorkspaceConfig.USER_DEFAULT_WORKSPACE, getDefaultLocation().getAbsolutePath());
 	}
 	
 	/**
@@ -150,7 +150,7 @@ public class GlobalConfig extends StorableObject implements Serializable {
 		if(!existingWorkspaces.containsKey(WorkspaceConfig.USER_DEFAULT_WORKSPACE)){
 			// This might be the case if the GlobalConfig version stored on the disk comes from a version
 			// that did not contain a default workspace
-			existingWorkspaces.put(WorkspaceConfig.USER_DEFAULT_WORKSPACE, WorkspaceConfig.getDefaultWorkspaceLocation().getAbsolutePath());
+			existingWorkspaces.put(WorkspaceConfig.USER_DEFAULT_WORKSPACE, getDefaultLocation().getAbsolutePath());
 		}
 		
 		if (lostWorkspaces.size() > 0) {
@@ -202,7 +202,7 @@ public class GlobalConfig extends StorableObject implements Serializable {
 	 * @throws IOException
 	 */
 	private WorkspaceConfig retrieveWorkspace(String workspaceName) throws IOException {
-		WorkspaceConfig wsc = getLoadedWorkspace(workspaceName);
+		WorkspaceConfig wsc = getCachedWorkspace(workspaceName);
 		if (wsc != null) {
 			logger.trace("Retrieving cached workspace: " + workspaceName);
 			return wsc;
@@ -238,9 +238,10 @@ public class GlobalConfig extends StorableObject implements Serializable {
 	}
 	
 	private WorkspaceConfig getDefaultWorkspace() throws IOException{
+		logger.trace("Get Default Workspace");
 		File wsDir = WorkspaceConfig.getDefaultWorkspaceDirectory();
 		File wsFile = getFile(wsDir, WorkspaceConfig.class);
-		File wsLocation = WorkspaceConfig.getDefaultWorkspaceLocation();
+		File wsLocation = getDefaultLocation();
 		WorkspaceConfig wsc = null;
 		if (wsFile.exists()) {
 			wsc = WorkspaceConfig.loadWorkspace(wsLocation, WorkspaceConfig.USER_DEFAULT_WORKSPACE);
@@ -261,7 +262,7 @@ public class GlobalConfig extends StorableObject implements Serializable {
 	 */
 	private transient Map<String, WorkspaceConfig>	cachedWorkspaces;
 	
-	private WorkspaceConfig getLoadedWorkspace(String workspaceName) {
+	private WorkspaceConfig getCachedWorkspace(String workspaceName) {
 		if (cachedWorkspaces == null) {
 			cachedWorkspaces = new TreeMap<String, WorkspaceConfig>();
 		}
@@ -293,6 +294,10 @@ public class GlobalConfig extends StorableObject implements Serializable {
 		notifyWorkspaceListChanged();
 		setLastUsedWorkspace(workspaceName);
 		enterInitialWorkspace();
+	}
+	
+	public void addWorkspace(String workspaceName, File location) {
+		addWorkspace(workspaceName, location.getAbsolutePath());
 	}
 	
 	public void removeWorkspace(String workspaceName) {
