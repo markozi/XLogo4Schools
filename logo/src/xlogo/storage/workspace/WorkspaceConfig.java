@@ -629,6 +629,8 @@ public class WorkspaceConfig extends StorableObject implements Serializable {
 	}
 	
 	public Language getLanguage() {
+		if (language == null)
+			return Language.LANGUAGE_ENGLISH;
 		return language;
 	}
 	
