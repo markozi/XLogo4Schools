@@ -70,7 +70,7 @@ public class UserConfig implements Serializable, Observable<UserConfig.UserPrope
 	 * @see #isVirtual()
 	 * @see #createVirtualUser()
 	 */
-	public static final String	DEFAULT_USER				= "Default User";
+	public static final String	DEFAULT_USER				= System.getProperty("user.name");
 	public static final File DEFAULT_LOCATION = WorkspaceConfig.DEFAULT_DIRECTORY;
 	public static final File DEFAULT_DIRECTORY = new File(DEFAULT_LOCATION + File.separator + DEFAULT_USER);
 	
