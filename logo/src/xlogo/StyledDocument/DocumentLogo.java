@@ -36,6 +36,7 @@ import javax.swing.text.*;
 
 import xlogo.kernel.Primitive;
 import xlogo.storage.WSManager;
+import xlogo.storage.workspace.SyntaxHighlightConfig;
 import xlogo.storage.workspace.WorkspaceConfig;
 
 /**
@@ -60,7 +61,7 @@ public class DocumentLogo extends DefaultStyledDocument {
 	private MutableAttributeSet keyword;
 	private MutableAttributeSet comment;
 	private MutableAttributeSet quote;
-	private boolean coloration_activee = WSManager.getWorkspaceConfig().isSyntaxHighlightingEnabled();
+	private boolean coloration_activee = true;
 	private boolean colore_parenthese = false;
 
 	public void setColoration(boolean b) {
@@ -68,21 +69,35 @@ public class DocumentLogo extends DefaultStyledDocument {
 	}
 
 	public DocumentLogo() {
-		WorkspaceConfig uc = WSManager.getWorkspaceConfig();
+		WorkspaceConfig wc = WSManager.getWorkspaceConfig();
 
 		doc = this;
 		rootElement = doc.getDefaultRootElement();
 		putProperty(DefaultEditorKit.EndOfLineStringProperty, "\n");
-		initStyles(uc.getCommentColor(), uc.getCommentStyle(),
-				uc.getPrimitiveColor(), uc.getPrimitiveStyle(),
-				uc.getBraceColor(), uc.getBraceStyle(),
-				uc.getOperatorColor(), uc.getOperatorStyle());
+		
+		SyntaxHighlightConfig syntaxHighlight = new SyntaxHighlightConfig();
+		if (wc != null){
+			coloration_activee = wc.isSyntaxHighlightingEnabled();
+			syntaxHighlight = wc.getSyntaxHighlightStyles();
+		}
+		
+		initStyles(syntaxHighlight.getCommentColor(), syntaxHighlight.getCommentStyle(),
+				syntaxHighlight.getPrimitiveColor(), syntaxHighlight.getPrimitiveStyle(),
+				syntaxHighlight.getBraceColor(), syntaxHighlight.getBraceStyle(),
+				syntaxHighlight.getOperandColor(), syntaxHighlight.getOperandStyle());
 	}
 
 	public void initStyles(int c_comment, int sty_comment, int c_primitive,
 			int sty_primitive, int c_parenthese, int sty_parenthese,
 			int c_operande, int sty_operande) {
-		Font font = WSManager.getWorkspaceConfig().getFont();
+		WorkspaceConfig wc = WSManager.getWorkspaceConfig();
+		Font font;
+		if (wc != null){
+			font = WSManager.getWorkspaceConfig().getFont();
+		} else {
+			font = WorkspaceConfig.DEFAULT_FONT;
+		}
+		 
 
 		normal = new SimpleAttributeSet();
 		StyleConstants.setFontFamily(normal, font.getFamily());

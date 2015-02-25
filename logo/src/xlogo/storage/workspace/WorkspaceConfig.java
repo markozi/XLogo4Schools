@@ -38,15 +38,13 @@ import java.util.TreeMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import xlogo.AppSettings;
-import xlogo.Logo;
-import xlogo.messages.MessageKeys;
-import xlogo.messages.async.dialog.DialogMessenger;
-import xlogo.storage.Storable;
+import xlogo.interfaces.Observable;
+import xlogo.interfaces.PropertyChangePublisher;
 import xlogo.storage.StorableObject;
 import xlogo.storage.WSManager;
 import xlogo.storage.global.GlobalConfig;
 import xlogo.storage.user.UserConfig;
+import xlogo.storage.user.UserConfig.UserProperty;
 
 /**
  * WorkspaceConfig maintains a workspace (i.e. a "class room") that consists of several projects or "Users".
@@ -63,304 +61,190 @@ import xlogo.storage.user.UserConfig;
  * If a user is deleted, it is deleted only logically, so it can be reintegrated later again.
  * @author Marko Zivkovic
  */
-public class WorkspaceConfig extends StorableObject implements Serializable {
+public class WorkspaceConfig implements Serializable, Observable<WorkspaceConfig.WorkspaceProperty> {
 	
 	private static final long	serialVersionUID		= -3554871695113998509L;
 	
-	/**
-	 * Name of the virtual workspace
+	/*
+	 * Constants
 	 */
-	public static final String	VIRTUAL_WORKSPACE		= "Guest Workspace (no automatic save)";
+	
 	public static final String	USB_DEFAULT_WORKSPACE	= "XLogo4Schools";
 	public static final String	USER_DEFAULT_WORKSPACE	= "XLogo4Schools-Workspace";
-	public static final int		MAX_EMPTY_FILES			= 4;
+	public static final int			MAX_EMPTY_FILES		= 4;
+	
+	public static final File DEFAULT_LOCATION = GlobalConfig.DEFAULT_LOCATION;
+	public static final File DEFAULT_DIRECTORY = new File(DEFAULT_LOCATION + File.separator + USER_DEFAULT_WORKSPACE);
+	
+	public static final Font DEFAULT_FONT = new Font("dialog", Font.PLAIN, 14);
 	
 	private static Logger		logger					= LogManager.getLogger(WorkspaceConfig.class.getSimpleName());
 	
-	public static File getDefaultWorkspaceDirectory(){
-		File location = GlobalConfig.getDefaultLocation();
-		return getDirectory(location, USER_DEFAULT_WORKSPACE);
-	}
-	
-	public static File getDefaultWorkspaceLocation(){
-		return GlobalConfig.getDefaultLocation();
-	}
-	
-	public static boolean isSpecialWorkspace(String workspaceName, String location) {
-		return isVirtualWorkspace(workspaceName) || isDefaultWorkspace(workspaceName, location);
-	}
-	
-	public static boolean isSpecialWorkspace(String workspaceName, File location) {
-		return isVirtualWorkspace(workspaceName) || isDefaultWorkspace(workspaceName, location);
-	}
-	
-	public static boolean isVirtualWorkspace(String workspaceName) {
-		return VIRTUAL_WORKSPACE.equals(workspaceName);
-	}
-	
-	public static boolean isDefaultWorkspace(String workspaceName, String location) {
-		return isDefaultWorkspace(workspaceName, new File(location));
-	}
-	
-	public static boolean isDefaultWorkspace(String workspaceName, File location) {
-		return workspaceName.equals(USER_DEFAULT_WORKSPACE) && 
-				location.equals(getDefaultWorkspaceLocation());
-	}
-	
-	protected WorkspaceConfig() {
-		super();
-		userList = new ArrayList<String>();
-		language = Language.LANGUAGE_ENGLISH;
-		font = new Font("dialog", Font.PLAIN, 14); // TODO on access check if it is null.
-		// TODO what if incompatible?
-		AppSettings.getInstance().setFont(font);
-		syntaxHighlightingStyles = new SyntaxHighlightConfig();
-	}
-	
-	/**
-	 * @return
-	 * @throws IllegalStateException if this is not virtual and {@link #getLocation()} returns null
+	/*
+	 * Transient Fields
 	 */
-	public String getWorkspaceName() throws IllegalStateException {
-		if (isVirtual())
-			return VIRTUAL_WORKSPACE;
-		
-		File wsDir = getLocation();
+	
+	private transient File wsDir;
+	
+	public File getDirectory() {
+		return wsDir;
+	}
+
+	public void setDirectory(File wsDir) {
+		this.wsDir = wsDir;
+	}
+	
+	public String getWorkspaceName(){
+		File wsDir = getDirectory();
 		if (wsDir == null)
 			throw new IllegalStateException("Name is not available because location is null.");
 		return wsDir.getName();
 	}
 	
 	/*
-	 * Static constructors
+	 * Persistent Fields
 	 */
-	private static WorkspaceConfig	virtualWS;
 	
-	/**
-	 * A virtual user can enter the application in a virtual workspace without having an actual user account on the file system. Hence nothing will be stored.
-	 * A regular user (not virtual) will have his own folder in a regular workspace on the file system and all his preferences and files are stored there.
-	 * To create a regular workspace, use {@link #createNewWorkspace(File, String)},
-	 * to load a regular workspace from the file system, use {@link #loadWorkspace(File)}}.
-	 * @see #isVirtual()
-	 * @return a virtual workspace
+	private ArrayList<String>		userList			= new ArrayList<String>();
+	private String					lastActiveUser;
+	private NumberOfBackups			numberOfBackups		= NumberOfBackups.INFINITE;
+	private Language				language;
+	private boolean					allowUserCreation	= true;
+	private ContestConfig			contestSettings; // Contest //TODO create options in workspace settings
+	private SyntaxHighlightConfig	syntaxHighlightingStyles;	// TODO = new SyntaxHighlightStyles();
+	private Font					font; // This font is the default font for all menus ... in XLogo Application
+					
+	/*
+	 * Constructor
 	 */
-	public static WorkspaceConfig createVirtualWorkspace() {
-		logger.trace("Creating virtual workspace.");
-		if (virtualWS == null) {
-			virtualWS = new WorkspaceConfig();
-			virtualWS.makeVirtual();
-		}
-		return virtualWS;
-	}
 	
-	@Override
-	protected void makeVirtual() {
-		super.makeVirtual();
+	public WorkspaceConfig() {
+		super();
 		userList = new ArrayList<String>();
-		userList.add(UserConfig.VIRTUAL_USER);
-		lastActiveUser = UserConfig.VIRTUAL_USER;
-		try {
-			enterUserSpace(UserConfig.VIRTUAL_USER);
-		}
-		catch (IOException e) { /* Does not happen */}
 	}
 	
-	private static WorkspaceConfig createWorkspace(File dir, String workspaceName) throws IOException {
-		if (!Storable.checkLegalName(workspaceName)) {
-			DialogMessenger.getInstance().dispatchError(Logo.messages.getString(MessageKeys.NAME_ERROR_TITLE),
-					Logo.messages.getString(MessageKeys.ILLEGAL_NAME));
+		
+	public File getUserDirectroy(String username) {
+		if (!existsUserLogically(username))
 			return null;
+		
+		return StorableObject.getDirectory(getDirectory(), username);
+	}
+			
+	/**
+	 * Produces a list of user names by reading the contents of the current workspace directory.
+	 * The users in this list may contain users that have been deleted logically before.
+	 * @return
+	 */
+	public ArrayList<String> getPhysicalUserList() {
+		
+		ArrayList<String> users = new ArrayList<String>();
+		
+		for (File dir : WSManager.listDirectories(getDirectory())) {
+			if (WSManager.isUserDirectory(dir)) {
+				users.add(dir.getName());
+			}
+		}
+		return users;
+	}
+		
+	/*
+	 * active user
+	 */
+	
+	private transient StorableObject<UserConfig, UserProperty>	activeUser;
+	
+	public StorableObject<UserConfig, UserProperty> getActiveUser() {
+		return activeUser;
+	}
+	
+	public void enterInitialUserSpace() throws IOException{
+		String user = getLastActiveUser();
+		if (user != null && userList.contains(user)){
+			enterUserSpace(user);
+		}
+	}
+	
+	/**
+	 * @throws IOException If the old userConfig could not be stored. 
+	 */
+	public void enterUserSpace(String username) throws IOException {
+		enterUserSpace(retrieveUserSpace(username));
+	}
+	
+	public void enterUserSpace(StorableObject<UserConfig, UserProperty> userConfig) throws IOException {
+		if(userConfig == activeUser){
+			return;
 		}
 		
-		File wsd = getDirectory(dir, workspaceName);
-		WorkspaceConfig wsc = new WorkspaceConfig();
-		wsc.setLocation(wsd);
-		return wsc;
-	}
-	
-	/**
-	 * @param dir
-	 * @param workspaceName
-	 * @return
-	 * @throws IOException
-	 */
-	public static WorkspaceConfig createNewWorkspace(File dir, String workspaceName) throws IOException {
-		logger.trace("Creating workspace " + workspaceName + " at " + dir.getAbsolutePath());
-		WorkspaceConfig wsc = createWorkspace(dir, workspaceName);
-		wsc.store();
-		return wsc;
-	}
-	
-	/**
-	 * Physically storing this workspace is deferred until explicitly disabled.
-	 * This is used to temporarily make the USB Workspace and the Default Workspace available, but only store it when {@link #store()} is called the next time.
-	 * @param dir
-	 * @return
-	 * @throws IOException
-	 */
-	public static WorkspaceConfig createDeferredWorkspace(File dir, String workspaceName) throws IOException {
-		logger.trace("Creating deferred workspace " + workspaceName + " at " + dir.getAbsolutePath());
-		WorkspaceConfig wsc = createWorkspace(dir, workspaceName);
-		wsc.setStoringDeferred(true);
-		return wsc;
-	}
-	
-	private transient boolean	isStoringDeferred	= false;
-	
-	public void setStoringDeferred(boolean val) {
-		this.isStoringDeferred = val;
-	}
-	
-	@Override
-	protected void makeDirty(){
-		super.makeDirty();
-		setStoringDeferred(false);
-	}
-	
-	@Override
-	public void store() throws IOException {
-		if (!isStoringDeferred) {
-			super.store();
+		if (activeUser != null) {
+			leaveUserSpace();
 		}
-		else {
-			isStoringDeferred = false;
-		}
-	}
-	
-	/**
-	 * @see #loadWorkspace(File)
-	 * @param dir - location of the workspace
-	 * @param workspaceName
-	 * @return
-	 * @throws IOException
-	 */
-	public static WorkspaceConfig loadWorkspace(File dir, String workspaceName) throws IOException {
-		File wsc = getDirectory(dir, workspaceName);
-		return loadWorkspace(wsc);
-	}
-	
-	/**
-	 * @param workspaceDir
-	 * @return Load an existing workspace from the file system.
-	 * If workspaceDir specifies a {@link WorkspaceConfig#VIRTUAL_WORKSPACE}, the virtual workspace is returned instead.
-	 * @throws IOException
-	 */
-	public static WorkspaceConfig loadWorkspace(File workspaceDir) throws IOException {
-		logger.trace("Loading workspace from " + workspaceDir.getAbsolutePath());
-		if (workspaceDir.getName().equals(WorkspaceConfig.VIRTUAL_WORKSPACE)) { return createVirtualWorkspace(); }
+		logger.trace("Entering user space: " + userConfig.get().getUserName());
 		
-		File wsf = getFile(workspaceDir, WorkspaceConfig.class);
+		activeUser = userConfig;
+		setLastActiveUser(userConfig.get().getUserName());
+	}
+	
+	/**
+	 * @throws IOException If userConfig could not be stored. 
+	 */
+	public void leaveUserSpace() throws IOException {
+		logger.trace("Leaving user space: " + activeUser.get().getUserName());
+		if (activeUser.isDirty())
+			activeUser.store();
+		activeUser = null;
+	}
+	
+	
+	protected StorableObject<UserConfig, UserProperty> retrieveUserSpace(String username){
+		StorableObject<UserConfig, UserProperty> uc = getCachedUserSpace(username);
+		if (uc == null && getDirectory() != null){
+			uc = WSManager.getUser(getDirectory(), username);
+			cacheUserSpace(username, uc);
+		}
 		
-		WorkspaceConfig wsc;
-		try {
-			wsc = (WorkspaceConfig) WorkspaceConfig.loadObject(wsf);
-			wsc.setLocation(workspaceDir);
-			return wsc;
+		return uc;
+	}
+	
+	/**
+	 * User Cache
+	 * 
+	 * UserConfigs that have already been created or loaded from disk.
+	 */
+	private transient Map<String, StorableObject<UserConfig, UserProperty>> cachedUserSpaces;
+	
+	private StorableObject<UserConfig, UserProperty> getCachedUserSpace(String username) {
+		if (cachedUserSpaces == null){
+			cachedUserSpaces= new TreeMap<String, StorableObject<UserConfig, UserProperty>>();
 		}
-		catch (ClassNotFoundException e) {
-			return null;
+		return cachedUserSpaces.get(username);
+	}
+	
+	private void cacheUserSpace(String username, StorableObject<UserConfig, UserProperty> wsc){
+		if (cachedUserSpaces == null){
+			cachedUserSpaces= new TreeMap<String, StorableObject<UserConfig, UserProperty>>();
 		}
+		cachedUserSpaces.put(username, wsc);
 	}
 	
 	/*
 	 * User list
 	 */
-	
-	/**
-	 * @see #getUserList()
-	 */
-	private ArrayList<String>	userList;
-	
-	/**
-	 * The names of the logical users in the workspace
-	 * @return
-	 */
-	public String[] getUserList() {
-		String[] users = new String[userList.size()];
-		return userList.toArray(users);
-	}
-	
-	public File getUserDirectroy(String username) {
-		if (!existsUserLogically(username) || isVirtual())
-			return null;
-		
-		return getDirectory(getLocation(), username);
-	}
-	
-	/**
-	 * Create new user directory and UserConfig file in this workspace on the file system, and add it logically to the userList.
-	 * If either existed, only the non-existing parts are created.
-	 * To create a user in a virtual workspace will have no effect, but an error message is printed.
-	 * <p> Has no effect if this is virtual.
-	 * @param username
-	 */
-	public void createUser(String username) {
-		logger.trace("Creating user: " + username);
-		if (!Storable.checkLegalName(username)) {
-			DialogMessenger.getInstance().dispatchError(Logo.messages.getString(MessageKeys.NAME_ERROR_TITLE),
-					Logo.messages.getString(MessageKeys.ILLEGAL_NAME));
-			return;
-		}
-		
-		if (isVirtual()) {
-			DialogMessenger.getInstance().dispatchError("Workspace Error",
-					"Attempt to create new user to virtual workspace.");
-			return;
-		}
-		
-		File userDir = getDirectory(getLocation(), username);
-		
-		if (!userDir.mkdirs() && !userDir.isDirectory()) {
-			DialogMessenger.getInstance().dispatchError("Workspace Error",
-					"Could not make required directories: " + userDir.toString());
-			return;
-		}
-		
-		if (!existsUserLogically(username)) {
-			userList.add(username);
-			makeDirty();
-		}
-		
-		// Make new user logically existent in workspace config file
-		try {
-			store();
-		}
-		catch (IOException e) {
-			String title = AppSettings.getInstance().translate("general.error.title");
-			String message = AppSettings.getInstance().translate("error.could.not.store.ws");
-			DialogMessenger.getInstance().dispatchError(title, message);
-		}
-		if (!existsUserPhysically(username)){
-			UserConfig.createNewUser(this, username);
-		}
-		lastActiveUser = username;
-	}
-	
-	/**
-	 * Import a user directory from anywhere in the file system to this workspace.
-	 * All files in the user directory are copied. Already existing files might get overwritten.
-	 * <p> This has no effect if this is virtual.
-	 * @param srcUserDir - a legal user directory anywhere on the file system
-	 * @param destUsername - Existing files of targetUser are overwritten. If targetUser does not exist, it will be created first.
-	 * @throws IllegalArgumentException
-	 * @throws IOException 
-	 * @see WSManager#isUserDirectory(File)
-	 */
-	public void importUser(File srcUserDir, String destUsername) throws IllegalArgumentException, IOException {
-		logger.trace("Importing user '" + destUsername + "' from " + srcUserDir.getAbsolutePath());
-		
-		if (isVirtual())
-			return;
-		
-		if (!WSManager.isUserDirectory(srcUserDir))
-			throw new IllegalArgumentException();
-		
-		createUser(destUsername);
-		File targetUserDir = getDirectory(getLocation(), destUsername);
-		
-		WSManager.copyFullyRecursive(srcUserDir, targetUserDir);
 
-		lastActiveUser = destUsername;
+	public void addUser(String username) {
+		if (userList.contains(username)){
+			logger.warn("Adding user name that is already present in user list. Ignore adding.");
+			return;
+		}
+		userList.add(username);
+		publisher.publishEvent(WorkspaceProperty.USER_LIST);
+	}
+	
+	public void addUser(StorableObject<UserConfig, UserConfig.UserProperty> uc){
+		String name = uc.get().getUserName();
+		cacheUserSpace(name, uc);
+		addUser(name);
 	}
 	
 	/**
@@ -370,99 +254,45 @@ public class WorkspaceConfig extends StorableObject implements Serializable {
 	public void removeUser(String username){
 		logger.trace("Removing user: " + username);
 		if (existsUserLogically(username)){
-			makeDirty();
+			userList.remove(username);
+			cachedUserSpaces.remove(username);
+			publisher.publishEvent(WorkspaceProperty.USER_LIST);
+		} else {
+			userList.remove(username);
+			cachedUserSpaces.remove(username);
 		}
 		
-		userList.remove(username);
-		cachedUserSpaces.remove(username);
-		
-		if (activeUser != null && activeUser.getUserName().equals(username)){
+		if (activeUser != null && activeUser.get().getUserName().equals(username)){
 			activeUser = null;
-			lastActiveUser = null;
-			makeDirty();
+			setLastActiveUser(null);
 		}
 	}
 	
-	/**
-	 * @param username - if this does not exists logically in the workspace, null is returned.
-	 * @return a {@link UserConfig} generated from the file system. If this is a virtual workspace, a virtual user is created instead.
-	 * @throws IOException if the UserConfig could not be loaded
-	 * @see UserConfig#loadUser(File, String)
+	/*
+	 * last active user
 	 */
-	public UserConfig loadUser(String username) throws IOException {
-		logger.trace("Loading user: " + username);
-		if (!existsUserLogically(username)) {
-			AppSettings as = AppSettings.getInstance();
-			String title = as.translate("general.error.title");
-			String msg1 = as.translate("error.attempt.load.inexistent.user");
-			String msg2 = as.translate("error.suggest.try.to.import.user");
-			DialogMessenger.getInstance().dispatchError(title, msg1 + username + ". " + msg2);
-			return null;
+
+	/**
+	 * @return name of the last active user
+	 */
+	public String getLastActiveUser() {
+		if (lastActiveUser == null) {
+			if (userList.size() > 0) {
+				lastActiveUser = userList.get(0);
+			}
 		}
-		
-		if (isVirtual())
-			return UserConfig.createVirtualUser();
-		
-		// exists logically and is not virtual
-		
-		if (!existsUserPhysically(username)) {
-			// but it does exist logically => it must have been corrupted externally.
-			// => restore it.
-			if (!getLocation().mkdirs()) {
-				AppSettings as = AppSettings.getInstance();
-				String title = as.translate("general.error.title");
-				String msg = as.translate("error.could.not.make.directories");
-				DialogMessenger.getInstance().dispatchError(title, msg);
-				return null;
-			}
-			// user creation requires existence of the workspace on file system
-			try {
-				store();
-			}
-			catch (IOException e) {
-				AppSettings as = AppSettings.getInstance();
-				String title = as.translate("general.error.title");
-				String msg = as.translate("error.could.not.store.ws");
-				DialogMessenger.getInstance().dispatchError(title, msg);
-			}
-			return UserConfig.createNewUser(this, username);
-		}
-		// exists physically
-		return UserConfig.loadUser(this, username);
+		return lastActiveUser;
 	}
 	
 	/**
-	 * Produces a list of user names by reading the contents of the current workspace directory.
-	 * The users in this list may contain users that have been deleted logically before.
-	 * @return
+	 * Succeeds if the user exists
+	 * @param workspace
 	 */
-	public ArrayList<String> getPhysicalUserList() {
-		if (isVirtual())
-			return new ArrayList<String>();
-		
-		ArrayList<String> users = new ArrayList<String>();
-		
-		if (WSManager.isWorkspaceDirectory(getLocation())) {
-			AppSettings as = AppSettings.getInstance();
-			String title = as.translate("general.error.title");
-			String msg = as.translate("error.current.ws.deleted.I.will.recreate.it");
-			DialogMessenger.getInstance().dispatchError(title, msg);
-			try {
-				store();
-			}
-			catch (IOException e) {
-				String msg2 = as.translate("error.could.not.recreate.try.manually");
-				DialogMessenger.getInstance().dispatchError(title, msg2);
-				return users;
-			}
+	public void setLastActiveUser(String username) {
+		if (existsUserLogically(username) && !username.equals(getLastActiveUser())) {
+			lastActiveUser = new String(username);
+			publisher.publishEvent(WorkspaceProperty.LAST_ACTIVE_USER);
 		}
-		
-		for (File dir : WSManager.listDirectories(getLocation())) {
-			if (WSManager.isUserDirectory(dir)) {
-				users.add(dir.getName());
-			}
-		}
-		return users;
 	}
 	
 	/**
@@ -474,160 +304,35 @@ public class WorkspaceConfig extends StorableObject implements Serializable {
 		return userList.contains(username);
 	}
 	
-	/**
-	 * A user exists physically, if a folder with the user's name exists in this workspace and if it contains a UserConfig file.
-	 * @param username
-	 * @return
-	 * @see WSManager#isUserDirectory(File)
-	 */
-	public boolean existsUserPhysically(String username) {
-		File userDir = getDirectory(getLocation(), username);
-		return WSManager.isUserDirectory(userDir);
-	}
-	
-	/*
-	 * last active user
-	 */
-	
-	private String	lastActiveUser;
-	
-	/**
-	 * @return name of the last active user
-	 */
-	public String getLastActiveUser() {
-		if (lastActiveUser == null){
-			if (userList.size() > 0){
-				lastActiveUser = userList.get(0);
-			}
-		}
-		
-		return lastActiveUser;
-	}
-	
-	/**
-	 * Succeeds if the user exists
-	 * @param workspace
-	 */
-	public void setLastActiveUser(String username) {
-		if (existsUserLogically(username) && !username.equals(lastActiveUser)) {
-			lastActiveUser = new String(username);
-			makeDirty();
-		}
-	}
-	
-	/*
-	 * active user
-	 */
-	
-	private transient UserConfig	activeUser;
-	
-	public UserConfig getActiveUser() {
-		return activeUser;
-	}
-	
-	public void enterInitialUserSpace() throws IOException{
-		String user = getLastActiveUser();
-		if (user != null){
-			enterUserSpace(user);
-		}
-	}
-	
-	/**
-	 * @throws IOException If the old userConfig could not be stored. 
-	 */
-	public void enterUserSpace(String username) throws IOException {
-		if (activeUser != null) {
-			leaveUserSpace();
-		}
-		logger.trace("Entering user space: " + username);
-		
-		activeUser = retrieveUserSpace(username);
-		
-		setLastActiveUser(username);
-	}
-	
-	/**
-	 * @throws IOException If userConfig could not be stored. 
-	 */
-	public void leaveUserSpace() throws IOException {
-		logger.trace("Leaving user space: " + activeUser.getUserName());
-		if (activeUser.isDirty())
-			activeUser.store();
-		activeUser = null;
-	}
-	
-	protected UserConfig retrieveUserSpace(String username){
-		UserConfig uc = getCachedUserSpace(username);
-		if (uc != null){
-			return uc;
-		}
-		
-		if (isVirtual()){
-			uc = UserConfig.createVirtualUser();
-		} else {
-			uc = UserConfig.loadUser(this, username);
-		}
-		
-		cacheUserSpace(username, uc);
-		return uc;
-	}
-	
-	/**
-	 * UserConfigs that have already been created or loaded from disk.
-	 */
-	private transient Map<String, UserConfig> cachedUserSpaces;
-	
-	private UserConfig getCachedUserSpace(String username) {
-		if (cachedUserSpaces == null){
-			cachedUserSpaces= new TreeMap<String, UserConfig>();
-		}
-		return cachedUserSpaces.get(username);
-	}
-	
-	private void cacheUserSpace(String username, UserConfig wsc){
-		cachedUserSpaces.put(username, wsc);
+	public String[] getUserList() {
+		String[] users = new String[userList.size()];
+		return userList.toArray(users);
 	}
 	
 	/*
 	 * Version control
 	 */
-	
-	/**
-	 * How many old versions of a file should be kept, in addition to the most recent one?
-	 * Default is infinite.
-	 */
-	private NumberOfBackups	numberOfBackups	= NumberOfBackups.INFINITE;
-	
-	/**
-	 * @see #numberOfBackups
-	 */
+
 	public NumberOfBackups getNumberOfBackups() {
 		return numberOfBackups;
 	}
-	
-	/**
-	 * @see #numberOfBackups
-	 */
+
 	public void setNumberOfBackups(NumberOfBackups n) {
+		if (this.numberOfBackups == n) { return; }
 		numberOfBackups = n;
-		makeDirty();
+		publisher.publishEvent(WorkspaceProperty.N_OF_BACKUPS);
 	}
 	
 	/*
 	 * Workspace language
 	 */
-	
-	/**
-	 * The language to be used within this workspace
-	 */
-	public Language	language;
-	
+
 	public void setLanguage(Language language) {
+		if (this.language == language) { return; }
 		this.language = language;
-		AppSettings.getInstance().setLanguage(language);
-		makeDirty();
+		publisher.publishEvent(WorkspaceProperty.LANGUAGE);
 	}
-	
+
 	public Language getLanguage() {
 		if (language == null)
 			return Language.LANGUAGE_ENGLISH;
@@ -637,72 +342,63 @@ public class WorkspaceConfig extends StorableObject implements Serializable {
 	/*
 	 * Allow users (children) to create new user accounts in workspaces?
 	 */
-	
-	private boolean	allowUserCreation	= true;
-	
-	public void setAllowUserCreation(boolean allowed) {
+	public void setUserCreationAllowed(boolean allowed) {
+		if (this.allowUserCreation == allowed) { return; }
 		this.allowUserCreation = allowed;
-		makeDirty();
+		publisher.publishEvent(WorkspaceProperty.ALLOW_USER_CREATION);
 	}
-	
+
 	public boolean isUserCreationAllowed() {
-		return allowUserCreation && !isVirtual();
+		return allowUserCreation;
 	}
 	
-	/*
-	 * Contest //TODO create options in workspace settings
-	 */
-	
-	private ContestConfig	contestConfig;
-	
-	protected ContestConfig getContestSettings() {
-		return contestConfig;
+	public ContestConfig getContestSettings() {
+		if (contestSettings == null)
+			contestSettings = new ContestConfig();
+		return contestSettings;
 	}
 	
+	public void setContestSettings(ContestConfig contestConfig) {
+		if (this.contestSettings == contestConfig) { return; }
+		this.contestSettings = contestConfig;
+		publisher.publishEvent(WorkspaceProperty.CONTEST);
+	}
+
 	public int getNOfContestFiles() {
-		if (contestConfig == null)
-			contestConfig = new ContestConfig();
 		return getContestSettings().getNOfContestFiles();
 	}
-	
+
 	public void setNOfContestFiles(int nOfContestFiles) {
+		if (this.getNOfContestFiles() == nOfContestFiles) { return; }
 		getContestSettings().setNOfContestFiles(nOfContestFiles);
+		publisher.publishEvent(WorkspaceProperty.CONTEST);
 	}
-	
+
 	public int getNOfContestBonusFiles() {
 		return getContestSettings().getNOfContestBonusFiles();
 	}
-	
+
 	public void setNOfContestBonusFiles(int nOfContestBonusFiles) {
+		if (this.getNOfContestBonusFiles() == nOfContestBonusFiles) { return; }
 		getContestSettings().setNOfContestBonusFiles(nOfContestBonusFiles);
+		publisher.publishEvent(WorkspaceProperty.CONTEST);
 	}
 	
-	public int getMaxEmptyFiles(){
+	public int getMaxEmptyFiles() {
 		return MAX_EMPTY_FILES;
 	}
 	
-	/*
-	 * Syntax Highlighting
-	 */
-	private SyntaxHighlightConfig	syntaxHighlightingStyles;	// TODO = new SyntaxHighlightStyles();
-																
-	/**
-	 * This font is the default font for all menus ... in XLogo Application
-	 */
-	private Font					font;						// TODO =new Font("dialog",Font.PLAIN,14);
-																
 	public SyntaxHighlightConfig getSyntaxHighlightStyles() {
 		if (syntaxHighlightingStyles == null) {
 			syntaxHighlightingStyles = new SyntaxHighlightConfig();
-			makeDirty();
 		}
 		return syntaxHighlightingStyles;
 	}
 	
 	public void setSyntaxHighlightConfig(SyntaxHighlightConfig syntaxHighlightingStyles) {
+		if (this.syntaxHighlightingStyles == syntaxHighlightingStyles) { return; }
 		this.syntaxHighlightingStyles = syntaxHighlightingStyles;
-		makeDirty();
-		AppSettings.getInstance().setSyntaxHighlightingStyles(syntaxHighlightingStyles);
+		publisher.publishEvent(WorkspaceProperty.SYNTAX_HIGHLIGHTING);
 	}
 	
 	public int getPrimitiveColor() {
@@ -710,9 +406,9 @@ public class WorkspaceConfig extends StorableObject implements Serializable {
 	}
 	
 	public void setPrimitiveColor(int primitiveColor) {
+		if (this.getPrimitiveColor() == primitiveColor) { return; }
 		getSyntaxHighlightStyles().setPrimitiveColor(primitiveColor);
-		makeDirty();
-		AppSettings.getInstance().setSyntaxHighlightingStyles(getSyntaxHighlightStyles());
+		publisher.publishEvent(WorkspaceProperty.SYNTAX_HIGHLIGHTING);
 	}
 	
 	public int getPrimitiveStyle() {
@@ -720,29 +416,29 @@ public class WorkspaceConfig extends StorableObject implements Serializable {
 	}
 	
 	public void setPrimitiveStyle(int primitiveStyle) {
+		if (this.getPrimitiveStyle() == primitiveStyle) { return; }
 		getSyntaxHighlightStyles().setPrimitiveStyle(primitiveStyle);
-		makeDirty();
-		AppSettings.getInstance().setSyntaxHighlightingStyles(getSyntaxHighlightStyles());
+		publisher.publishEvent(WorkspaceProperty.SYNTAX_HIGHLIGHTING);
 	}
 	
-	public int getOperatorColor() {
-		return getSyntaxHighlightStyles().getOperatorColor();
+	public int getOperandColor() {
+		return getSyntaxHighlightStyles().getOperandColor();
 	}
 	
-	public void setOperandColor(int operatorColor) {
-		getSyntaxHighlightStyles().setOperatorColor(operatorColor);
-		makeDirty();
-		AppSettings.getInstance().setSyntaxHighlightingStyles(getSyntaxHighlightStyles());
+	public void setOperandColor(int operandColor) {
+		if (this.getOperandColor() == operandColor) { return; }
+		getSyntaxHighlightStyles().setOperandColor(operandColor);
+		publisher.publishEvent(WorkspaceProperty.SYNTAX_HIGHLIGHTING);
 	}
 	
-	public int getOperatorStyle() {
-		return getSyntaxHighlightStyles().getOperatorStyle();
+	public int getOperandStyle() {
+		return getSyntaxHighlightStyles().getOperandStyle();
 	}
 	
-	public void setOperandStyle(int operatorStyle) {
-		getSyntaxHighlightStyles().setOperatorStyle(operatorStyle);
-		makeDirty();
-		AppSettings.getInstance().setSyntaxHighlightingStyles(getSyntaxHighlightStyles());
+	public void setOperandStyle(int operandStyle) {
+		if (this.getOperandStyle() == operandStyle) { return; }
+		getSyntaxHighlightStyles().setOperandStyle(operandStyle);
+		publisher.publishEvent(WorkspaceProperty.SYNTAX_HIGHLIGHTING);
 	}
 	
 	public int getCommentColor() {
@@ -750,9 +446,9 @@ public class WorkspaceConfig extends StorableObject implements Serializable {
 	}
 	
 	public void setCommentColor(int commentColor) {
+		if (this.getCommentColor() == commentColor) { return; }
 		getSyntaxHighlightStyles().setCommentColor(commentColor);
-		makeDirty();
-		AppSettings.getInstance().setSyntaxHighlightingStyles(getSyntaxHighlightStyles());
+		publisher.publishEvent(WorkspaceProperty.SYNTAX_HIGHLIGHTING);
 	}
 	
 	public int getCommentStyle() {
@@ -760,9 +456,9 @@ public class WorkspaceConfig extends StorableObject implements Serializable {
 	}
 	
 	public void setCommentStyle(int commentStyle) {
+		if (this.getCommentStyle() == commentStyle) { return; }
 		getSyntaxHighlightStyles().setCommentStyle(commentStyle);
-		makeDirty();
-		AppSettings.getInstance().setSyntaxHighlightingStyles(getSyntaxHighlightStyles());
+		publisher.publishEvent(WorkspaceProperty.SYNTAX_HIGHLIGHTING);
 	}
 	
 	public int getBraceColor() {
@@ -770,9 +466,9 @@ public class WorkspaceConfig extends StorableObject implements Serializable {
 	}
 	
 	public void setBraceColor(int braceColor) {
+		if (this.getBraceColor() == braceColor) { return; }
 		getSyntaxHighlightStyles().setBraceColor(braceColor);
-		makeDirty();
-		AppSettings.getInstance().setSyntaxHighlightingStyles(getSyntaxHighlightStyles());
+		publisher.publishEvent(WorkspaceProperty.SYNTAX_HIGHLIGHTING);
 	}
 	
 	public int getBraceStyle() {
@@ -780,9 +476,9 @@ public class WorkspaceConfig extends StorableObject implements Serializable {
 	}
 	
 	public void setBraceStyle(int braceStyle) {
+		if (this.getBraceStyle() == braceStyle) { return; }
 		getSyntaxHighlightStyles().setBraceStyle(braceStyle);
-		makeDirty();
-		AppSettings.getInstance().setSyntaxHighlightingStyles(getSyntaxHighlightStyles());
+		publisher.publishEvent(WorkspaceProperty.SYNTAX_HIGHLIGHTING);
 	}
 	
 	public boolean isSyntaxHighlightingEnabled() {
@@ -790,19 +486,47 @@ public class WorkspaceConfig extends StorableObject implements Serializable {
 	}
 	
 	public void setSyntaxHighlightingEnabled(boolean colorEnabled) {
+		if (this.isSyntaxHighlightingEnabled() == colorEnabled) { return; }
 		getSyntaxHighlightStyles().setColorEnabled(colorEnabled);
-		makeDirty();
-		AppSettings.getInstance().setSyntaxHighlightingStyles(getSyntaxHighlightStyles());
+		publisher.publishEvent(WorkspaceProperty.SYNTAX_HIGHLIGHTING);
 	}
 	
 	public Font getFont() {
+		if (font == null) {
+			font = DEFAULT_FONT;
+		}
 		return font;
 	}
 	
 	public void setFont(Font font) {
+		if (this.font == font) { return; }
 		this.font = font;
-		makeDirty();
-		AppSettings.getInstance().setFont(font);
+		publisher.publishEvent(WorkspaceProperty.FONT);
+	}
+
+
+	
+	/*
+	 * Property Change Listeners
+	 */
+	
+	public enum WorkspaceProperty {
+		FONT, SYNTAX_HIGHLIGHTING, ALLOW_USER_CREATION, LANGUAGE, N_OF_BACKUPS, LAST_ACTIVE_USER, USER_LIST, CONTEST;
+	}
+
+	private transient PropertyChangePublisher<WorkspaceProperty> publisher = new PropertyChangePublisher<>();
+	
+	@Override
+	public void addPropertyChangeListener(WorkspaceProperty property, PropertyChangeListener listener) {
+		if (publisher == null){
+			publisher = new PropertyChangePublisher<>();
+		}
+		publisher.addPropertyChangeListener(property, listener);
 	}
 	
+	@Override
+	public void removePropertyChangeListener(WorkspaceProperty property, PropertyChangeListener listener) {
+		publisher.removePropertyChangeListener(property, listener);
+	}
+
 }

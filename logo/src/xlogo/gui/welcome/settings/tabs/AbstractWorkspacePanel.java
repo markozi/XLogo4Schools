@@ -36,20 +36,21 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 
-import xlogo.AppSettings;
 import xlogo.gui.components.X4SComponent;
+import xlogo.interfaces.Observable.PropertyChangeListener;
 import xlogo.messages.async.dialog.DialogMessenger;
 import xlogo.storage.Storable;
 import xlogo.storage.WSManager;
 import xlogo.storage.global.GlobalConfig;
+import xlogo.storage.global.GlobalConfig.GlobalProperty;
 import xlogo.storage.workspace.WorkspaceConfig;
 
 public abstract class AbstractWorkspacePanel extends X4SComponent{
 
-	private ActionListener enterWorkspaceListener;
-	private ActionListener workspaceListChangeListener;
+	private PropertyChangeListener enterWorkspaceListener;
+	private PropertyChangeListener workspaceListChangeListener;
 		
-	protected abstract JComboBox getWorkspaceSelection();
+	protected abstract JComboBox<String> getWorkspaceSelection();
 
 	private boolean ignoreGuiEvents = false;
 	
@@ -63,31 +64,41 @@ public abstract class AbstractWorkspacePanel extends X4SComponent{
 				new Thread(new Runnable() {
 					public void run() {
 						String wsName = (String) getWorkspaceSelection().getSelectedItem();
-						enterWorkspace(wsName);
+						if (wsName != null){
+							enterWorkspace(wsName);
+						}
 					}
 				}).run();
 			}
 		});
 		
+		enterWorkspaceListener = () -> {
+			ignoreGuiEvents = true;
+			if (WSManager.getWorkspaceConfig() != null){
+				enableComponents();
+			} else {
+				disableComponents();
+			}
+			selectCurrentWorkspace();
+			ignoreGuiEvents = false;
+		};
+		
+		workspaceListChangeListener = () -> {
+			ignoreGuiEvents = true;
+			if (WSManager.getWorkspaceConfig() != null){
+				enableComponents();
+			} else {
+				disableComponents();
+			}
+			populateWorkspaceList();
+			ignoreGuiEvents = false;
+		};
+		
 		final GlobalConfig gc = WSManager.getGlobalConfig();
 		
-		gc.addWorkspaceListChangeListener(workspaceListChangeListener = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				ignoreGuiEvents = true;
-				populateWorkspaceList();
-				ignoreGuiEvents = false;
-			}
-		});
+		gc.addPropertyChangeListener(GlobalProperty.WORKSPACES, workspaceListChangeListener);
 		
-		gc.addEnterWorkspaceListener(enterWorkspaceListener = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				ignoreGuiEvents = true;
-				selectCurrentWorkspace();
-				ignoreGuiEvents = false;
-			}
-		});
+		gc.addPropertyChangeListener(GlobalProperty.CURRENT_WORKSPACE, enterWorkspaceListener);
 	}
 
 	@Override
@@ -95,9 +106,8 @@ public abstract class AbstractWorkspacePanel extends X4SComponent{
 	{
 		super.stopEventListeners();
 		GlobalConfig gc = WSManager.getGlobalConfig();
-		gc.removeEnterWorkspaceListener(enterWorkspaceListener);
-		gc.removeWorkspaceListChangeListener(workspaceListChangeListener);
-		
+		gc.removePropertyChangeListener(GlobalProperty.WORKSPACES, workspaceListChangeListener);
+		gc.removePropertyChangeListener(GlobalProperty.CURRENT_WORKSPACE, enterWorkspaceListener);		
 	}
 	
 	protected abstract void setValues();
@@ -107,14 +117,14 @@ public abstract class AbstractWorkspacePanel extends X4SComponent{
 	protected abstract void disableComponents();
 
 	protected void populateWorkspaceList() {
-		GlobalConfig gc = WSManager.getInstance().getGlobalConfigInstance();
+		GlobalConfig gc = WSManager.getGlobalConfig();
 		String[] workspaces = gc.getAllWorkspaces();
-		getWorkspaceSelection().setModel(new DefaultComboBoxModel(workspaces));
+		getWorkspaceSelection().setModel(new DefaultComboBoxModel<String>(workspaces));
 		selectCurrentWorkspace();
 	}
 	
 	protected void selectCurrentWorkspace(){
-		GlobalConfig gc = WSManager.getInstance().getGlobalConfigInstance();
+		GlobalConfig gc = WSManager.getGlobalConfig();
 		String lastUsed = gc.getLastUsedWorkspace();
 		getWorkspaceSelection().setSelectedItem(lastUsed);
 		setValues();
@@ -133,13 +143,6 @@ public abstract class AbstractWorkspacePanel extends X4SComponent{
 		
 		boolean ans = getUserYesOrNo(message, translate("ws.settings.delete.from.fs"));
 		
-		try {
-			wsManager.enterWorkspace(WorkspaceConfig.VIRTUAL_WORKSPACE);
-		} catch (IOException e) {
-			DialogMessenger.getInstance().dispatchMessage(
-					translate("ws.error.title"),
-					translate("ws.settings.could.not.enter.virtual.ws") + e.toString());
-		}
 		wsManager.deleteWorkspace(wsName, ans);
 		
 		populateWorkspaceList();
@@ -205,12 +208,8 @@ public abstract class AbstractWorkspacePanel extends X4SComponent{
 				disableComponents();
 				return;
 			}
-			if (wc.isVirtual())
-				disableComponents();
-			else
-				enableComponents();
+			enableComponents();
 			setValues();
-			AppSettings.getInstance().setLanguage(wc.getLanguage());
 		} catch (IOException e) {
 			DialogMessenger.getInstance().dispatchMessage(
 					translate("ws.error.title"),
@@ -237,7 +236,7 @@ public abstract class AbstractWorkspacePanel extends X4SComponent{
 		String location = wscPanel.locationField.getText();
 		File dir = new File(location);
 		
-		GlobalConfig gc = WSManager.getInstance().getGlobalConfigInstance();
+		GlobalConfig gc = WSManager.getGlobalConfig();
 		
 		// Make sure that the specified workspace name is non-empty and that it does not exist already
 		if (wsName.length() == 0){

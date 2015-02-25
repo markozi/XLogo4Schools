@@ -1,15 +1,19 @@
 package xlogo;
 
 import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import xlogo.interfaces.Observable;
+import xlogo.interfaces.PropertyChangePublisher;
+import xlogo.storage.WSManager;
+import xlogo.storage.global.GlobalConfig;
+import xlogo.storage.global.GlobalConfig.GlobalProperty;
 import xlogo.storage.workspace.Language;
 import xlogo.storage.workspace.SyntaxHighlightConfig;
+import xlogo.storage.workspace.WorkspaceConfig;
+import xlogo.storage.workspace.WorkspaceConfig.WorkspaceProperty;
 
 /**
  * This singleton class shall eliminate the accesses to Logo.messages.getString(),
@@ -18,38 +22,87 @@ import xlogo.storage.workspace.SyntaxHighlightConfig;
  * @author Marko
  *
  */
-public class AppSettings
-{
-	private static Logger logger = LogManager.getLogger(AppSettings.class.getSimpleName());
+public class AppSettings implements Observable<AppSettings.AppProperty>{
+	private static Logger		logger	= LogManager.getLogger(AppSettings.class.getSimpleName());
 	
-	private static AppSettings instance;
+	private static AppSettings	instance;
 	
-	public static AppSettings getInstance()
-	{
+	public static AppSettings getInstance() {
 		if (instance == null)
 			instance = new AppSettings();
 		return instance;
 	}
+	
+	private WorkspaceConfig	wc;
+	
+	private PropertyChangeListener	languageListener	= () -> {
+		setLanguage(wc.getLanguage());
+	};
+	
+	private PropertyChangeListener	syntaxListener	= () -> {
+		setSyntaxHighlightingStyles(wc.getSyntaxHighlightStyles());
+	};
+	
+	private PropertyChangeListener	workspaceListener	= () -> {
+		setWorkspace(WSManager.getWorkspaceConfig());
+	};
+	
+	public AppSettings() {
+		GlobalConfig gc = WSManager.getGlobalConfig();
+		WorkspaceConfig wc = WSManager.getWorkspaceConfig();
+		gc.addPropertyChangeListener(GlobalProperty.CURRENT_WORKSPACE, workspaceListener);
+		if (wc != null) {
+			setWorkspace(gc.getCurrentWorkspace().get());
+		}
+	}
+	
+	/* * * * * * *
+	 * WORKSPACE
+	 * * * * * * */
+	
+	protected void setWorkspace(WorkspaceConfig wc){
+		if (this.wc == wc){
+			return;
+		}
 		
+		if (wc != null) {
+			wc.removePropertyChangeListener(WorkspaceProperty.LANGUAGE, languageListener);
+			wc.removePropertyChangeListener(WorkspaceProperty.SYNTAX_HIGHLIGHTING, syntaxListener);
+		}
+		
+		this.wc = wc;
+		
+		if (wc != null) {
+			setLanguage(wc.getLanguage());
+			setSyntaxHighlightingStyles(wc.getSyntaxHighlightStyles());
+			
+			wc.addPropertyChangeListener(WorkspaceProperty.LANGUAGE, languageListener);
+			wc.addPropertyChangeListener(WorkspaceProperty.SYNTAX_HIGHLIGHTING, syntaxListener);
+		}
+		publisher.publishEvent(AppProperty.WORKSPACE);
+	}
+	
+	public WorkspaceConfig getWorkspace(){
+		return wc;
+	}
+	
 	/* * * * * * *
 	 * LANGUAGE
 	 * * * * * * */
 	
-	private Language language;
+	private Language	language	= Language.LANGUAGE_ENGLISH;
 	
-	public Language getLanguage()
-	{
+	public Language getLanguage() {
 		return language;
 	}
 	
-	public void setLanguage(Language language)
-	{
+	protected void setLanguage(Language language) {
 		if (language == this.language)
 			return;
 		logger.trace("Change language from " + this.language + " to " + language);
 		this.language = language;
 		Logo.generateLanguage(language);
-		notifyLanguageChanged();
+		publisher.publishEvent(AppProperty.LANGUAGE);
 	}
 	
 	/**
@@ -58,103 +111,65 @@ public class AppSettings
 	 * @param key
 	 * @return
 	 */
-	public String translate(String key)
-	{
+	public String translate(String key) {
 		if (Logo.messages == null) {
 			Logo.generateLanguage(Language.LANGUAGE_ENGLISH); // TODO this is a temporary bug fix
 		}
 		return Logo.messages.getString(key);
 	}
 	
-	private ArrayList<ActionListener> languageChangeListeners = new ArrayList<ActionListener>();
-	
-	public void addLanguageChangeListener(ActionListener listener)
-	{
-		languageChangeListeners.add(listener);
-	}
-	
-	public void removeLanguageChangeListener(ActionListener listener)
-	{
-		languageChangeListeners.remove(listener);
-	}
-	
-	private void notifyLanguageChanged()
-	{
-		ActionEvent event = new ActionEvent(this, 0, "languageChange");
-		for (ActionListener listener : languageChangeListeners)
-			listener.actionPerformed(event);
-	}
-
 	/* * * * * * *
 	 * FONT
 	 * * * * * * */
 	
-	private Font font;
+	private Font	font;
 	
-	public Font getFont()
-	{
+	public Font getFont() {
 		return font;
 	}
 	
-	public void setFont(Font font)
-	{
+	public void setFont(Font font) {
+		if(this.font == font){
+			return;
+		}
 		this.font = font;
-		notifyFontChanged();
+		publisher.publishEvent(AppProperty.FONT);
 	}
-	
-	private ArrayList<ActionListener> fontChangeListeners = new ArrayList<ActionListener>();
-	
-	public void addFontChangeListener(ActionListener listener)
-	{
-		fontChangeListeners.add(listener);
-	}
-	
-	public void removeFontChangeListener(ActionListener listener)
-	{
-		fontChangeListeners.remove(listener);
-	}
-	
-	private void notifyFontChanged()
-	{
-		ActionEvent event = new ActionEvent(this, 0, "fontChange");
-		for (ActionListener listener : fontChangeListeners)
-			listener.actionPerformed(event);
-	}
-	
+		
 	/* * * * * * *
 	 * SYNTAX HIGHLIGHTING STYLE
 	 * * * * * * */
 	
-	private SyntaxHighlightConfig syntaxHighlightingStyles;
+	private SyntaxHighlightConfig	syntaxHighlightingStyles;
 	
-	public SyntaxHighlightConfig getSyntaxHighlightStyles()
-	{
+	public SyntaxHighlightConfig getSyntaxHighlightStyles() {
 		return syntaxHighlightingStyles;
 	}
 	
-	public void setSyntaxHighlightingStyles(SyntaxHighlightConfig syntaxHighlighStyles)
-	{
+	protected void setSyntaxHighlightingStyles(SyntaxHighlightConfig syntaxHighlighStyles) {
 		this.syntaxHighlightingStyles = syntaxHighlighStyles;
-		notifySyntaxHighlightStyleChanged();
+		publisher.publishEvent(AppProperty.SYNTAX_HIGHLIGHTING);
 	}
 	
-	private ArrayList<ActionListener> syntaxHighlightStyleChangeListeners = new ArrayList<ActionListener>();
 	
-	public void addSyntaxHighlightStyleChangeListener(ActionListener listener)
-	{
-		syntaxHighlightStyleChangeListeners.add(listener);
+	/* * * * * * *
+	 * EVENT HANDLING
+	 * * * * * * */
+	
+	public enum AppProperty {
+		LANGUAGE, SYNTAX_HIGHLIGHTING, FONT, WORKSPACE;
 	}
 	
-	public void removeSyntaxHighlightStyleChangeListener(ActionListener listener)
-	{
-		syntaxHighlightStyleChangeListeners.remove(listener);
+	private transient final PropertyChangePublisher<AppProperty> publisher = new PropertyChangePublisher<>();
+	
+	@Override
+	public void addPropertyChangeListener(AppProperty property, PropertyChangeListener listener) {
+		publisher.addPropertyChangeListener(property, listener);
 	}
 	
-	private void notifySyntaxHighlightStyleChanged()
-	{
-		ActionEvent event = new ActionEvent(this, 0, "fontChange");
-		for (ActionListener listener : syntaxHighlightStyleChangeListeners)
-			listener.actionPerformed(event);
+	@Override
+	public void removePropertyChangeListener(AppProperty property, PropertyChangeListener listener) {
+		publisher.removePropertyChangeListener(property, listener);
 	}
-
+	
 }

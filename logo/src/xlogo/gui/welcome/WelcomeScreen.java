@@ -33,11 +33,13 @@ import java.awt.*;
 import java.io.IOException;
 
 import xlogo.gui.components.X4SFrame;
+import xlogo.interfaces.Observable.PropertyChangeListener;
 import xlogo.messages.MessageKeys;
 import xlogo.messages.async.dialog.DialogMessenger;
 import xlogo.storage.Storable;
 import xlogo.storage.WSManager;
 import xlogo.storage.global.GlobalConfig;
+import xlogo.storage.global.GlobalConfig.GlobalProperty;
 import xlogo.storage.workspace.WorkspaceConfig;
 import xlogo.utils.Utils;
 import xlogo.utils.WebPage;
@@ -59,8 +61,8 @@ public class WelcomeScreen extends X4SFrame {
 	private JLabel				workspace;
 	private JLabel				username;
 	
-	private JComboBox			workspaceSelection;
-	private JComboBox			userSelection;
+	private JComboBox<String>	workspaceSelection;
+	private JComboBox<String>	userSelection;
 	
 	private JButton				openWorkspaceSettingsBtn;
 	private JButton				enterButton;
@@ -71,11 +73,13 @@ public class WelcomeScreen extends X4SFrame {
 	private JPanel				panel;
 	private GroupLayout			groupLayout;
 	
-	private ActionListener		onApplicationEnterListener;
-	private ActionListener		onWorkspaceListChangeListener;
-	private ActionListener		onEnterWorkspaceListener;
-	
 	private WorkspaceSettings	workspaceSettings;
+	
+	private ActionListener		onApplicationEnterListener;
+	
+	private PropertyChangeListener		onWorkspaceListChangeListener;
+	private PropertyChangeListener		onEnterWorkspaceListener;
+	
 	
 	/**
 	 * 
@@ -99,7 +103,7 @@ public class WelcomeScreen extends X4SFrame {
 			@Override
 			public void dispose() {
 				try {
-					WSManager.getInstance().getGlobalConfigInstance().store();
+					WSManager.getInstance().storeAllSettings();
 				}
 				catch (IOException e) {
 					DialogMessenger.getInstance().dispatchMessage(translate("ws.error.title"),
@@ -117,8 +121,8 @@ public class WelcomeScreen extends X4SFrame {
 		workspace = new JLabel("Workspace");
 		username = new JLabel("User");
 		
-		workspaceSelection = new JComboBox();
-		userSelection = new JComboBox();
+		workspaceSelection = new JComboBox<>();
+		userSelection = new JComboBox<>();
 		
 		openWorkspaceSettingsBtn = new JButton("Settings");
 		enterButton = new JButton("Enter");
@@ -207,32 +211,22 @@ public class WelcomeScreen extends X4SFrame {
 		
 		GlobalConfig gc = WSManager.getGlobalConfig();
 		
-		onEnterWorkspaceListener = new ActionListener(){
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				ignoreGuiEvents = true;
-				populateWorkspaceList();
-				populateUserList();
-				ignoreGuiEvents = false;
+		onWorkspaceListChangeListener = () -> {
+			ignoreGuiEvents = true;
+			populateWorkspaceList();
+			populateUserList();
+			ignoreGuiEvents = false;
+		};
+		
+		onEnterWorkspaceListener = () -> {
+			ignoreGuiEvents = true;
+			populateWorkspaceList();
+			populateUserList();
+			ignoreGuiEvents = false;
+		};
 				
-			}
-		};
-		
-		gc.addEnterWorkspaceListener(onEnterWorkspaceListener);
-						
-		onWorkspaceListChangeListener = new ActionListener(){
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				ignoreGuiEvents = true;
-				populateWorkspaceList();
-				populateUserList();
-				ignoreGuiEvents = false;
-			}
-		};
-		
-		WSManager.getGlobalConfig().addWorkspaceListChangeListener(onWorkspaceListChangeListener);
+		gc.addPropertyChangeListener(GlobalProperty.CURRENT_WORKSPACE, onEnterWorkspaceListener);
+		gc.addPropertyChangeListener(GlobalProperty.WORKSPACES, onWorkspaceListChangeListener);
 		
 		workspaceSelection.addItemListener(new ItemListener(){
 			public void itemStateChanged(ItemEvent e) {
@@ -314,25 +308,33 @@ public class WelcomeScreen extends X4SFrame {
 	}
 	
 	private void populateWorkspaceList() {
-		GlobalConfig gc = WSManager.getInstance().getGlobalConfigInstance();
+		GlobalConfig gc = WSManager.getGlobalConfig();
 		String[] workspaces = gc.getAllWorkspaces();
-		workspaceSelection.setModel(new DefaultComboBoxModel(workspaces));
+		workspaceSelection.setModel(new DefaultComboBoxModel<>(workspaces));
 		selectCurrentWorkspace();
 	}
 	
 	private void selectCurrentWorkspace(){
-		GlobalConfig gc = WSManager.getInstance().getGlobalConfigInstance();
+		GlobalConfig gc = WSManager.getGlobalConfig();
 		workspaceSelection.setSelectedItem(gc.getLastUsedWorkspace());
 	}
 	
 	private void populateUserList() {
-		WorkspaceConfig wc = WSManager.getInstance().getWorkspaceConfigInstance();
-		String[] users = wc.getUserList();
-		userSelection.setModel(new DefaultComboBoxModel(users));
-		String lastUser = wc.getLastActiveUser();
+		WorkspaceConfig wc = WSManager.getWorkspaceConfig();
+		String[] users;
+		String lastUser = null;
+		boolean isUserCreationAllowed = false;
+		if (wc != null){
+			users = wc.getUserList();
+			lastUser = wc.getLastActiveUser();
+			isUserCreationAllowed = wc.isUserCreationAllowed();
+		} else {
+			users = new String[0];
+		}
+		userSelection.setModel(new DefaultComboBoxModel<>(users));
 		userSelection.setSelectedItem(lastUser);
 		enterButton.setEnabled(lastUser != null && lastUser.length() > 0);
-		userSelection.setEditable(wc.isUserCreationAllowed());
+		userSelection.setEditable(isUserCreationAllowed);
 	}
 	
 	protected void enterWorkspace(String workspaceName) {
@@ -350,7 +352,7 @@ public class WelcomeScreen extends X4SFrame {
 		Runnable runnable = new Runnable(){
 			public void run() {
 				String authentification = null;
-				GlobalConfig gc = WSManager.getInstance().getGlobalConfigInstance();
+				GlobalConfig gc = WSManager.getGlobalConfig();
 				if (gc.isPasswordRequired()) {
 					authentification = showPasswordPopup();
 					if (authentification == null)
@@ -408,9 +410,10 @@ public class WelcomeScreen extends X4SFrame {
 			return;
 		}
 		
+		// The following is in case the user entered a new name : Need to create user first
 		WorkspaceConfig wc = WSManager.getInstance().getWorkspaceConfigInstance();
 		if (!wc.existsUserLogically(username))
-			wc.createUser(username);
+			WSManager.getInstance().createUser(username);
 		
 		try {
 			WSManager.getInstance().enterUserSpace(username);
@@ -429,10 +432,10 @@ public class WelcomeScreen extends X4SFrame {
 			// TODO remove each reference to workspace settings
 			workspaceSettings = null;
 		}
-		WSManager.getGlobalConfig().removeEnterWorkspaceListener(onEnterWorkspaceListener);
-		WSManager.getGlobalConfig().removeWorkspaceListChangeListener(onWorkspaceListChangeListener);
+		WSManager.getGlobalConfig().removePropertyChangeListener(GlobalProperty.CURRENT_WORKSPACE, onEnterWorkspaceListener);
+		WSManager.getGlobalConfig().removePropertyChangeListener(GlobalProperty.WORKSPACES, onWorkspaceListChangeListener);
 		try {
-			WSManager.getWorkspaceConfig().store();
+			WSManager.getInstance().storeAllSettings();
 		}
 		catch (IOException ignore) { }
 		onApplicationEnterListener.actionPerformed(new ActionEvent(this, 0, null));

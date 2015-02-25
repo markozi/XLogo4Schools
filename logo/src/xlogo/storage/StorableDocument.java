@@ -1,27 +1,22 @@
-/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loic Le Coq
+/*
+ * XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loic Le Coq
  * Copyright (C) 2013 Marko Zivkovic
- * 
  * Contact Information: marko88zivkovic at gmail dot com
- * 
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.  This program is distributed in the hope that it will be 
- * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General 
- * Public License for more details.  You should have received a copy of the 
- * GNU General Public License along with this program; if not, write to the Free 
- * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, 
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version. This program is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details. You should have received a copy of the
+ * GNU General Public License along with this program; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301, USA.
- * 
- * 
  * This Java source code belongs to XLogo4Schools, written by Marko Zivkovic
  * during his Bachelor thesis at the computer science department of ETH Zurich,
  * in the year 2013 and/or during future work.
- * 
  * It is a reengineered version of XLogo written by Loic Le Coq, published
  * under the GPL License at http://xlogo.tuxfamily.org/
- * 
  * Contents of this file were entirely written by Marko Zivkovic
  */
 
@@ -43,38 +38,35 @@ import org.apache.logging.log4j.Logger;
 import xlogo.storage.user.UserConfig;
 import xlogo.storage.workspace.WorkspaceConfig;
 
-public abstract class StorableDocument extends Storable
-{
+public abstract class StorableDocument extends Storable {
 	
 	/**
 	 * 
 	 */
 	private static final long	serialVersionUID	= 8218323197066522297L;
 	
-	private static Logger logger = LogManager.getLogger(StorableDocument.class.getSimpleName());
-
+	private static Logger		logger				= LogManager.getLogger(StorableDocument.class.getSimpleName());
+	
 	/**
 	 * Contents of the file
 	 */
-	private String					text;
+	private String				text;
 	
 	/**
 	 * DEFINE TIME
 	 */
-	private Calendar lastSync;
+	private Calendar			lastSync;
 	
 	/**
 	 * When this was created or saved the last time using {@link #store()}.
 	 * Other store methods will not affect the time.
 	 * @return
 	 */
-	public Calendar getLastSync()
-	{
+	public Calendar getLastSync() {
 		return lastSync;
 	}
 	
-	public StorableDocument()
-	{
+	public StorableDocument() {
 		super();
 		text = "";
 		synced();
@@ -85,26 +77,15 @@ public abstract class StorableDocument extends Storable
 	 * and it also stores a copy in the backup folder, if this is required by {@link WorkspaceConfig#getNumberOfBackups()}.
 	 */
 	@Override
-	public void store() throws IOException
-	{
+	public void store() {
 		synced();
-		if (isVirtual())
-			return;
-		
-		File file = getFilePath();
-		logger.trace("Storing document: " + file.getAbsolutePath());
-		
-		if (!file.getParentFile().exists())
-			file.getParentFile().mkdirs();
-		
-		storeCopyToFile(file);
+		super.store();
 	}
 	
-	protected void synced()
-	{
+	protected void synced() {
 		lastSync = Calendar.getInstance();
 	}
-
+	
 	/**
 	 * 
 	 * This is the counterpart to {@link #openFromAnyFile(UserConfig, File)} <br>
@@ -112,11 +93,9 @@ public abstract class StorableDocument extends Storable
 	 * This works, even if the file is declared virtual.
 	 */
 	@Override
-	public void storeCopyToFile(File file) throws IOException, IllegalArgumentException
-	{
+	public void storeCopyToFile(File file) throws IOException, IllegalArgumentException {
 		logger.trace("Storing copy of " + getFileName() + " to " + file.getAbsolutePath());
-		try
-		{
+		try {
 			mkParentDirs(file);
 			FileOutputStream f = new FileOutputStream(file);
 			BufferedOutputStream b = new BufferedOutputStream(f);
@@ -127,8 +106,7 @@ public abstract class StorableDocument extends Storable
 			f.close();
 			
 		}
-		catch (FileNotFoundException e1)
-		{
+		catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 		}
 	}
@@ -136,8 +114,7 @@ public abstract class StorableDocument extends Storable
 	/**
 	 * Deletes the current file path
 	 */
-	public void delete()
-	{
+	public void delete() {
 		if (isVirtual())
 			return;
 		File file = getFilePath();
@@ -145,8 +122,7 @@ public abstract class StorableDocument extends Storable
 			file.delete();
 	}
 	
-	public String getText()
-	{
+	public String getText() {
 		if (text == null)
 			text = generateText();
 		return text;
@@ -165,10 +141,9 @@ public abstract class StorableDocument extends Storable
 	 * If possible, use {@link #setTextFromReader(BufferedReader)} for performance reasons.
 	 * @param text
 	 */
-	public void setText(String text)
-	{
+	public void setText(String text) {
 		invalidateText();
-		if(text == null)
+		if (text == null)
 			return;
 		
 		String replIndent = text.replaceAll("\t", "    ");
@@ -181,7 +156,7 @@ public abstract class StorableDocument extends Storable
 	 * Whether the underlying text representation is the empty string
 	 * @return
 	 */
-	public boolean isEmpty(){
+	public boolean isEmpty() {
 		return getText().equals("");
 	}
 	
@@ -190,8 +165,7 @@ public abstract class StorableDocument extends Storable
 	 * The new text is then parsed to the concrete document structure.
 	 * @param br
 	 */
-	public void setTextFromReader(BufferedReader br)
-	{
+	public void setTextFromReader(BufferedReader br) {
 		invalidateText();
 		parseText(br);
 	}
@@ -207,8 +181,7 @@ public abstract class StorableDocument extends Storable
 	 * Call this whenever the internal object structure has changed and it should be serialized first, using {@link #generateText()},
 	 * when {@link #getText()} is called the next time.
 	 */
-	protected void invalidateText()
-	{
+	protected void invalidateText() {
 		this.text = null;
 	}
 }

@@ -215,7 +215,7 @@ public class LogoContext
 		files.remove(oldName);
 		files.put(newName, file);
 		
-		file.setFileName(newName);
+		file.setPlainName(newName);
 	}
 	
 	private final ArrayList<ProcedureMapListener> procedureMapListener = new ArrayList<ProcedureMapListener>();

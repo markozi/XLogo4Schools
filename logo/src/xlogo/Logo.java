@@ -98,7 +98,7 @@ public class Logo {
 		//Recuperer les fichiers de démarrage correspondant au double clic de souris
 		// ou au lancement en ligne de commande
 
-		GlobalConfig gc = WSManager.getInstance().getGlobalConfigInstance();
+		GlobalConfig gc = WSManager.getGlobalConfig();
 		
 		for(int i=0;i<args.length;i++){
 			gc.getPath().add(args[i]);
@@ -110,7 +110,11 @@ public class Logo {
 
 	/**Builds Application with the valid Config*/
 	public Logo() {
-		Language lang = WSManager.getInstance().getWorkspaceConfigInstance().getLanguage();
+		WorkspaceConfig wc = WSManager.getWorkspaceConfig();
+		Language lang = Language.LANGUAGE_ENGLISH;
+		if (wc != null){
+			lang = WSManager.getInstance().getWorkspaceConfigInstance().getLanguage();
+		}
 		generateLanguage(lang);
 
 		showWelcomeScreen();

@@ -55,13 +55,13 @@ public class ColorStyleSelectionPanel {
 	private Integer[] intArray = new Integer[17];
 	private JButton bchoisir = new JButton(
 			Logo.messages.getString("pref.highlight.other"));
-	private JComboBox combo_couleur;
+	private JComboBox<Integer> combo_couleur;
 	private String[] msg = {
 			Logo.messages.getString("style.none"),
 			Logo.messages.getString("style.bold"),
 			Logo.messages.getString("style.italic"),
 			Logo.messages.getString("style.underline") };
-	private JComboBox style = new JComboBox(msg);
+	private JComboBox<String> style = new JComboBox<>(msg);
 	private JLabel titre = new JLabel();
 	private Color couleur_perso = Color.WHITE;
 	private GridBagLayout gb = new GridBagLayout();
@@ -79,7 +79,7 @@ public class ColorStyleSelectionPanel {
 		//titre.setFont(font);
 		titre.setText(title + ":");
 
-		combo_couleur = new JComboBox(intArray);
+		combo_couleur = new JComboBox<>(intArray);
 		ComboBoxRenderer renderer = new ComboBoxRenderer();
 		combo_couleur.setRenderer(renderer);
 		setColorAndStyle(rgb, sty);
@@ -159,7 +159,7 @@ public class ColorStyleSelectionPanel {
 				DrawPanel.defaultColors[combo_couleur.getSelectedIndex()]);
 	}
 
-	private class ComboBoxRenderer extends JPanel implements ListCellRenderer {
+	private class ComboBoxRenderer extends JPanel implements ListCellRenderer<Object> {
 		private static final long serialVersionUID = 1L;
 		int id = 0;
 
@@ -168,7 +168,7 @@ public class ColorStyleSelectionPanel {
 			setPreferredSize(new Dimension(50, 20));
 		}
 
-		public Component getListCellRendererComponent(JList list, Object value,
+		public Component getListCellRendererComponent(JList<?> list, Object value,
 				int index, boolean isSelected, boolean cellHasFocus) {
 			// Get the selected index. (The index param isn't
 			// always valid, so just use the value.)

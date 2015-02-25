@@ -46,7 +46,7 @@ public class ContestTab extends AbstractWorkspacePanel {
 	
 	JPanel component;
 	JLabel workspaceLabel;
-	JComboBox workspaceSelection;
+	JComboBox<String> workspaceSelection;
 	JLabel nOfFilesLabel;
 	JSpinner nOfFileSpinner;
 	JLabel nOfBonusFilesLabel;
@@ -58,29 +58,42 @@ public class ContestTab extends AbstractWorkspacePanel {
 	}
 
 	@Override
-	protected JComboBox getWorkspaceSelection() {
+	protected JComboBox<String> getWorkspaceSelection() {
 		return workspaceSelection;
 	}
 	
 	@Override
 	protected void initComponent()
 	{
+		int contestFiles = 6;
+		int bonusFiles = 2;
 		WorkspaceConfig wc = WSManager.getWorkspaceConfig();
+		if (wc != null){
+			contestFiles = wc.getNOfContestFiles();
+			bonusFiles = wc.getNOfContestBonusFiles();
+		}
+		
 		component = new JPanel();
 		
 		workspaceLabel = new JLabel();
-		workspaceSelection = new JComboBox();
+		workspaceSelection = new JComboBox<>();
 
 		nOfFilesLabel = new JLabel();
-	    nOfFileSpinner = new JSpinner(new SpinnerNumberModel(wc.getNOfContestFiles(), 0, 100, 1));
+	    nOfFileSpinner = new JSpinner(new SpinnerNumberModel(contestFiles, 0, 100, 1));
 	    JComponent editor = new JSpinner.NumberEditor(nOfFileSpinner);
 	    nOfFileSpinner.setEditor(editor);
 
 		nOfBonusFilesLabel = new JLabel();
-	    nOfBonusFileSpinner = new JSpinner(new SpinnerNumberModel(wc.getNOfContestBonusFiles(), 0, 100, 1));
+	    nOfBonusFileSpinner = new JSpinner(new SpinnerNumberModel(bonusFiles, 0, 100, 1));
 	    JComponent editor2 = new JSpinner.NumberEditor(nOfBonusFileSpinner);
 	    nOfBonusFileSpinner.setEditor(editor2);
 
+	    if (wc != null){
+	    	enableComponents();
+	    } else {
+	    	disableComponents();
+	    }
+	    
 		populateWorkspaceList();
 	}
 
@@ -156,14 +169,21 @@ public class ContestTab extends AbstractWorkspacePanel {
 		nOfFileSpinner.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent arg0) {
-				WSManager.getWorkspaceConfig().setNOfContestFiles((Integer) nOfFileSpinner.getValue());
+				WorkspaceConfig wc = WSManager.getWorkspaceConfig();
+				if (wc != null) {
+					wc.setNOfContestFiles((Integer) nOfFileSpinner.getValue());
+				}
 			}
 		});
 		
 		nOfBonusFileSpinner.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent e) {
-				WSManager.getWorkspaceConfig().setNOfContestBonusFiles((Integer) nOfBonusFileSpinner.getValue());
+				WorkspaceConfig wc = WSManager.getWorkspaceConfig();
+				if (wc != null){
+					wc.setNOfContestBonusFiles((Integer) nOfBonusFileSpinner.getValue());
+				}
+				
 			}
 		});
 	}
@@ -178,18 +198,28 @@ public class ContestTab extends AbstractWorkspacePanel {
 	@Override
 	protected void setValues() {
 		WorkspaceConfig wc = WSManager.getWorkspaceConfig();
+		if (wc == null) {
+			nOfFileSpinner.setValue(0);
+			nOfBonusFileSpinner.setValue(0);
+			disableComponents();
+			return;
+		} else {
+			enableComponents();
+		}
 		nOfFileSpinner.setValue(wc.getNOfContestFiles());
 		nOfBonusFileSpinner.setValue(wc.getNOfContestBonusFiles());
 	}
 
 	@Override
 	protected void enableComponents() {
+		workspaceSelection.setEnabled(true);
 		nOfFileSpinner.setEnabled(true);
 		nOfBonusFileSpinner.setEnabled(true);
 	}
 
 	@Override
 	protected void disableComponents() {
+		workspaceSelection.setEnabled(false);
 		nOfFileSpinner.setEnabled(false);
 		nOfBonusFileSpinner.setEnabled(false);
 	}

@@ -261,7 +261,7 @@ public class Editor implements ActionListener
 		{
 			((EditorTextPane) textZone).getDsd().initStyles(wc.getCommentColor(), wc.getCommentStyle(),
 					wc.getPrimitiveColor(), wc.getPrimitiveStyle(), wc.getBraceColor(),
-					wc.getBraceStyle(), wc.getOperatorColor(), wc.getOperatorStyle());
+					wc.getBraceStyle(), wc.getOperandColor(), wc.getOperandStyle());
 		}
 	}
 	

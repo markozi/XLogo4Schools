@@ -1,27 +1,22 @@
-/* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loic Le Coq
+/*
+ * XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loic Le Coq
  * Copyright (C) 2013 Marko Zivkovic
- * 
  * Contact Information: marko88zivkovic at gmail dot com
- * 
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.  This program is distributed in the hope that it will be 
- * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General 
- * Public License for more details.  You should have received a copy of the 
- * GNU General Public License along with this program; if not, write to the Free 
- * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, 
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version. This program is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details. You should have received a copy of the
+ * GNU General Public License along with this program; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301, USA.
- * 
- * 
  * This Java source code belongs to XLogo4Schools, written by Marko Zivkovic
  * during his Bachelor thesis at the computer science department of ETH Zurich,
  * in the year 2013 and/or during future work.
- * 
  * It is a reengineered version of XLogo written by Loic Le Coq, published
  * under the GPL License at http://xlogo.tuxfamily.org/
- * 
  * Contents of this file were entirely written by Marko Zivkovic
  */
 
@@ -31,7 +26,6 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.IOException;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.GroupLayout;
@@ -49,56 +43,53 @@ import xlogo.Logo;
 import xlogo.messages.async.dialog.DialogMessenger;
 import xlogo.storage.Storable;
 import xlogo.storage.WSManager;
-import xlogo.storage.global.GlobalConfig;
 import xlogo.storage.workspace.Language;
 import xlogo.storage.workspace.NumberOfBackups;
 import xlogo.storage.workspace.WorkspaceConfig;
 
-public class WorkspaceTab extends AbstractWorkspacePanel{
-
-	JPanel component;
+public class WorkspaceTab extends AbstractWorkspacePanel {
 	
-	JLabel workspaceLabel;
-	JLabel wsLocationLabel;
-	JLabel wsLanguageLabel;
-	JLabel wsBackupLabel;
-	JLabel userLabel;
+	JPanel						component;
 	
-	JButton addWorkspaceBtn;
-	JButton addUserBtn;
-
-	JButton removeWorkspaceBtn;
-	JButton removeUserBtn;
+	JLabel						workspaceLabel;
+	JLabel						wsLocationLabel;
+	JLabel						wsLanguageLabel;
+	JLabel						wsBackupLabel;
+	JLabel						userLabel;
 	
-	JButton importWorkspaceBtn;
-	JButton importUserBtn;
+	JButton						addWorkspaceBtn;
+	JButton						addUserBtn;
 	
-	JComboBox workspaceSelection;
-	JComboBox userSelection;
-	JLabel wsLocation;
-	JFileChooser wsLocationChooser;
-	JComboBox languageSelection;
-	JComboBox nOfBackupsSelecteion;
-	JCheckBox userCreatable;
+	JButton						removeWorkspaceBtn;
+	JButton						removeUserBtn;
+	
+	JButton						importWorkspaceBtn;
+	JButton						importUserBtn;
+	
+	JComboBox<String>			workspaceSelection;
+	JComboBox<String>			userSelection;
+	JLabel						wsLocation;
+	JFileChooser				wsLocationChooser;
+	JComboBox<Language>			languageSelection;
+	JComboBox<NumberOfBackups>	nOfBackupsSelecteion;
+	JCheckBox					userCreatable;
 	
 	public WorkspaceTab() {
 		super();
 	}
 	
 	@Override
-	public JComponent getComponent()
-	{
+	public JComponent getComponent() {
 		return component;
 	}
-
+	
 	@Override
-	protected JComboBox getWorkspaceSelection() {
+	protected JComboBox<String> getWorkspaceSelection() {
 		return workspaceSelection;
 	}
-
+	
 	@Override
-	protected void initComponent()
-	{
+	protected void initComponent() {
 		component = new JPanel();
 		
 		workspaceLabel = new JLabel("Workspace: ");
@@ -109,36 +100,41 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 		
 		addWorkspaceBtn = new JButton("Add");
 		addUserBtn = new JButton("Add");
-
+		
 		removeWorkspaceBtn = new JButton("Remove");
 		removeUserBtn = new JButton("Remove");
 		
 		importWorkspaceBtn = new JButton("Import");
 		importUserBtn = new JButton("Import");
 		
-		workspaceSelection = new JComboBox();
-		userSelection = new JComboBox();
+		workspaceSelection = new JComboBox<>();
+		userSelection = new JComboBox<>();
 		wsLocation = new JLabel();
 		wsLocationChooser = new JFileChooser();
-		languageSelection = new JComboBox(Language.values());
-		nOfBackupsSelecteion = new JComboBox(NumberOfBackups.values());
+		languageSelection = new JComboBox<>(Language.values());
+		nOfBackupsSelecteion = new JComboBox<>(NumberOfBackups.values());
 		userCreatable = new JCheckBox("Allow the users to create new user accounts?");
 		
 		populateWorkspaceList();
 		setValues();
+		
+		if (WSManager.getWorkspaceConfig() == null){
+			disableComponents();
+		} else {
+			enableComponents();
+		}
 	}
-
+	
 	@Override
-	protected void layoutComponent()
-	{
-		workspaceSelection.setMinimumSize(new Dimension(150,25));
-		workspaceSelection.setMaximumSize(new Dimension(150,25));
-		userSelection.setMinimumSize(new Dimension(150,25));
-		userSelection.setMaximumSize(new Dimension(150,25));
-		languageSelection.setMinimumSize(new Dimension(150,25));
-		languageSelection.setMaximumSize(new Dimension(150,25));
-		nOfBackupsSelecteion.setMinimumSize(new Dimension(75,25));
-		nOfBackupsSelecteion.setMaximumSize(new Dimension(75,25));
+	protected void layoutComponent() {
+		workspaceSelection.setMinimumSize(new Dimension(150, 25));
+		workspaceSelection.setMaximumSize(new Dimension(150, 25));
+		userSelection.setMinimumSize(new Dimension(150, 25));
+		userSelection.setMaximumSize(new Dimension(150, 25));
+		languageSelection.setMinimumSize(new Dimension(150, 25));
+		languageSelection.setMaximumSize(new Dimension(150, 25));
+		nOfBackupsSelecteion.setMinimumSize(new Dimension(75, 25));
+		nOfBackupsSelecteion.setMaximumSize(new Dimension(75, 25));
 		
 		component.add(workspaceLabel);
 		component.add(wsLocationLabel);
@@ -152,7 +148,7 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 		component.add(removeUserBtn);
 		component.add(importWorkspaceBtn);
 		component.add(importUserBtn);
-
+		
 		component.add(workspaceSelection);
 		component.add(userSelection);
 		component.add(wsLocation);
@@ -165,82 +161,73 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 		groupLayout.setAutoCreateGaps(true);
 		groupLayout.setAutoCreateContainerGaps(true);
 		
-		groupLayout.setVerticalGroup(
-				groupLayout.createSequentialGroup()
-					.addGroup(groupLayout.createParallelGroup()
-						.addComponent(workspaceLabel)
-						.addComponent(workspaceSelection)
-						.addComponent(addWorkspaceBtn)
-						.addComponent(removeWorkspaceBtn)
-						.addComponent(importWorkspaceBtn))
-					.addGroup(groupLayout.createParallelGroup()
-						.addComponent(wsLocationLabel)
-						.addComponent(wsLocation))
-					.addGroup(groupLayout.createParallelGroup()
-						.addComponent(userLabel)
-						.addComponent(userSelection)
-						.addComponent(addUserBtn)
-						.addComponent(removeUserBtn)
-						.addComponent(importUserBtn))
-					.addGroup(groupLayout.createParallelGroup()
-						.addComponent(wsLanguageLabel)
-						.addComponent(languageSelection))
-					.addGroup(groupLayout.createParallelGroup()
-							.addComponent(wsBackupLabel)
-							.addComponent(nOfBackupsSelecteion))
-					.addGroup(groupLayout.createParallelGroup()
-							.addComponent(userCreatable))
-					);
+		groupLayout
+				.setVerticalGroup(groupLayout
+						.createSequentialGroup()
+						.addGroup(
+								groupLayout.createParallelGroup().addComponent(workspaceLabel)
+										.addComponent(workspaceSelection).addComponent(addWorkspaceBtn)
+										.addComponent(removeWorkspaceBtn).addComponent(importWorkspaceBtn))
+						.addGroup(
+								groupLayout.createParallelGroup().addComponent(wsLocationLabel)
+										.addComponent(wsLocation))
+						.addGroup(
+								groupLayout.createParallelGroup().addComponent(userLabel).addComponent(userSelection)
+										.addComponent(addUserBtn).addComponent(removeUserBtn)
+										.addComponent(importUserBtn))
+						.addGroup(
+								groupLayout.createParallelGroup().addComponent(wsLanguageLabel)
+										.addComponent(languageSelection))
+						.addGroup(
+								groupLayout.createParallelGroup().addComponent(wsBackupLabel)
+										.addComponent(nOfBackupsSelecteion))
+						.addGroup(groupLayout.createParallelGroup().addComponent(userCreatable)));
 		
-		groupLayout.setHorizontalGroup(
-				groupLayout.createParallelGroup()
-					.addGroup(groupLayout.createSequentialGroup()
-						.addGroup(groupLayout.createParallelGroup()
-							.addComponent(workspaceLabel)
-							.addComponent(userLabel)
-							.addComponent(wsLocationLabel)
-							.addComponent(wsLanguageLabel)
-							.addComponent(wsBackupLabel)
-							)
-						.addGroup(groupLayout.createParallelGroup()
-							.addGroup(groupLayout.createSequentialGroup()
-								.addGroup(groupLayout.createParallelGroup()
-										.addComponent(workspaceSelection)
-										.addComponent(userSelection)
-									)
-								.addGroup(groupLayout.createParallelGroup()
-										.addComponent(addWorkspaceBtn)
-										.addComponent(addUserBtn)
-									)
-								.addGroup(groupLayout.createParallelGroup()
-										.addComponent(removeWorkspaceBtn)
-										.addComponent(removeUserBtn)
-									)
-								.addGroup(groupLayout.createParallelGroup()
-										.addComponent(importWorkspaceBtn)
-										.addComponent(importUserBtn)
-									)	
-								)
-							.addComponent(wsLocation)
-							.addComponent(languageSelection)
-							.addComponent(nOfBackupsSelecteion)		
-							)
-						)
-					.addComponent(userCreatable)
-					);
+		groupLayout.setHorizontalGroup(groupLayout
+				.createParallelGroup()
+				.addGroup(
+						groupLayout
+								.createSequentialGroup()
+								.addGroup(
+										groupLayout.createParallelGroup().addComponent(workspaceLabel)
+												.addComponent(userLabel).addComponent(wsLocationLabel)
+												.addComponent(wsLanguageLabel).addComponent(wsBackupLabel))
+								.addGroup(
+										groupLayout
+												.createParallelGroup()
+												.addGroup(
+														groupLayout
+																.createSequentialGroup()
+																.addGroup(
+																		groupLayout.createParallelGroup()
+																				.addComponent(workspaceSelection)
+																				.addComponent(userSelection))
+																.addGroup(
+																		groupLayout.createParallelGroup()
+																				.addComponent(addWorkspaceBtn)
+																				.addComponent(addUserBtn))
+																.addGroup(
+																		groupLayout.createParallelGroup()
+																				.addComponent(removeWorkspaceBtn)
+																				.addComponent(removeUserBtn))
+																.addGroup(
+																		groupLayout.createParallelGroup()
+																				.addComponent(importWorkspaceBtn)
+																				.addComponent(importUserBtn)))
+												.addComponent(wsLocation).addComponent(languageSelection)
+												.addComponent(nOfBackupsSelecteion))).addComponent(userCreatable));
 	}
 	
 	@Override
-	protected void initEventListeners()
-	{
+	protected void initEventListeners() {
 		/*
 		 * WORKSPACE [SELECT in super class]; ADD; REMOVE; IMPORT
 		 */
 		super.initEventListeners();
-			
-		addWorkspaceBtn.addActionListener(new ActionListener() {
+		
+		addWorkspaceBtn.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
-				new Thread(new Runnable() {
+				new Thread(new Runnable(){
 					public void run() {
 						addWorkspace();
 					}
@@ -248,9 +235,9 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 			}
 		});
 		
-		removeWorkspaceBtn.addActionListener(new ActionListener() {
+		removeWorkspaceBtn.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
-				new Thread(new Runnable() {
+				new Thread(new Runnable(){
 					public void run() {
 						deleteWorkspace();
 					}
@@ -258,9 +245,9 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 			}
 		});
 		
-		importWorkspaceBtn.addActionListener(new ActionListener() {
+		importWorkspaceBtn.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
-				new Thread(new Runnable() {
+				new Thread(new Runnable(){
 					public void run() {
 						importWorkspace();
 					}
@@ -272,9 +259,9 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 		 * USER ADD; REMOVE; IMPORT
 		 */
 		
-		addUserBtn.addActionListener(new ActionListener() {
+		addUserBtn.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
-				new Thread(new Runnable() {
+				new Thread(new Runnable(){
 					public void run() {
 						addUser();
 					}
@@ -282,9 +269,9 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 			}
 		});
 		
-		removeUserBtn.addActionListener(new ActionListener() {
+		removeUserBtn.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
-				new Thread(new Runnable() {
+				new Thread(new Runnable(){
 					public void run() {
 						removeUser();
 					}
@@ -292,9 +279,9 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 			}
 		});
 		
-		importUserBtn.addActionListener(new ActionListener() {
+		importUserBtn.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
-				new Thread(new Runnable() {
+				new Thread(new Runnable(){
 					public void run() {
 						importUser();
 					}
@@ -306,9 +293,9 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 		 * LANGUAGE
 		 */
 		
-		languageSelection.addActionListener(new ActionListener() {
+		languageSelection.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
-				new Thread(new Runnable() {
+				new Thread(new Runnable(){
 					public void run() {
 						Language lang = (Language) languageSelection.getSelectedItem();
 						changeLanguage(lang);
@@ -321,7 +308,7 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 		 * BACKUP VERSIONS
 		 */
 		
-		nOfBackupsSelecteion.addActionListener(new ActionListener() {
+		nOfBackupsSelecteion.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				NumberOfBackups n = (NumberOfBackups) nOfBackupsSelecteion.getSelectedItem();
 				WSManager.getInstance().getWorkspaceConfigInstance().setNumberOfBackups(n);
@@ -332,10 +319,13 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 		 * USER CREATION
 		 */
 		
-		userCreatable.addChangeListener(new ChangeListener() {
+		userCreatable.addChangeListener(new ChangeListener(){
 			public void stateChanged(ChangeEvent arg0) {
 				boolean isAllowed = userCreatable.isSelected();
-				WSManager.getInstance().getWorkspaceConfigInstance().setAllowUserCreation(isAllowed);
+				WorkspaceConfig wc = WSManager.getWorkspaceConfig();
+				if (wc != null) {
+					wc.setUserCreationAllowed(isAllowed);
+				}
 			}
 		});
 	}
@@ -347,23 +337,17 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 	/**
 	 * On creation or when a workspace is set, the input elements must be set according to the current workspace properties.
 	 */
-	protected void setValues()
-	{
-		WorkspaceConfig wc = WSManager.getInstance().getWorkspaceConfigInstance();
-		GlobalConfig gc = WSManager.getInstance().getGlobalConfigInstance();
+	protected void setValues() {
+		WorkspaceConfig wc = WSManager.getWorkspaceConfig();
 		
 		// location text
-		if (wc == null)
-		{
-			String wsName = (String) workspaceSelection.getSelectedItem();
-			wsLocation.setText(gc.getWorkspaceDirectory(wsName).toString());
-			wsLocationLabel.setText(Logo.messages.getString("ws.settings.damaged"));
-			disableComponents();
+		if (wc == null) {
+			wsLocation.setText("-");
 			return;
-		}else if(wc.isVirtual())
-			wsLocation.setText(Logo.messages.getString("ws.settings.virtual.ws.not.stored"));
-		else
-			wsLocation.setText(wc.getLocation().toString());
+		}
+		else {
+			wsLocation.setText(wc.getDirectory().toString());
+		}
 		
 		// user list
 		populateUserList();
@@ -383,14 +367,14 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 	 * Disable controls that depend on the workspace and that cannot be used with a virtual workspace
 	 * or a workspace that could not be loaded
 	 */
-	protected void disableComponents()
-	{
-		WorkspaceConfig wc = WSManager.getInstance().getWorkspaceConfigInstance();
-		removeWorkspaceBtn.setEnabled(wc == null);
+	protected void disableComponents() {
+		workspaceSelection.setEnabled(false);
+		removeWorkspaceBtn.setEnabled(false);
 		userSelection.setEnabled(false);
 		addUserBtn.setEnabled(false);
 		removeUserBtn.setEnabled(false);
 		importUserBtn.setEnabled(false);
+		languageSelection.setEnabled(false);
 		nOfBackupsSelecteion.setEnabled(false);
 		userCreatable.setEnabled(false);
 	}
@@ -399,13 +383,14 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 	/**
 	 * Enable if Workspace is successfully entered and if it is not virtual.
 	 */
-	protected void enableComponents()
-	{
+	protected void enableComponents() {
+		workspaceSelection.setEnabled(true);
 		removeWorkspaceBtn.setEnabled(true);
 		userSelection.setEnabled(true);
 		addUserBtn.setEnabled(true);
 		removeUserBtn.setEnabled(true);
 		importUserBtn.setEnabled(true);
+		languageSelection.setEnabled(true);
 		nOfBackupsSelecteion.setEnabled(true);
 		userCreatable.setEnabled(true);
 	}
@@ -414,32 +399,28 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 	 * USER : ADD, REMOVE, IMPORT
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 	
-	
-	private void populateUserList()
-	{
+	private void populateUserList() {
 		WorkspaceConfig wc = WSManager.getInstance().getWorkspaceConfigInstance();
 		String[] users = wc.getUserList();
-		userSelection.setModel(new DefaultComboBoxModel(users));
-		try {
-			wc.enterInitialUserSpace();
-			String lastUser = wc.getLastActiveUser();
-			userSelection.setSelectedItem(lastUser);
-		}
-		catch (IOException ignore) {
-		}
+		userSelection.setModel(new DefaultComboBoxModel<String>(users));
+		//try {
+		//wc.enterInitialUserSpace(); // TODO maybe we still need this?
+		String lastUser = wc.getLastActiveUser();
+		userSelection.setSelectedItem(lastUser);
+		//}
+		//catch (IOException ignore) {
+		//}
 	}
 	
-	private void addUser()
-	{
-		String username =  getUserText(Logo.messages.getString("ws.settings.enter.user.name"), Logo.messages.getString("ws.settings.create.new.user"));
-
+	private void addUser() {
+		String username = getUserText(Logo.messages.getString("ws.settings.enter.user.name"),
+				Logo.messages.getString("ws.settings.create.new.user"));
+		
 		if ((username == null) || (username.length() == 0))
 			return;
 		
-		if (WSManager.getInstance().getWorkspaceConfigInstance().existsUserLogically(username))
-		{
-			DialogMessenger.getInstance().dispatchMessage(
-					Logo.messages.getString("ws.error.title"),
+		if (WSManager.getInstance().getWorkspaceConfigInstance().existsUserLogically(username)) {
+			DialogMessenger.getInstance().dispatchMessage(Logo.messages.getString("ws.error.title"),
 					Logo.messages.getString("ws.settings.user.exists.already"));
 			return;
 		}
@@ -448,18 +429,15 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 		populateUserList();
 	}
 	
-	private void removeUser()
-	{
+	private void removeUser() {
 		WSManager wsManager = WSManager.getInstance();
 		WorkspaceConfig wc = wsManager.getWorkspaceConfigInstance();
-
+		
 		String username = (String) userSelection.getSelectedItem();
 		if (username == null)
 			return;
 		String userDirectory = wc.getUserDirectroy(username).toString();
-		String message = 
-				Logo.messages.getString("ws.settings.want.delete.dir.1") 
-				+ userDirectory 
+		String message = Logo.messages.getString("ws.settings.want.delete.dir.1") + userDirectory
 				+ Logo.messages.getString("ws.settings.want.delete.dir.1");
 		
 		boolean ans = getUserYesOrNo(message, Logo.messages.getString("ws.settings.remove.user"));
@@ -469,32 +447,27 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 		populateUserList();
 	}
 	
-	private void importUser()
-	{
+	private void importUser() {
 		File dir = getUserSelectedDirectory();
 		if (dir == null)
 			return;
-
-		if (!WSManager.isUserDirectory(dir))
-		{
-			DialogMessenger.getInstance().dispatchMessage(
-					Logo.messages.getString("i.am.sorry"),
+		
+		if (!WSManager.isUserDirectory(dir)) {
+			DialogMessenger.getInstance().dispatchMessage(Logo.messages.getString("i.am.sorry"),
 					dir.toString() + Logo.messages.getString("ws.settings.not.legal.user.dir"));
 			return;
 		}
 		
 		String newName = dir.getName();
 		WorkspaceConfig wc = WSManager.getWorkspaceConfig();
-		if (dir.equals(wc.getUserDirectroy(newName)))
-		{
+		if (dir.equals(wc.getUserDirectroy(newName))) {
 			DialogMessenger.getInstance().dispatchMessage("This user was already in the list.");
 			return;
 		}
-
-		while (wc.existsUserLogically(newName) || !Storable.checkLegalName(newName))
-		{
-			String msg = wc.existsUserLogically(newName) ? 
-					"The user name " + newName + " already exists. Please choose a new name."
+		
+		while (wc.existsUserLogically(newName) || !Storable.checkLegalName(newName)) {
+			String msg = wc.existsUserLogically(newName) ? "The user name " + newName
+					+ " already exists. Please choose a new name."
 					: "The chosen name contains illegal characters. Please choose a new name.";
 			
 			newName = getUserText(msg, "Name Conflict");
@@ -504,9 +477,9 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 		
 		try {
 			WSManager.getInstance().importUser(dir, newName);
-		} catch (Exception e) {
-			DialogMessenger.getInstance().dispatchMessage(
-					Logo.messages.getString("ws.error.title"),
+		}
+		catch (Exception e) {
+			DialogMessenger.getInstance().dispatchMessage(Logo.messages.getString("ws.error.title"),
 					Logo.messages.getString("ws.settings.could.not.import.user") + e.toString());
 		}
 		populateUserList();
@@ -519,14 +492,12 @@ public class WorkspaceTab extends AbstractWorkspacePanel{
 	private void changeLanguage(Language lang) {
 		WorkspaceConfig wc = WSManager.getInstance().getWorkspaceConfigInstance();
 		
-		if (wc.getLanguage() != lang)
-		{
+		if (wc.getLanguage() != lang) {
 			wc.setLanguage(lang);
 		}
 	}
 	
-	protected void setText()
-	{
+	protected void setText() {
 		workspaceLabel.setText(Logo.messages.getString("ws.settings.workspace"));
 		wsLocationLabel.setText(Logo.messages.getString("ws.settings.location"));
 		wsLanguageLabel.setText(Logo.messages.getString("ws.settings.language"));

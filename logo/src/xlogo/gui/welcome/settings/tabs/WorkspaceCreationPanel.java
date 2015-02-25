@@ -40,7 +40,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import xlogo.gui.components.X4SComponent;
-import xlogo.storage.WSManager;
+import xlogo.storage.global.GlobalConfig;
 
 class WorkspaceCreationPanel extends X4SComponent
 {
@@ -68,7 +68,7 @@ class WorkspaceCreationPanel extends X4SComponent
 		locationField = new JTextField();
 		openFilechooserBtn = new JButton("Browse");
 		
-		locationField.setText(WSManager.getInstance().getGlobalConfigInstance().getLocation().toString());
+		locationField.setText(GlobalConfig.DEFAULT_LOCATION.getAbsolutePath());
 		locationField.setEditable(false);		
 	}
 

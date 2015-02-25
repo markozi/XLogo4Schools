@@ -254,7 +254,7 @@ public class ZoneCommande extends JTextPane implements CaretListener
 	{
 		WorkspaceConfig wc = WSManager.getWorkspaceConfig();
 		dlc.initStyles(wc.getCommentColor(), wc.getCommentStyle(), wc.getPrimitiveColor(), wc.getPrimitiveStyle(),
-				wc.getBraceColor(), wc.getBraceStyle(), wc.getOperatorColor(), wc.getOperatorStyle());
+				wc.getBraceColor(), wc.getBraceStyle(), wc.getOperandColor(), wc.getOperandStyle());
 	}
 	
 	// Enable or disable Syntax Highlighting

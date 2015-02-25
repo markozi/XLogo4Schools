@@ -27,10 +27,9 @@
 
 package xlogo.gui.components;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 import xlogo.AppSettings;
+import xlogo.AppSettings.AppProperty;
+import xlogo.interfaces.Observable.PropertyChangeListener;
 
 /**
  * Automatically calls all convenience features in the following order:
@@ -68,29 +67,23 @@ public abstract class X4SGui {
 		stopListenForLanguageChangeEvents();
 	}
 	
-	private ActionListener languageChangeListener;
+	private PropertyChangeListener languageChangeListener = () -> {
+		setText();
+	};
 	
 	/**
 	 * Note: registers only once, even if called more than once.
 	 */
 	public void startListenForLanguageChangeEvents()
 	{
-		if (languageChangeListener != null)
-			return;
-		languageChangeListener = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				setText();
-			}
-		};
-		AppSettings.getInstance().addLanguageChangeListener(languageChangeListener);
+		AppSettings.getInstance().addPropertyChangeListener(AppProperty.LANGUAGE, languageChangeListener);
 	}
 	
 	public void stopListenForLanguageChangeEvents()
 	{
 		if (languageChangeListener == null)
 			return;
-		AppSettings.getInstance().removeLanguageChangeListener(languageChangeListener);
+		AppSettings.getInstance().removePropertyChangeListener(AppProperty.LANGUAGE, languageChangeListener);
 		languageChangeListener = null;
 	}
 	

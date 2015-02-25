@@ -41,8 +41,10 @@ import javax.swing.JPanel;
 import javax.swing.JTextPane;
 
 import xlogo.AppSettings;
+import xlogo.AppSettings.AppProperty;
 import xlogo.StyledDocument.DocumentLogo;
 import xlogo.gui.components.ColorStyleSelectionPanel;
+import xlogo.interfaces.Observable.PropertyChangeListener;
 import xlogo.storage.WSManager;
 import xlogo.storage.workspace.SyntaxHighlightConfig;
 import xlogo.storage.workspace.WorkspaceConfig;
@@ -51,7 +53,7 @@ public class SyntaxHighlightingTab extends AbstractWorkspacePanel{
 	private JPanel component;
 	
 	private JLabel workspaceLabel;
-	private JComboBox workspaceSelection;
+	private JComboBox<String> workspaceSelection;
 	private ColorStyleSelectionPanel commentStyleSelection;
 	private ColorStyleSelectionPanel braceStyleSelection;
 	private ColorStyleSelectionPanel primitiveStyleSelection;
@@ -62,7 +64,7 @@ public class SyntaxHighlightingTab extends AbstractWorkspacePanel{
 	private DocumentLogo previewLogoDocument;
 	private JTextPane previewTextPane;
 
-	private ActionListener syntaxHighlightChangeListener;
+	private PropertyChangeListener syntaxHighlightChangeListener;
 	
 	public SyntaxHighlightingTab() {
 		super();
@@ -76,14 +78,16 @@ public class SyntaxHighlightingTab extends AbstractWorkspacePanel{
 	protected void initComponent()
 	{
 		WorkspaceConfig wc = WSManager.getWorkspaceConfig();
+		SyntaxHighlightConfig syntaxHighlighting = wc != null ? wc.getSyntaxHighlightStyles() : new SyntaxHighlightConfig();
+			
 		//Font font = wc.getFont();
 		component = new JPanel();
 		workspaceLabel = new JLabel();
-		workspaceSelection = new JComboBox();
-		commentStyleSelection=new ColorStyleSelectionPanel(wc.getCommentColor(), wc.getCommentStyle(), translate("pref.highlight.comment"));
-		braceStyleSelection=new ColorStyleSelectionPanel(wc.getBraceColor(), wc.getBraceStyle(), translate("pref.highlight.parenthesis"));
-		primitiveStyleSelection=new ColorStyleSelectionPanel(wc.getPrimitiveColor(), wc.getPrimitiveStyle(), translate("pref.highlight.primitive"));
-		operandStyleSelection=new ColorStyleSelectionPanel(wc.getOperatorColor(), wc.getOperatorStyle(), translate("pref.highlight.operand"));
+		workspaceSelection = new JComboBox<>();
+		commentStyleSelection=new ColorStyleSelectionPanel(syntaxHighlighting.getCommentColor(), syntaxHighlighting.getCommentStyle(), translate("pref.highlight.comment"));
+		braceStyleSelection=new ColorStyleSelectionPanel(syntaxHighlighting.getBraceColor(), syntaxHighlighting.getBraceStyle(), translate("pref.highlight.parenthesis"));
+		primitiveStyleSelection=new ColorStyleSelectionPanel(syntaxHighlighting.getPrimitiveColor(), syntaxHighlighting.getPrimitiveStyle(), translate("pref.highlight.primitive"));
+		operandStyleSelection=new ColorStyleSelectionPanel(syntaxHighlighting.getOperandColor(), syntaxHighlighting.getOperandStyle(), translate("pref.highlight.operand"));
 
 		previewTextPane=new JTextPane();
 		activateHighlightingCheckBox = new JCheckBox();
@@ -184,13 +188,12 @@ public class SyntaxHighlightingTab extends AbstractWorkspacePanel{
 					setValues();
 				}
 			});
-		AppSettings.getInstance().addSyntaxHighlightStyleChangeListener(
-				syntaxHighlightChangeListener = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				updateSyntaxHighlightingPreview();
-			}
-		});
+		
+		syntaxHighlightChangeListener = () -> {
+			updateSyntaxHighlightingPreview();
+		};
+		
+		AppSettings.getInstance().addPropertyChangeListener(AppProperty.SYNTAX_HIGHLIGHTING, syntaxHighlightChangeListener);
 		
 		operandStyleSelection.addStyleChangeListener(new ActionListener() {
 			@Override
@@ -230,25 +233,27 @@ public class SyntaxHighlightingTab extends AbstractWorkspacePanel{
 	}
 	
 	@Override
-	public void stopEventListeners()
-	{
+	public void stopEventListeners() {
 		super.stopEventListeners();
-		AppSettings.getInstance().removeSyntaxHighlightStyleChangeListener(syntaxHighlightChangeListener);
-		
+		AppSettings.getInstance().removePropertyChangeListener(AppProperty.SYNTAX_HIGHLIGHTING, syntaxHighlightChangeListener);
 	}
 
 	@Override
-	protected JComboBox getWorkspaceSelection() {
+	protected JComboBox<String> getWorkspaceSelection() {
 		return workspaceSelection;
 	}
 
 	@Override
 	protected void setValues() {
 		WorkspaceConfig wc = WSManager.getWorkspaceConfig();
-		commentStyleSelection.setColorAndStyle(wc.getCommentColor(), wc.getCommentStyle());
-		braceStyleSelection.setColorAndStyle(wc.getBraceColor(), wc.getBraceStyle());
-		primitiveStyleSelection.setColorAndStyle(wc.getPrimitiveColor(), wc.getPrimitiveStyle());
-		operandStyleSelection.setColorAndStyle(wc.getOperatorColor(), wc.getOperatorStyle());
+		if (wc == null){
+			disableComponents();
+		} else {
+			commentStyleSelection.setColorAndStyle(wc.getCommentColor(), wc.getCommentStyle());
+			braceStyleSelection.setColorAndStyle(wc.getBraceColor(), wc.getBraceStyle());
+			primitiveStyleSelection.setColorAndStyle(wc.getPrimitiveColor(), wc.getPrimitiveStyle());
+			operandStyleSelection.setColorAndStyle(wc.getOperandColor(), wc.getOperandStyle());
+		}
 		
 		updateSyntaxHighlightingPreview();
 	}
@@ -257,6 +262,8 @@ public class SyntaxHighlightingTab extends AbstractWorkspacePanel{
 	{
 		WorkspaceConfig wc = WSManager.getWorkspaceConfig();
 
+		if (wc == null){ return; }
+		
 		boolean isHighlightingEnabled = wc.isSyntaxHighlightingEnabled();
 		activateHighlightingCheckBox.setSelected(isHighlightingEnabled);
 		commentStyleSelection.setEnabled(isHighlightingEnabled);
@@ -270,19 +277,32 @@ public class SyntaxHighlightingTab extends AbstractWorkspacePanel{
 				wc.getCommentColor(), wc.getCommentStyle(),
 				wc.getPrimitiveColor(), wc.getPrimitiveStyle(),
 				wc.getBraceColor(), wc.getBraceStyle(),
-				wc.getOperatorColor(), wc.getOperatorStyle());
+				wc.getOperandColor(), wc.getOperandStyle());
+		
 		
 		previewTextPane.setText(translate("pref.highlight.example"));
 	}
 
 	@Override
 	protected void enableComponents() {
-		
+		workspaceSelection.setEnabled(true);
+		activateHighlightingCheckBox.setEnabled(true);
+		commentStyleSelection.setEnabled(true);
+		primitiveStyleSelection.setEnabled(true);
+		braceStyleSelection.setEnabled(true);
+		operandStyleSelection.setEnabled(true);
+		restoreDefaultsButton.setEnabled(true);
 	}
 
 	@Override
 	protected void disableComponents() {
-		
+		workspaceSelection.setEnabled(false);
+		activateHighlightingCheckBox.setEnabled(false);
+		commentStyleSelection.setEnabled(false);
+		primitiveStyleSelection.setEnabled(false);
+		braceStyleSelection.setEnabled(false);
+		operandStyleSelection.setEnabled(false);
+		restoreDefaultsButton.setEnabled(false);
 	}
 
 }

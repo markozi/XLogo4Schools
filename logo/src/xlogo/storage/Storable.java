@@ -47,14 +47,25 @@ public abstract class Storable implements Serializable {
 	private File				location;
 	
 	/**
-	 * Dirty : an object is dirty if it was changed since it was loaded or stored the last time.
+	 * Dirty : an object is dirty if it was changed since it was created, loaded or stored the last time.
 	 */
 	private transient boolean	dirty				= true;
+	
+	/**
+	 * If true, the storable will only be stored after it has been marked dirty (thus, if an explicit change happened to it)
+	 */
+	private boolean				isStoringDeferred	= false;
 	
 	/**
 	 * Will not be stored if virtual.
 	 */
 	private transient boolean	isVirtual			= false;
+	
+	/**
+	 * @see #isPersisted()
+	 */
+	private boolean				isPersisted			= false;
+
 	
 	/*
 	 * PATH BUILDERS
@@ -73,11 +84,32 @@ public abstract class Storable implements Serializable {
 	 */
 	
 	/**
-	 * Store this object to the file specified by {@link #getFilePath()} if it is dirty
+	 * Store this object to the file specified by {@link #getFilePath()} if it is dirty and storing is not deferred, but only if it is not virtual.
 	 * @throws IOException
 	 */
-	public abstract void store() throws IOException;
+	public void store() {
+		if (!isStoringDeferred()){
+			if (isDirty() && !isVirtual()){
+				setPersisted(false);
+				try {
+					File file = getFilePath();
+					mkParentDirs(file);
+					storeCopyToFile(file);
+				}
+				catch (IOException ignore) { }
+				setPersisted(true);
+			}
+		} else {
+			setStoringDeferred(false);
+		}
+	}
 	
+	/**
+	 * Persist the contents of this {@link Storable} to the specified file.
+	 * @param file
+	 * @throws IOException
+	 * @throws IllegalArgumentException
+	 */
 	public abstract void storeCopyToFile(File file) throws IOException, IllegalArgumentException;
 	
 	/**
@@ -93,8 +125,12 @@ public abstract class Storable implements Serializable {
 	
 	public abstract String getFileNameExtension();
 	
+	public String getFileNamePrefix(){
+		return "";
+	}
+	
 	public String getFileName() {
-		return getPlainName() + getFileNameExtension();
+		return getFileNamePrefix() + getPlainName() + getFileNameExtension();
 	}
 	
 	/**
@@ -107,16 +143,16 @@ public abstract class Storable implements Serializable {
 	/**
 	 * If this exists on the file system, that file will be renamed. <p>
 	 * If newFileName already existed, it is deleted first.
-	 * @param newFileName
-	 * @throws IllegalArgumentException - If the provided name is not legal.
+	 * @param newFileName - must not be null and must satisfy {@link #checkLegalName(String)}
+	 * @throws IllegalArgumentException - If the provided name is not legal or null.
 	 */
-	public void setFileName(String newFileName) throws IllegalArgumentException //TODO make sure callers conform with contract
+	public void setPlainName(String newFileName) throws IllegalArgumentException
 	{
 		if (newFileName == null || newFileName.length() == 0)
 			throw new IllegalArgumentException("File name must not be null or empty.");
 		
 		if (!checkLegalName(newFileName))
-			throw new IllegalArgumentException("The chose file name contains illegal characters.");
+			throw new IllegalArgumentException("The chosen file name contains illegal characters.");
 		
 		String ext = getFileNameExtension();
 		String oldName = getPlainName();
@@ -154,14 +190,16 @@ public abstract class Storable implements Serializable {
 	/**
 	 * To set null or a file that is not a directory or a directory with no write permissions is an error, as long as this is not virtual.<br>
 	 * Setting location has no effect if this is virtual.<br>
-	 * @param location - the directory where this should be stored to.
+	 * @param location - the directory where this should be stored to. If null, location will be set to user home directory
 	 * @throws IOException 
 	 * @throws IOException If the specified location is not a directory or no write permissions exist, or the chosen name is not legal.
 	 */
 	public void setLocation(File location) throws IllegalArgumentException {
 		if (isVirtual) { return; }
 		
-		if (location == null) { throw new IllegalArgumentException("Location must not be null."); }
+		if (location == null) { 
+			location = new File(System.getProperty("user.home"));
+		}
 		
 		this.location = location;
 		makeDirty();
@@ -225,6 +263,7 @@ public abstract class Storable implements Serializable {
 	 */
 	protected void makeDirty() {
 		dirty = true;
+		setStoringDeferred(false);
 	}
 	
 	/**
@@ -233,6 +272,18 @@ public abstract class Storable implements Serializable {
 	 */
 	protected void makeClean() {
 		dirty = false;
+	}
+	
+	/*
+	 * Deferred
+	 */
+	
+	public boolean isStoringDeferred() {
+		return isStoringDeferred;
+	}
+
+	public void setStoringDeferred(boolean isDeferred) {
+		this.isStoringDeferred = isDeferred;
 	}
 	
 	/*
@@ -253,6 +304,26 @@ public abstract class Storable implements Serializable {
 	 */
 	public boolean isVirtual() {
 		return isVirtual;
+	}
+	
+	/*
+	 * isPersisted
+	 */
+	
+	/**
+	 * @see #isPersisted()
+	 * @param isPersisted
+	 */
+	protected void setPersisted(boolean isPersisted){
+		this.isPersisted = isPersisted;
+	}
+	
+	/**
+	 * Whether the last attempt to store or load the object was successful
+	 * @return
+	 */
+	public boolean isPersisted(){
+		return isPersisted;
 	}
 	
 	// The best I found : http://stackoverflow.com/questions/893977/java-how-to-find-out-whether-a-file-name-is-valid

@@ -37,10 +37,13 @@
 	
 	<property name="version" value="0.9.05beta-2014-12-22"/>
 	
+		<echo message="Using Java version ${ant.java.version}."/>
+		
     <!-- ================================= 
          default target: deploy              
          ================================= -->
     <target name="deploy" depends="create.jar">
+	
 		<condition property="sign.jar">
 			<equals arg1="true" arg2="${signJar}"/>		
 		</condition>		
@@ -75,6 +78,7 @@
 				<include name="jl1.0.1.jar"/>
 				<include name="log4j-api-2.1.jar"/>
 				<include name="log4j-core-2.1.jar"/>
+				<include name="org.json-20131017.jar"/>
 				<include name="manifest_xlogo"/>
 				<include name="manifest_start"/>
 				<include name="build.xml"/>
@@ -148,12 +152,12 @@
 	</target>
 	
 	<!-- Compile all Files -->
-
+	
 	<target name="compile" depends="copy.static.files">
 <!--		<echo> ${ant.java.version}</echo> -->
     	<javac 
-    		source="1.5" encoding="utf8"
-    		target="1.5"
+    		source="1.6" encoding="utf8"
+    		target="1.6"
     		srcdir="src" destdir="deploy/"
     		includeantruntime="false">
     		 <classpath>
@@ -164,6 +168,7 @@
    			 	<pathelement location="jl1.0.1.jar"/> 
    			 	<pathelement location="log4j-api-2.1.jar"/> 
    			 	<pathelement location="log4j-core-2.1.jar"/> 
+   			 	<pathelement location="org.json-20131017.jar"/>
    		      </classpath>
     	</javac>
 	</target>
@@ -181,6 +186,7 @@
         			<include name="jh.jar"/>
         			<include name="log4j-api-2.1.jar"/>
         			<include name="log4j-core-2.1.jar"/>
+        			<include name="org.json-20131017.jar"/>
         		</fileset>
         		<fileset dir="src/">
         			<include name="**.properties"/>

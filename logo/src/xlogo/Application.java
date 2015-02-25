@@ -84,69 +84,69 @@ import xlogo.messages.async.history.HistoryMessenger;
  * @author Loic Le Coq
  */
 public class Application extends X4SFrame {
-	private static final int		BG_COLOR		= 0xB3BCEA;
-	public static final String		appName			= "XLogo4Schools";
+	private static final int			BG_COLOR		= 0xB3BCEA;
+	public static final String			appName			= "XLogo4Schools";
 	
-	private static Stack<String>	pile_historique;
-	private int						index_historique;
+	private static Stack<String>		pile_historique;
+	private int							index_historique;
 	
-	private MenuListener			menulistener;
+	private MenuListener				menulistener;
 	
-	public boolean					error;
-	boolean							stop;
+	public boolean						error;
+	boolean								stop;
 	
-	public Affichage				affichage;
-	private Sound_Player			son;
-	private Touche					touche;
-	private Popup					jpop;
+	public Affichage					affichage;
+	private Sound_Player				son;
+	private Touche						touche;
+	private Popup						jpop;
 	
 	// pref Box
 	/**
 	 * To display 3D View
 	 */
-	private Viewer3D				viewer3d;
+	private Viewer3D					viewer3d;
 	
 	// Interpreter and drawer
-	private Kernel					kernel;
+	private Kernel						kernel;
 	
-	private UserSpace				userSpace;
-	private UserConfig				uc;
+	private UserSpace					userSpace;
+	private UserConfig	uc;
 	
 	/*
 	 * My Layout
 	 */
 	
-	private JFrame					mainFrame;
-	private JPanel					filesAndProcedures;
-	private JPanel					commandOrEditor;
-	private FilesList				filesList;
-	private ProcedureSearch			procedureSearch;
+	private JFrame						mainFrame;
+	private JPanel						filesAndProcedures;
+	private JPanel						commandOrEditor;
+	private FilesList					filesList;
+	private ProcedureSearch				procedureSearch;
 	
 	// drawingOrEditor@Drawing
-	private JPanel					commandCard;
-	private ZoneCommande			commandLine;
-	private JLabel					recordTimerLabel;
-	private JButton					stopButton;
-	private JButton					menuButton;
-	public JSplitPane				drawingAndHistory;
+	private JPanel						commandCard;
+	private ZoneCommande				commandLine;
+	private JLabel						recordTimerLabel;
+	private JButton						stopButton;
+	private JButton						menuButton;
+	public JSplitPane					drawingAndHistory;
 	
-	private JPanel					drawingAndExtras;
-	private HistoryPanel			history;
+	private JPanel						drawingAndExtras;
+	private HistoryPanel				history;
 	
-	public JScrollPane				scrollArea;
-	private DrawPanel				drawPanel;
-	private JPanel					extrasPanel;
-	private JSlider					speedSlider;
-	private TurtleComboBox 			turtleCombo;
+	public JScrollPane					scrollArea;
+	private DrawPanel					drawPanel;
+	private JPanel						extrasPanel;
+	private JSlider						speedSlider;
+	private TurtleComboBox				turtleCombo;
 	
 	// drawingOrEditor@Editor
-	private Editor					editor;
+	private Editor						editor;
 	
 	// Extras Menu
-	private JPopupMenu				extras;
-		
-	private static final String		COMMAND_CARD_ID	= "command_card";
-	private static final String		EDITOR_CARD_ID	= "editor_card";
+	private JPopupMenu					extras;
+	
+	private static final String			COMMAND_CARD_ID	= "command_card";
+	private static final String			EDITOR_CARD_ID	= "editor_card";
 	
 	/** Builds the main frame */
 	public Application() {
@@ -266,11 +266,11 @@ public class Application extends X4SFrame {
 		});
 	}
 	
-	private void initFilesList(){
+	private void initFilesList() {
 		filesList = new FilesList();
 		boolean isEditable = userSpace.isFilesListEditable();
 		filesList.setEditable(isEditable);
-		for (String fileName : userSpace.getFileNames()){
+		for (String fileName : userSpace.getFileNames()) {
 			boolean hasErrors = userSpace.hasErrors(fileName);
 			filesList.addFile(fileName, isEditable, hasErrors);
 		}
@@ -339,7 +339,7 @@ public class Application extends X4SFrame {
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * LAYOUT
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
+	
 	@Override
 	protected void layoutComponent() {
 		layoutFilesAndProcedures();
@@ -491,46 +491,43 @@ public class Application extends X4SFrame {
 		//Create the popup menu.
 		extras = new JPopupMenu();
 		
-		if (!uc.isVirtual()) // Contest Mode not available in virtual mode
-		{
-			startContestMenuItem = new JMenuItem(translate(MessageKeys.CONTEST_MODE_START));
-			stopContestMenuItem = new JMenuItem(translate(MessageKeys.CONTEST_MODE_STOP));
-			extras.add(startContestMenuItem, 0);
-			
-			startContestMenuItem.addActionListener(new ActionListener(){
-				public void actionPerformed(ActionEvent e) {
-					WorkspaceConfig wc = WSManager.getWorkspaceConfig();
-					int nOfFiles = wc.getNOfContestFiles();
-					int nOfBonusFiles = wc.getNOfContestBonusFiles();
-					
-					String[] contestFileNames = new String[nOfFiles + nOfBonusFiles];
-					
-					String nameBase = translate("contest.mode.filename") + " ";
-					for (int i = 0; i < nOfFiles; i++)
-						contestFileNames[i] = nameBase + (i + 1);
-					
-					nameBase = translate("contest.mode.bonus.filename") + " ";
-					
-					for (int i = 0; i < nOfBonusFiles; i++)
-						contestFileNames[nOfFiles + i] = nameBase + (i + 1);
-					try {
-						userSpace.startRecordMode(contestFileNames);
-					}
-					catch (IOException e1) {
-						DialogMessenger.getInstance().dispatchMessage(translate("contest.error.title"),
-								translate("contest.could.not.create") + "\n" + e.toString());
-						return;
-					}
-					commandLine.requestFocus();
+		startContestMenuItem = new JMenuItem(translate(MessageKeys.CONTEST_MODE_START));
+		stopContestMenuItem = new JMenuItem(translate(MessageKeys.CONTEST_MODE_STOP));
+		extras.add(startContestMenuItem, 0);
+		
+		startContestMenuItem.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				WorkspaceConfig wc = WSManager.getWorkspaceConfig();
+				int nOfFiles = wc.getNOfContestFiles();
+				int nOfBonusFiles = wc.getNOfContestBonusFiles();
+				
+				String[] contestFileNames = new String[nOfFiles + nOfBonusFiles];
+				
+				String nameBase = translate("contest.mode.filename") + " ";
+				for (int i = 0; i < nOfFiles; i++)
+					contestFileNames[i] = nameBase + (i + 1);
+				
+				nameBase = translate("contest.mode.bonus.filename") + " ";
+				
+				for (int i = 0; i < nOfBonusFiles; i++)
+					contestFileNames[nOfFiles + i] = nameBase + (i + 1);
+				try {
+					userSpace.startRecordMode(contestFileNames);
 				}
-			});
-			stopContestMenuItem.addActionListener(new ActionListener(){
-				public void actionPerformed(ActionEvent e) {
-					userSpace.stopRecordMode();
-					commandLine.requestFocus();
+				catch (IOException e1) {
+					DialogMessenger.getInstance().dispatchMessage(translate("contest.error.title"),
+							translate("contest.could.not.create") + "\n" + e.toString());
+					return;
 				}
-			});
-		}
+				commandLine.requestFocus();
+			}
+		});
+		stopContestMenuItem.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				userSpace.stopRecordMode();
+				commandLine.requestFocus();
+			}
+		});
 		
 		importMenuItem = new JMenuItem(translate(MessageKeys.US_IMPORT));
 		extras.add(importMenuItem);
@@ -712,8 +709,8 @@ public class Application extends X4SFrame {
 					@Override
 					public void run() {
 						HistoryMessenger.getInstance().dispatchComment(
-								fileName + " : " + translate(MessageKeys.HIST_MSG_PROCEDURES_UNDEFINED) + " " + procedure
-										+ ".\n");
+								fileName + " : " + translate(MessageKeys.HIST_MSG_PROCEDURES_UNDEFINED) + " "
+										+ procedure + ".\n");
 					}
 				});
 			}
@@ -731,8 +728,8 @@ public class Application extends X4SFrame {
 						sb.delete(sb.length() - 2, sb.length() - 1);
 						
 						HistoryMessenger.getInstance().dispatchComment(
-								fileName + " : " + translate(MessageKeys.HIST_MSG_PROCEDURES_UNDEFINED) + " " + sb.toString()
-										+ ".\n");
+								fileName + " : " + translate(MessageKeys.HIST_MSG_PROCEDURES_UNDEFINED) + " "
+										+ sb.toString() + ".\n");
 					}
 				});
 			}
@@ -893,7 +890,7 @@ public class Application extends X4SFrame {
 					}
 				});
 			}
-
+			
 			private Timer	recordTimer;
 			
 			@Override
@@ -915,7 +912,7 @@ public class Application extends X4SFrame {
 								
 								long diff = now.getTime() - start.getTime();
 								
-								recordTimerLabel.setText(UserConfig.getMinSec(diff));
+								recordTimerLabel.setText(Utils.getMinSec(diff));
 							}
 						});
 						recordTimer.start();
@@ -997,7 +994,7 @@ public class Application extends X4SFrame {
 				userSpace.closeFile(fileName);
 			}
 		});
-	
+		
 		userSpace.addBroadcastListener(new MessageListener(){
 			
 			@Override
@@ -1012,7 +1009,7 @@ public class Application extends X4SFrame {
 		});
 	}
 	
-	public static void runOnGuiThread(Runnable runnable){
+	public static void runOnGuiThread(Runnable runnable) {
 		if (SwingUtilities.isEventDispatchThread()) {
 			runnable.run();
 			return;
@@ -1032,7 +1029,7 @@ public class Application extends X4SFrame {
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * COMMANDS
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
+	
 	public void showWelcomeMessage() {
 		HistoryMessenger.getInstance().dispatchComment(
 				translate(MessageKeys.APP_HELLO) + " " + uc.getUserName() + "!\n");
@@ -1088,26 +1085,24 @@ public class Application extends X4SFrame {
 		CardLayout cardLayout = (CardLayout) commandOrEditor.getLayout();
 		cardLayout.show(commandOrEditor, EDITOR_CARD_ID);
 	}
-
+	
 	public void focusCommandLine() {
 		commandLine.requestFocus();
 	}
 	
-	public void focusEditor(){
+	public void focusEditor() {
 		editor.requestFocus();
 	}
-
+	
 	public void closeWindow() {
 		WSManager storageManager = WSManager.getInstance();
 		try {
-			if (!uc.isVirtual()) {
-				String openFile = userSpace.getOpenFileName();
-				if (openFile != null) {
-					userSpace.writeFileText(openFile, editor.getText());
-					userSpace.storeFile(openFile);
-				}
-				storageManager.getUserConfigInstance().store();
+			String openFile = userSpace.getOpenFileName();
+			if (openFile != null) {
+				userSpace.writeFileText(openFile, editor.getText());
+				userSpace.storeFile(openFile);
 			}
+			storageManager.storeAllSettings();
 			System.exit(0);
 		}
 		catch (Exception e1) {
@@ -1220,7 +1215,7 @@ public class Application extends X4SFrame {
 			public void run() {
 				PrintWriter out = null;
 				File logoFile = uc.getCommandLineContestFile();
-				String line = UserConfig.getTimeStamp() + " : " + text;
+				String line = Utils.getTimeStamp() + " : " + text;
 				try {
 					out = new PrintWriter(new BufferedWriter(new FileWriter(logoFile, true)));
 					out.println(line);

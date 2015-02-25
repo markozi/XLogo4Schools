@@ -62,7 +62,7 @@ import xlogo.utils.Utils;
  * This class holds the text file a user entered in the editor.
  * It analyzes the text and maintains a symbol table for all defined procedures that live within it.
  * <p>
- * The file does never store itself implicitly, except for when it is created using {@link #createNewFile(String)} or renamed using {@link #setFileName(String)}
+ * The file does never store itself implicitly, except for when it is created using {@link #createNewFile(String)} or renamed using {@link #setPlainName(String)}
  * In every other case, {@link #store()}} or {@link #storeCopyToFile(File)}} must be invoked explicitly.
  * <p>
  * The file's text can be set using {@link #setTextFromReader(BufferedReader)}} (preferred) or {@link #setText(String)}}.
@@ -116,9 +116,7 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 	{
 		super();
 		this.userConfig = WSManager.getUserConfig();
-		if (!userConfig.isVirtual())
-			setLocation(userConfig.getSourceDirectory());
-		setFileName(fileName);
+		setPlainName(fileName);
 		executables = new HashMap<String, Procedure>();
 		allProcedures = new ArrayList<Procedure>();
 	}
@@ -164,8 +162,6 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 		String text = Utils.readLogoFile(path.toString());
 		LogoFile file = new LogoFile(fileName);
 		file.setText(text);
-		if (userConfig.isVirtual())
-			file.makeVirtual();
 		return file;
 	}
 		
@@ -183,8 +179,6 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 		String text = Utils.readLogoFile(path.toString());
 		LogoFile file = new LogoFile(newFileName);
 		file.setText(text);
-		if (WSManager.getUserConfig().isVirtual())
-			file.makeVirtual();
 		file.store();
 		return file;
 	}
@@ -200,7 +194,7 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 	 * @param newFileName - without extension
 	 */
 	@Override
-	public void setFileName(String newFileName)
+	public void setPlainName(String newFileName)
 	{
 		logger.trace("Renaming file " + getPlainName() + " to " + newFileName);
 		
@@ -221,7 +215,7 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 		}
 		
 		String oldPlainName = getPlainName();
-		super.setFileName(newFileName);
+		super.setPlainName(newFileName);
 		String newPlainName = getPlainName();
 		
 		if (oldPlainName != null)
@@ -271,11 +265,9 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 	 * and another copy in the backup folder, if this is required by {@link WorkspaceConfig#getNumberOfBackups()}.
 	 */
 	@Override
-	public void store() throws IOException
+	public void store()
 	{
 		super.store();
-		if (isVirtual())
-			return;
 		doBackup();
 	}
 	
@@ -299,8 +291,10 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 	 * defined by {@link WorkspaceConfig#getNumberOfBackups()}}
 	 * @throws IOException
 	 */
-	private void doBackup() throws IOException
+	private void doBackup()
 	{
+		if (isVirtual())
+			return;
 		logger.trace("Creating backup file of current version of " + getPlainName());
 		
 		WorkspaceConfig wc = WSManager.getInstance().getWorkspaceConfigInstance();
@@ -311,8 +305,12 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 		if (!backupFolder.exists())
 			backupFolder.mkdirs();
 		
-		if (nob != NumberOfBackups.NO_BACKUPS)
-			storeCopyToFile(backupFile);
+		if (nob != NumberOfBackups.NO_BACKUPS) {
+			try {
+				storeCopyToFile(backupFile);
+			}
+			catch (Exception ignore) { }
+		}
 		
 		if (nob == NumberOfBackups.INFINITE)
 			return;

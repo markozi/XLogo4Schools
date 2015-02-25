@@ -24,16 +24,14 @@ package xlogo.storage.global;
 
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -41,106 +39,47 @@ import java.util.TreeMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import net.samuelcampos.usbdrivedectector.USBDeviceDetectorManager;
-import net.samuelcampos.usbdrivedectector.USBStorageDevice;
-import net.samuelcampos.usbdrivedectector.events.IUSBDriveListener;
-import net.samuelcampos.usbdrivedectector.events.USBStorageEvent;
 import xlogo.AppSettings;
-import xlogo.Logo;
-import xlogo.messages.MessageKeys;
-import xlogo.messages.async.dialog.DialogMessenger;
+import xlogo.interfaces.Observable;
+import xlogo.interfaces.PropertyChangePublisher;
 import xlogo.storage.StorableObject;
-import xlogo.storage.WSManager;
-import xlogo.storage.user.UserConfig;
 import xlogo.storage.workspace.WorkspaceConfig;
+import xlogo.storage.workspace.WorkspaceConfig.WorkspaceProperty;
 
 /**
  * This Config is stored in default location : "user.home". It contains information about the currently used workspaces on the computer
  * @author Marko Zivkovic
  */
-public class GlobalConfig extends StorableObject implements Serializable {
+public class GlobalConfig implements Serializable, Observable<GlobalConfig.GlobalProperty> {
 	
 	private static final long	serialVersionUID	= 2787615728665011813L;
 	private static Logger		logger				= LogManager.getLogger(GlobalConfig.class.getSimpleName());
 	
+	public static final File DEFAULT_LOCATION = new File(System.getProperty("user.home"));
+
+	public static boolean		DEBUG				= true;		// TODO set false
 	public static final String	LOGO_FILE_EXTENSION	= ".lgo";
-	public static boolean		DEBUG				= true;	// TODO set false
 																												
 	/**
 	 * Creates the global config at default location, together with a virtual workspace
 	 */
-	protected GlobalConfig() {
-		try {
-			setLocation(getDefaultLocation());
-		}
-		catch (IllegalArgumentException ignore) {} // This is thrown if name illegal, but it is legal
+	public GlobalConfig() {
 		workspaces = new TreeMap<String, String>();
-		workspaces.put(WorkspaceConfig.VIRTUAL_WORKSPACE, "");
-		workspaces.put(WorkspaceConfig.USER_DEFAULT_WORKSPACE, getDefaultLocation().getAbsolutePath());
 	}
-	
-	/**
-	 * If GlobalConfig exists on the file system in default location, it is loaded, otherwise it will be created there.
-	 * @return
-	 */
-	public static GlobalConfig create() {
-		File gcf = getFile(getDefaultLocation(), GlobalConfig.class);
 		
-		GlobalConfig globalConfig = null;
-		if (gcf.exists()) {
-			logger.trace("Try to read GlobalConfig from " + gcf.getAbsolutePath());
-			try {
-				globalConfig = (GlobalConfig) loadObject(gcf);
-			}
-			catch (Exception e) {
-				logger.error("GlobalConfig was corrupted.");
-				String title = AppSettings.getInstance().translate("error.loading.config.files.title");
-				String message = AppSettings.getInstance().translate("error.loading.config.files");
-				DialogMessenger.getInstance().dispatchError(title, message + e.toString());
-				gcf.delete();
-				globalConfig = null;
-			}
-		}
-		
-		if (globalConfig == null) {
-			try {
-				logger.info(gcf.getAbsolutePath() + " not found. Creating new.");
-				globalConfig = new GlobalConfig();
-				globalConfig.store();
-			}
-			catch (Exception e) {
-				// Best effort : We will try to operate the program without storing anything on disk
-				logger.error("Cannot store global config at " + gcf.getAbsolutePath() + ". Running in virtual mode.");
-				globalConfig = getNewVirtualInstance();
-				String title = AppSettings.getInstance().translate("error.setting.up.x4s.title");
-				String message = AppSettings.getInstance().translate("error.setting.up.x4s");
-				DialogMessenger.getInstance().dispatchError(title, message + e.toString());
-			}
-		}
-		globalConfig.init();
-		return globalConfig;
-	}
-	
-	protected void init(){
-		logger.trace("Initialize");
-		initUSBWorkspaces();
-		cleanUpWorkspaces();
-		enterInitialWorkspace();
-	}
-	
-	private void cleanUpWorkspaces() {
+	public void cleanUpWorkspaces() {
 		logger.trace("Cleaning up workspaces.");
 		Map<String, String> existingWorkspaces = new TreeMap<String, String>();
 		Map<String, String> lostWorkspaces = new TreeMap<String, String>();
 		for (Entry<String, String> e : workspaces.entrySet()) {
 			File file = new File(e.getValue());
-			if (file.exists() || WorkspaceConfig.isSpecialWorkspace(e.getKey(), e.getValue())) {
+			if (file.exists()) {
 				logger.trace("\tConfirmed existence: " + e.getKey() + " at " + e.getValue());
 				existingWorkspaces.put(e.getKey(), e.getValue());
 			}
 			else {
 				logger.trace("\tLost workspace: " + e.getKey() + " at " + e.getValue());
-				if (e.getKey().equals(lastUsedWorkspace)){
+				if (e.getKey().equals(lastUsedWorkspace)) {
 					lastUsedWorkspace = null;
 					currentWorkspace = null;
 				}
@@ -148,112 +87,56 @@ public class GlobalConfig extends StorableObject implements Serializable {
 			}
 		}
 		
-		if(!existingWorkspaces.containsKey(WorkspaceConfig.USER_DEFAULT_WORKSPACE)){
-			// This might be the case if the GlobalConfig version stored on the disk comes from a version
-			// that did not contain a default workspace
-			existingWorkspaces.put(WorkspaceConfig.USER_DEFAULT_WORKSPACE, getDefaultLocation().getAbsolutePath());
-		}
-		
+		/*// TODO maybe reintroduce this warning. but currently ==> recursive singleton instantiation :-(
 		if (lostWorkspaces.size() > 0) {
 			StringBuilder msg = new StringBuilder();
 			String message = AppSettings.getInstance().translate("message.some.workspaces.not.found");
 			String at = AppSettings.getInstance().translate("word.at.filesystem.location");
 			msg.append(message);
 			for (Entry<String, String> e : lostWorkspaces.entrySet()) {
-				msg.append('\t').append(e.getKey())
-					.append(' ').append(at).append(' ')
-					.append(e.getValue()).append('\n');
+				msg.append('\t').append(e.getKey()).append(' ').append(at).append(' ').append(e.getValue())
+						.append('\n');
 			}
 			DialogMessenger.getInstance().dispatchMessage(msg.toString());
-		}
+		}*/
 		workspaces = existingWorkspaces;
-	}
-		
-	public static GlobalConfig getNewVirtualInstance() {
-		GlobalConfig gc = new GlobalConfig();
-		gc.makeVirtual();
-		return gc;
 	}
 	
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * Physical Workspaces (stored on file system)
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-	
-	public void createWorkspace(File dir, String workspaceName) throws IOException {
-		logger.trace("Creating workspace '" + workspaceName + "' at " + dir.getAbsolutePath());
-		if (WorkspaceConfig.createNewWorkspace(dir, workspaceName) != null)
-			addWorkspace(workspaceName, dir.toString());
-	}
-	
-	public void importWorkspace(File workspaceDir, String workspaceName) {
-		logger.trace("Importing workspace '" + workspaceName + "' from " + workspaceDir.getAbsolutePath());
-		if (!WSManager.isWorkspaceDirectory(workspaceDir)) {
-			DialogMessenger.getInstance().dispatchError(Logo.messages.getString(MessageKeys.WS_ERROR_TITLE),
-					workspaceDir + " " + Logo.messages.getString(MessageKeys.WS_NOT_A_WORKSPACE_DIRECTORY));
-			return;
-		}
 		
-		addWorkspace(workspaceName, workspaceDir.getParent());
-	}
-	
 	/**
 	 * Load the specified workspace from the file system.
 	 * @param workspaceName
 	 * @return the specified workspace or null if it does not exist.
 	 * @throws IOException
 	 */
-	private WorkspaceConfig retrieveWorkspace(String workspaceName) throws IOException {
-		WorkspaceConfig wsc = getCachedWorkspace(workspaceName);
+	private StorableObject<WorkspaceConfig, WorkspaceProperty> retrieveWorkspace(String workspaceName) throws IOException {
+		StorableObject<WorkspaceConfig, WorkspaceProperty> wsc = getCachedWorkspace(workspaceName);
 		if (wsc != null) {
-			logger.trace("Retrieving cached workspace: " + workspaceName);
+			logger.trace("Retrieved cached workspace: " + workspaceName);
 			return wsc;
 		}
-
+		
 		if (!existsWorkspace(workspaceName)) {
 			logger.warn("Attempting to load an inexistent workspace: " + workspaceName);
 			return null;
 		}
 		
-		File location = getWorkspaceLocation(workspaceName);
-		
-		if (WorkspaceConfig.isDefaultWorkspace(workspaceName, location)) {
-			logger.trace("Retrieving Default workspace from: " + location.getAbsolutePath());
-			wsc = getDefaultWorkspace();
+		File wsDir = getWorkspaceDirectory(workspaceName);
+
+		logger.trace("Retrieving workspace: " + workspaceName + " from " + wsDir.toString());
+		try {
+			wsc = new StorableObject<>(WorkspaceConfig.class, wsDir).createOrLoad();
+			wsc.get().setDirectory(wsDir);
+			cacheWorkspace(workspaceName, wsc);
 		}
-		else if (isUSBDrive(workspaceName)) {
-			logger.trace("Retrieving USB workspace: " + workspaceName);
-			wsc = initUSBDrive(workspaceName);
-		}
-		else {
-			logger.trace("Retrieving workspace: " + workspaceName + " from " + location.getAbsolutePath());
-			wsc = WorkspaceConfig.loadWorkspace(location, workspaceName);
-		}
-		
-		if (wsc == null) {
-			WSManager.getInstance().deleteWorkspace(workspaceName, false);
-		}
-		
-		cacheWorkspace(workspaceName, wsc);
-		
+		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException ignore) { }
+			
 		return wsc;
 	}
-	
-	private WorkspaceConfig getDefaultWorkspace() throws IOException{
-		logger.trace("Get Default Workspace");
-		File wsDir = WorkspaceConfig.getDefaultWorkspaceDirectory();
-		File wsFile = getFile(wsDir, WorkspaceConfig.class);
-		File wsLocation = getDefaultLocation();
-		WorkspaceConfig wsc = null;
-		if (wsFile.exists()) {
-			wsc = WorkspaceConfig.loadWorkspace(wsLocation, WorkspaceConfig.USER_DEFAULT_WORKSPACE);
-		} else {
-			wsc = WorkspaceConfig.createNewWorkspace(wsLocation, WorkspaceConfig.USER_DEFAULT_WORKSPACE);
-			wsc.setAllowUserCreation(true);
-			wsc.createUser(UserConfig.DEFAULT_USER);
-		}
-		return wsc;
-	}
-	
+		
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * Workspace Cache
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -261,19 +144,21 @@ public class GlobalConfig extends StorableObject implements Serializable {
 	/**
 	 * Workspace Objects that have already been created or loaded from disk.
 	 */
-	private transient Map<String, WorkspaceConfig>	cachedWorkspaces;
+	private transient Map<String, StorableObject<WorkspaceConfig, WorkspaceProperty>>	cachedWorkspaces;
 	
-	private WorkspaceConfig getCachedWorkspace(String workspaceName) {
+	private StorableObject<WorkspaceConfig, WorkspaceProperty> getCachedWorkspace(String workspaceName) {
 		if (cachedWorkspaces == null) {
-			cachedWorkspaces = new TreeMap<String, WorkspaceConfig>();
+			cachedWorkspaces = new TreeMap<>();
 		}
 		return cachedWorkspaces.get(workspaceName);
 	}
 	
-	private void cacheWorkspace(String workspaceName, WorkspaceConfig wsc) {
+	private void cacheWorkspace(String workspaceName, StorableObject<WorkspaceConfig, WorkspaceProperty> wsc) {
+		if (cachedWorkspaces == null) {
+			cachedWorkspaces = new TreeMap<>();
+		}
 		cachedWorkspaces.put(workspaceName, wsc);
 	}
-	
 	
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * Workspaces
@@ -291,39 +176,37 @@ public class GlobalConfig extends StorableObject implements Serializable {
 	public void addWorkspace(String workspaceName, String location) {
 		logger.trace("Adding workspace: '" + workspaceName + "' at " + location);
 		workspaces.put(workspaceName, location);
-		makeDirty();
-		notifyWorkspaceListChanged();
+		publisher.publishEvent(GlobalProperty.WORKSPACES);
 		setLastUsedWorkspace(workspaceName);
-		enterInitialWorkspace();
 	}
 	
-	public void addWorkspace(String workspaceName, File location) {
-		addWorkspace(workspaceName, location.getAbsolutePath());
+	public void addWorkspace(StorableObject<WorkspaceConfig, WorkspaceProperty> wc) {
+		File location = wc.getLocation();
+		String name = wc.get().getWorkspaceName();
+		cacheWorkspace(name, wc);
+		addWorkspace(name, location.getParentFile().toString());
 	}
 	
 	public void removeWorkspace(String workspaceName) {
 		logger.trace("Removing workspace: " + workspaceName);
+		
+		if (currentWorkspace != null && currentWorkspace.get().getWorkspaceName().equals(workspaceName)){
+			leaveWorkspace();
+		}
+		
+		if (lastUsedWorkspace.equals(workspaceName)) {
+			lastUsedWorkspace = null;
+			publisher.publishEvent(GlobalProperty.LAST_USED_WORKSPACE);
+		}
+		
 		workspaces.remove(workspaceName);
 		cachedWorkspaces.remove(workspaceName);
-		makeDirty();
-		notifyWorkspaceListChanged();
-		if(lastUsedWorkspace.equals(workspaceName)){
-			lastUsedWorkspace = null;
-			currentWorkspace = null;
-			enterInitialWorkspace();
-		}
+		publisher.publishEvent(GlobalProperty.WORKSPACES);
 	}
 	
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * Workspace File Utility
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-	
-	/**
-	 * @return File from system property "user.home"
-	 */
-	public static File getDefaultLocation() {
-		return new File(System.getProperty("user.home"));
-	}
 	
 	/**
 	 * @param wsName
@@ -346,7 +229,7 @@ public class GlobalConfig extends StorableObject implements Serializable {
 			return null;
 		return new File(wsLocation.toString() + File.separator + wsName);
 	}
-
+	
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * Workspaces
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -366,14 +249,6 @@ public class GlobalConfig extends StorableObject implements Serializable {
 	public boolean existsWorkspace(String workspace) {
 		return workspaces.get(workspace) != null;
 	}
-	
-	
-	public String getFirstUSBWorkspace() {
-		for (String ws : workspaces.keySet()) {
-			if (isUSBDrive(ws)) { return ws; }
-		}
-		return null;
-	}
 		
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * Last used workspace
@@ -392,7 +267,7 @@ public class GlobalConfig extends StorableObject implements Serializable {
 	private void setLastUsedWorkspace(String workspace) {
 		if (existsWorkspace(workspace)) {
 			lastUsedWorkspace = workspace;
-			makeDirty();
+			publisher.publishEvent(GlobalProperty.LAST_USED_WORKSPACE);
 		}
 	}
 	
@@ -400,52 +275,17 @@ public class GlobalConfig extends StorableObject implements Serializable {
 	 * Current Workspace
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 	
-	private transient WorkspaceConfig	currentWorkspace;
+	private transient StorableObject<WorkspaceConfig, WorkspaceProperty>	currentWorkspace;
 	
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * Entering and Leaving Workspaces
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 	
-	public WorkspaceConfig getCurrentWorkspace() {
+	public StorableObject<WorkspaceConfig, WorkspaceProperty> getCurrentWorkspace() {
 		return currentWorkspace;
 	}
 	
-	/**
-	 * This is used to have a workspace ready at the beginning, without any user interaction.
-	 * <p>
-	 * Tries to enter workspaces with the following priority.
-	 * 1. Last used workspace (if any)
-	 * 2. Default workspace, if there is no last used workspace
-	 * 3. Virtual Workspace, if entering or creating the default workspace failed for some reason.
-	 */
-	private void enterInitialWorkspace() {
-		logger.trace("Entering initial workspace.");
-		
-		String initialWs = getFirstUSBWorkspace();
-		
-		if (initialWs == null) {
-			initialWs = getLastUsedWorkspace();
-		}
-		
-		if (initialWs == null) {
-			initialWs = WorkspaceConfig.USER_DEFAULT_WORKSPACE;
-		}
-		
-		if (initialWs == null) {
-			initialWs = WorkspaceConfig.VIRTUAL_WORKSPACE;	// this exists, see constructor
-		}
-		
-		try {
-			enterWorkspace(initialWs);
-		}
-		catch (IOException e1) {
-			try {
-				enterWorkspace(WorkspaceConfig.VIRTUAL_WORKSPACE);
-			}
-			catch (IOException e2) {}
-			DialogMessenger.getInstance().dispatchError("Workspace Error", "Cannot enter workspace: " + e1.toString());
-		}
-	}
+
 	
 	/**
 	 * Load the workspace
@@ -459,134 +299,40 @@ public class GlobalConfig extends StorableObject implements Serializable {
 			leaveWorkspace();
 		}
 		currentWorkspace = retrieveWorkspace(workspaceName);
-		if (currentWorkspace == null)
-			currentWorkspace = retrieveWorkspace(WorkspaceConfig.VIRTUAL_WORKSPACE);
 		
 		setLastUsedWorkspace(workspaceName);
 		
-		notifyWorkspacEntered();
+		publisher.publishEvent(GlobalProperty.CURRENT_WORKSPACE);
 		
-		currentWorkspace.enterInitialUserSpace();
-		
-		AppSettings.getInstance().setLanguage(currentWorkspace.getLanguage());
+		currentWorkspace.get().enterInitialUserSpace();
 	}
 	
 	/**
 	 * Afterwards, currentWorkspace is null
 	 * @throws IOException If workspace could not be saved.
 	 */
-	public void leaveWorkspace() throws IOException {
+	public void leaveWorkspace() {
 		if (currentWorkspace == null)
-			throw new IllegalStateException(AppSettings.getInstance().translate("error.leaving.ws.without.being.in.one"));
-		logger.trace("Leaving workspace: " + currentWorkspace.getWorkspaceName());
+			throw new IllegalStateException(AppSettings.getInstance()
+					.translate("error.leaving.ws.without.being.in.one"));
+		logger.trace("Leaving workspace: " + currentWorkspace.get().getWorkspaceName());
 		
-		if (currentWorkspace.getActiveUser() != null) {
-			currentWorkspace.leaveUserSpace();
+		if (currentWorkspace.get().getActiveUser() != null) {
+			try {
+				currentWorkspace.get().leaveUserSpace();
+			}
+			catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 		if (currentWorkspace.isDirty())
 			currentWorkspace.store();
 		
 		currentWorkspace = null;
-	}
-	
-	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-	 * USB Detection & Handling
-	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-	
-	private transient USBDeviceDetectorManager	driveDetector;
-		
-	/**
-	 * Detect External Drives
-	 */
-	protected void initUSBWorkspaces() {
-		driveDetector = new USBDeviceDetectorManager(800);
-		
-		for (USBStorageDevice rmDevice : driveDetector.getRemovableDevices()) {
-			if (rmDevice.canRead() && rmDevice.canWrite()) {
-				addUSBDrive(rmDevice);
-			}
-		}
-		
-		driveDetector.addDriveListener(new IUSBDriveListener(){
-			
-			@Override
-			public void usbDriveEvent(USBStorageEvent event) {
-				USBStorageDevice rmDevice = event.getStorageDevice();
-				switch (event.getEventType()) {
-					case CONNECTED:
-						addUSBDrive(rmDevice);
-						break;
-					case REMOVED:
-						removeUSBDrive(rmDevice);
-						break;
-				}
-			}
-		});
-	}
-	
-	protected void addUSBDrive(USBStorageDevice rmDevice) {
-		if (getWorkspaceDirectory(rmDevice.getSystemDisplayName()) == null) {
-			logger.trace("USB Drive attached: " + rmDevice);
-			String deviceName = rmDevice.getSystemDisplayName();
-			File location = rmDevice.getRootDirectory();
-			addWorkspace(deviceName, location.getAbsolutePath());
-		}
-	}
-	
-	protected void removeUSBDrive(USBStorageDevice rmDevice) {
-		logger.trace("USB Drive removed: " + rmDevice);
-		String deviceName = rmDevice.getSystemDisplayName();
-		removeWorkspace(deviceName);
-	}
-	
-	protected WorkspaceConfig initUSBDrive(String deviceName) throws IOException {
-		logger.trace("Initializing USB Drive: " + deviceName);
-		File usbRoot = null;
-		for (USBStorageDevice device : driveDetector.getRemovableDevices()) {
-			if (deviceName.equals(device.getSystemDisplayName())) {
-				usbRoot = device.getRootDirectory();
-				break;
-			}
-		}
-		if (usbRoot == null) { return null; }
-		
-		File wsDir = WorkspaceConfig.getDirectory(usbRoot, WorkspaceConfig.USB_DEFAULT_WORKSPACE);
-		File wsConfigFile = WorkspaceConfig.getFile(wsDir, WorkspaceConfig.class);
-		
-		WorkspaceConfig wsc = null;
-		if (wsConfigFile.exists()) {
-			logger.trace("Loading USB workspace from " + wsDir.getAbsolutePath());
-			wsc = WorkspaceConfig.loadWorkspace(usbRoot, WorkspaceConfig.USB_DEFAULT_WORKSPACE);
-			for (String user : wsc.getUserList()) {
-				logger.trace("\t Having user " + user);
-			}
-		}
-		else {
-			logger.trace("Creating new temporary USB workspace at " + usbRoot);
-			wsc = WorkspaceConfig.createDeferredWorkspace(usbRoot, WorkspaceConfig.USB_DEFAULT_WORKSPACE);
-			wsc.setAllowUserCreation(true);
-		}
-		return wsc;
-	}
-	
-	/* *
-	 * Workspace Types
-	 * */
-	
-	public boolean isUSBDrive(String workspaceName) {
-		List<USBStorageDevice> devices = driveDetector.getRemovableDevices();
-		logger.trace("Is '" + workspaceName + "' on a USB Drive?");
-		for (USBStorageDevice device : devices) {
-			if (workspaceName.equals(device.getSystemDisplayName())) { 
-				logger.trace("\t = Yes, corresponding USB Device found.");
-				return true; 
-			} else {
-				logger.trace("\t Does not corresponding to " + device.getSystemDisplayName());
-			}
-		}
-		logger.trace("\t = No, could not find corresponding USB Drive.");
-		return false;
+
+		publisher.publishEvent(GlobalProperty.CURRENT_WORKSPACE);
 	}
 	
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -610,7 +356,7 @@ public class GlobalConfig extends StorableObject implements Serializable {
 				masterPassword = null;
 			else
 				masterPassword = hash(newPw);
-			makeDirty();
+			publisher.publishEvent(GlobalProperty.PASSWORD);
 			return true;
 		}
 		else {
@@ -675,7 +421,7 @@ public class GlobalConfig extends StorableObject implements Serializable {
 	
 	public void setPath(ArrayList<String> path) {
 		this.path = path;
-		makeDirty();
+		publisher.publishEvent(GlobalProperty.PATH);
 	}
 	
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -720,8 +466,8 @@ public class GlobalConfig extends StorableObject implements Serializable {
 		return maximumMemory;
 	}
 	
-	private transient int		maxMemoryAtNextStart	= getMaximumMemory();
-															
+	private transient int	maxMemoryAtNextStart	= getMaximumMemory();
+	
 	/**
 	 * @return The amount of memory in MB that Lanceur will cause JVM to allocate to XLogo4Schools the next time this application is started.
 	 */
@@ -743,7 +489,7 @@ public class GlobalConfig extends StorableObject implements Serializable {
 		//Preferences prefs = Preferences.systemRoot().node(PROPERTIES_PREFIX);
 		//prefs.putInt("appMemory", maxMemory);
 	}
-
+	
 	/**
 	 * The amount of memory that the memory checker allows the application to consume.
 	 * It's 0.9*{@link #getMaximumMemory()}} in bytes.
@@ -756,8 +502,8 @@ public class GlobalConfig extends StorableObject implements Serializable {
 	 * Fonts
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 	
-	public static final Font[]	fonts					= GraphicsEnvironment.getLocalGraphicsEnvironment()
-																.getAllFonts();	// Toolkit.getDefaultToolkit().getFontList();
+	public static final Font[]	fonts	= GraphicsEnvironment.getLocalGraphicsEnvironment().getAllFonts();	// Toolkit.getDefaultToolkit().getFontList();
+																											
 	static public int getFontId(Font font) {
 		for (int i = 0; i < fonts.length; i++) {
 			if (fonts[i].getFontName().equals(font.getFontName()))
@@ -767,51 +513,25 @@ public class GlobalConfig extends StorableObject implements Serializable {
 	}
 	
 	/* * * * * * *
-	 * Event Handling
+	 * Event Handling : Property Change Listeners
 	 * * * * * * */
+						
+	public enum GlobalProperty {
+		PATH, PASSWORD, LAST_USED_WORKSPACE, CURRENT_WORKSPACE, WORKSPACES;
+	}
+
+	private transient PropertyChangePublisher<GlobalProperty> publisher = new PropertyChangePublisher<>();
 	
-	// workspace list change
-	
-	private transient ArrayList<ActionListener>	workspaceListChangeListeners;
-	
-	public void addWorkspaceListChangeListener(ActionListener listener) {
-		if (workspaceListChangeListeners == null)
-			workspaceListChangeListeners = new ArrayList<ActionListener>();
-		workspaceListChangeListeners.add(listener);
+	@Override
+	public void addPropertyChangeListener(GlobalProperty property, PropertyChangeListener listener) {
+		if (publisher == null){
+			publisher = new PropertyChangePublisher<>();
+		}
+		publisher.addPropertyChangeListener(property, listener);
 	}
 	
-	public void removeWorkspaceListChangeListener(ActionListener listener) {
-		workspaceListChangeListeners.remove(listener);
+	@Override
+	public void removePropertyChangeListener(GlobalProperty property, PropertyChangeListener listener) {
+		publisher.removePropertyChangeListener(property, listener);
 	}
-	
-	private void notifyWorkspaceListChanged() {
-		if (workspaceListChangeListeners == null)
-			workspaceListChangeListeners = new ArrayList<ActionListener>();
-		ActionEvent event = new ActionEvent(this, 0, "workspaceListChanged");
-		for (ActionListener listener : workspaceListChangeListeners)
-			listener.actionPerformed(event);
-	}
-	
-	// enter workspace event
-	
-	private transient ArrayList<ActionListener>	enterWorkspaceListeners;
-	
-	public void addEnterWorkspaceListener(ActionListener listener) {
-		if (enterWorkspaceListeners == null)
-			enterWorkspaceListeners = new ArrayList<ActionListener>();
-		enterWorkspaceListeners.add(listener);
-	}
-	
-	public void removeEnterWorkspaceListener(ActionListener listener) {
-		enterWorkspaceListeners.remove(listener);
-	}
-	
-	private void notifyWorkspacEntered() {
-		if (enterWorkspaceListeners == null)
-			return;
-		ActionEvent event = new ActionEvent(this, 0, "workspaceEntered");
-		for (ActionListener listener : enterWorkspaceListeners)
-			listener.actionPerformed(event);
-	}
-	
 }

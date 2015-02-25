@@ -283,18 +283,10 @@ public class Procedure
 				instr.append("\\l");
 				instr.append(lineNumber);
 				instr.append(" ");
-				while (bfr.ready())
+				while (bfr.ready() && (line = bfr.readLine()) != null)
 				{
 					lineNumber++;
-					// read the line
-					try
-					{
-						line = bfr.readLine().trim();
-					}
-					catch (NullPointerException e1)
-					{
-						break;
-					}
+					line = line.trim();
 					// delete comments
 					line = deleteComments(line);
 					line = Utils.decoupe(line).toString().trim();

@@ -156,7 +156,7 @@ public class GlobalTab extends X4SComponent {
 				passwordField.setText(null);
 				retypeField.setText(null);
 				if (!selected)
-					WSManager.getInstance().getGlobalConfigInstance().setNewPassword(authentification, null);
+					WSManager.getGlobalConfig().setNewPassword(authentification, null);
 			}
 		});
 		
@@ -192,7 +192,7 @@ public class GlobalTab extends X4SComponent {
 	
 	private void savePassword() throws IOException
 	{
-		GlobalConfig gc = WSManager.getInstance().getGlobalConfigInstance();
+		GlobalConfig gc = WSManager.getGlobalConfig();
 		
 		if (askPasswordCb.isSelected())
 		{
@@ -202,7 +202,6 @@ public class GlobalTab extends X4SComponent {
 			{
 				gc.setNewPassword(authentification, pw1);
 				authentification = pw1;
-				gc.store();
 			}
 			else
 			{
@@ -214,7 +213,6 @@ public class GlobalTab extends X4SComponent {
 		{
 			gc.setNewPassword(authentification, null);
 			authentification = null;
-			gc.store();
 		}
 	}
 	

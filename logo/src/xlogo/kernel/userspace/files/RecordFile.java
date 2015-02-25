@@ -126,7 +126,7 @@ public class RecordFile extends LogoFile implements MessageBroadcaster
 					totalMillis += now.getTime() - last.getTime();
 					last = now;
 					
-					String time = UserConfig.getMinSec(totalMillis);
+					String time = Utils.getMinSec(totalMillis);
 					String fileName = getPlainName();
 					
 					for(MessageListener listener : timerEventListeners)
@@ -203,9 +203,9 @@ public class RecordFile extends LogoFile implements MessageBroadcaster
 	
 	private String getTimeStampHeader(long totalTime, long lastEditStarted, long lastEditEnded)
 	{
-		String tot = UserConfig.getMinSec(totalTime);
-		String lastStart = UserConfig.getTimeString(lastEditStarted);
-		String now = UserConfig.getTimeString(lastEditEnded);
+		String tot = Utils.getMinSec(totalTime);
+		String lastStart = Utils.getTimeString(lastEditStarted);
+		String now = Utils.getTimeString(lastEditEnded);
 		
 		return "# Total Time : " + tot + "\n# Edited from : " + lastStart + "\n# Until : " + now + "\n\n";
 	}
@@ -222,7 +222,7 @@ public class RecordFile extends LogoFile implements MessageBroadcaster
 		if(listener == null)
 			throw new IllegalArgumentException("Listener must not be null.");
 		timerEventListeners.add(listener);
-		listener.messageEvent(getPlainName(), UserConfig.getMinSec(totalMillis));
+		listener.messageEvent(getPlainName(), Utils.getMinSec(totalMillis));
 	}
 
 	@Override

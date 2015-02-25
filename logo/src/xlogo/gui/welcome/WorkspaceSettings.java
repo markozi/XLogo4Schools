@@ -85,8 +85,7 @@ public class WorkspaceSettings extends X4SFrame {
 			public void dispose()
 			{
 				try {
-					WSManager.getInstance().getGlobalConfigInstance().store();
-					WSManager.getInstance().getWorkspaceConfigInstance().store();
+					WSManager.getInstance().storeAllSettings();
 				} catch (IOException e) {
 					DialogMessenger.getInstance().dispatchMessage(
 							translate("ws.error.title"),

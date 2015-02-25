@@ -92,19 +92,19 @@ public class SyntaxHighlightConfig implements Serializable{
 		this.primitiveStyle = primitiveStyle;
 	}
 
-	public int getOperatorColor() {
+	public int getOperandColor() {
 		return operatorColor;
 	}
 
-	public void setOperatorColor(int operatorColor) {
+	public void setOperandColor(int operatorColor) {
 		this.operatorColor = operatorColor;
 	}
 
-	public int getOperatorStyle() {
+	public int getOperandStyle() {
 		return operatorStyle;
 	}
 
-	public void setOperatorStyle(int operatorStyle) {
+	public void setOperandStyle(int operatorStyle) {
 		this.operatorStyle = operatorStyle;
 	}
 

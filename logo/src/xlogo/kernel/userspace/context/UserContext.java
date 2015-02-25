@@ -60,10 +60,7 @@ public class UserContext extends LogoContext
 	private void loadUserFiles()
 	{
 		UserConfig userConfig = WSManager.getUserConfig();
-		
-		if (userConfig.isVirtual())
-			return;
-		
+				
 		File sourceDir = userConfig.getSourceDirectory();
 		if (!sourceDir.exists())
 			sourceDir.mkdirs();
@@ -122,18 +119,10 @@ public class UserContext extends LogoContext
 	public void createFile(String fileName, String text) throws IOException
 	{
 		/*
-		 * Eager creation of files in file order list in user config.
+		 * Eager creation of files in file-order list in user config.
 		 */		
 		
-		if (!WSManager.getUserConfig().isVirtual())
-			super.createFile(fileName, text);
-		else
-		{
-			LogoFile file = LogoFile.createNewVirtualFile(fileName);
-			file.setText(text);
-			getFilesTable().put(fileName, file);
-			installListeners(file);
-		}
+		super.createFile(fileName, text);
 		WSManager.getUserConfig().addFile(fileName);
 	}
 	
