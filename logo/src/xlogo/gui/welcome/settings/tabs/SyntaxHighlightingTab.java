@@ -45,6 +45,7 @@ import xlogo.AppSettings.AppProperty;
 import xlogo.StyledDocument.DocumentLogo;
 import xlogo.gui.components.ColorStyleSelectionPanel;
 import xlogo.interfaces.Observable.PropertyChangeListener;
+import xlogo.kernel.Primitive;
 import xlogo.storage.WSManager;
 import xlogo.storage.workspace.SyntaxHighlightConfig;
 import xlogo.storage.workspace.WorkspaceConfig;
@@ -64,6 +65,7 @@ public class SyntaxHighlightingTab extends AbstractWorkspacePanel{
 	private DocumentLogo previewLogoDocument;
 	private JTextPane previewTextPane;
 
+	private PropertyChangeListener logoLanguageChangeListener;
 	private PropertyChangeListener syntaxHighlightChangeListener;
 	
 	public SyntaxHighlightingTab() {
@@ -167,7 +169,7 @@ public class SyntaxHighlightingTab extends AbstractWorkspacePanel{
 		operandStyleSelection.setTitle(translate("pref.highlight.operand"));
 		activateHighlightingLabel.setText(translate("pref.highlight.enabled"));
 		restoreDefaultsButton.setText(translate("pref.highlight.init"));
-		previewTextPane.setText(translate("pref.highlight.example"));
+		updateLogoLanguage();
 	}
 	
 	@Override
@@ -188,6 +190,12 @@ public class SyntaxHighlightingTab extends AbstractWorkspacePanel{
 					setValues();
 				}
 			});
+		
+		logoLanguageChangeListener = () -> {
+			updateLogoLanguage();
+		};
+		
+		AppSettings.getInstance().addPropertyChangeListener(AppProperty.LOGO_LANGUAGE, logoLanguageChangeListener);
 		
 		syntaxHighlightChangeListener = () -> {
 			updateSyntaxHighlightingPreview();
@@ -235,6 +243,7 @@ public class SyntaxHighlightingTab extends AbstractWorkspacePanel{
 	@Override
 	public void stopEventListeners() {
 		super.stopEventListeners();
+		AppSettings.getInstance().removePropertyChangeListener(AppProperty.LOGO_LANGUAGE, logoLanguageChangeListener);
 		AppSettings.getInstance().removePropertyChangeListener(AppProperty.SYNTAX_HIGHLIGHTING, syntaxHighlightChangeListener);
 	}
 
@@ -279,8 +288,11 @@ public class SyntaxHighlightingTab extends AbstractWorkspacePanel{
 				wc.getBraceColor(), wc.getBraceStyle(),
 				wc.getOperandColor(), wc.getOperandStyle());
 		
-		
-		previewTextPane.setText(translate("pref.highlight.example"));
+		updateLogoLanguage();
+	}
+	
+	protected void updateLogoLanguage(){
+		previewTextPane.setText(Primitive.EXAMPLE_PROGRAM);
 	}
 
 	@Override

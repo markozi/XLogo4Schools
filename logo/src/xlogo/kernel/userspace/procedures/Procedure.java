@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.StringTokenizer;
 import java.io.*;
 
-import xlogo.Logo;
 import xlogo.kernel.Primitive;
 import xlogo.utils.Utils;
 
@@ -338,7 +337,7 @@ public class Procedure
 		StringBuffer sb = new StringBuffer();
 
 		sb.append(comment);
-		sb.append(Logo.messages.getString("pour") + " " + name);
+		sb.append(Primitive.TO + " " + name);
 		for (int j = 0; j < nbparametre; j++)
 		{
 			sb.append(" :");
@@ -354,7 +353,7 @@ public class Procedure
 		}
 		sb.append("\n");
 		sb.append(instruction);
-		sb.append(Logo.messages.getString("fin"));
+		sb.append(Primitive.END);
 		sb.append("\n");
 		// System.out.println("a"+sb+"a");
 		return new String(sb);
@@ -448,7 +447,7 @@ public class Procedure
 	{
 		String token = st.nextToken();
 
-		if (!token.toLowerCase().equals(Logo.messages.getString("pour").toLowerCase()))
+		if (!token.toLowerCase().equals(Primitive.TO.toLowerCase()))
 		{
 			addError(ProcedureErrorType.MISSING_TO);
 			return;
@@ -630,8 +629,8 @@ public class Procedure
 	private void parseBody(BufferedReader br) throws IOException
 	{
 		StringBuffer body = new StringBuffer();
-		String to = Logo.messages.getString("pour").toLowerCase() + " ";
-		String end = Logo.messages.getString("fin").toLowerCase();
+		String to = Primitive.TO.toLowerCase() + " ";
+		String end = Primitive.END.toLowerCase();
 		instruction = null;
 		String line;
 		String lower;

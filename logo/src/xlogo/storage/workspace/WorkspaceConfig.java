@@ -111,7 +111,7 @@ public class WorkspaceConfig implements Serializable, Observable<WorkspaceConfig
 	private Language				language;
 	private LogoLanguage			logoLanguage		= LogoLanguage.ENGLISH;
 	private boolean					allowUserCreation	= true;
-	private ContestConfig			contestSettings; // Contest //TODO create options in workspace settings
+	private ContestConfig			contestSettings;
 	private SyntaxHighlightConfig	syntaxHighlightingStyles;	// TODO = new SyntaxHighlightStyles();
 	private Font					font; // This font is the default font for all menus ... in XLogo Application
 					

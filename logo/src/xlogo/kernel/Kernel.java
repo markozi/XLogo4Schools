@@ -33,7 +33,7 @@ import java.awt.Color;
 
 import xlogo.kernel.userspace.UserSpace;
 import xlogo.storage.user.DrawQuality;
-import xlogo.storage.workspace.Language;
+import xlogo.storage.workspace.LogoLanguage;
 /**
  * Title : XLogo
  * Description : XLogo is an interpreter for the Logo
@@ -144,9 +144,9 @@ public class Kernel
 		app.getDrawPanel().initGraphics();
 	}
 	
-	public void buildPrimitiveTreemap(Language lang)
+	public void buildPrimitiveTreemap(LogoLanguage lang)
 	{
-		primitive.buildPrimitiveTreemap(lang);
+		Primitive.buildPrimitiveTreemap(lang);
 	}
 	
 	public String execute(StringBuffer st) throws LogoError

@@ -11,6 +11,7 @@ import xlogo.storage.WSManager;
 import xlogo.storage.global.GlobalConfig;
 import xlogo.storage.global.GlobalConfig.GlobalProperty;
 import xlogo.storage.workspace.Language;
+import xlogo.storage.workspace.LogoLanguage;
 import xlogo.storage.workspace.SyntaxHighlightConfig;
 import xlogo.storage.workspace.WorkspaceConfig;
 import xlogo.storage.workspace.WorkspaceConfig.WorkspaceProperty;
@@ -37,6 +38,10 @@ public class AppSettings implements Observable<AppSettings.AppProperty>{
 	
 	private PropertyChangeListener	languageListener	= () -> {
 		setLanguage(wc.getLanguage());
+	};
+	
+	private PropertyChangeListener	logoLanguageListener= () -> {
+		setLogoLanguage(wc.getLogoLanguage());
 	};
 	
 	private PropertyChangeListener	syntaxListener	= () -> {
@@ -67,6 +72,7 @@ public class AppSettings implements Observable<AppSettings.AppProperty>{
 		
 		if (wc != null) {
 			wc.removePropertyChangeListener(WorkspaceProperty.LANGUAGE, languageListener);
+			wc.removePropertyChangeListener(WorkspaceProperty.LOGO_LANGUAGE, logoLanguageListener);
 			wc.removePropertyChangeListener(WorkspaceProperty.SYNTAX_HIGHLIGHTING, syntaxListener);
 		}
 		
@@ -74,9 +80,11 @@ public class AppSettings implements Observable<AppSettings.AppProperty>{
 		
 		if (wc != null) {
 			setLanguage(wc.getLanguage());
+			setLogoLanguage(wc.getLogoLanguage());
 			setSyntaxHighlightingStyles(wc.getSyntaxHighlightStyles());
 			
 			wc.addPropertyChangeListener(WorkspaceProperty.LANGUAGE, languageListener);
+			wc.addPropertyChangeListener(WorkspaceProperty.LOGO_LANGUAGE, logoLanguageListener);
 			wc.addPropertyChangeListener(WorkspaceProperty.SYNTAX_HIGHLIGHTING, syntaxListener);
 		}
 		publisher.publishEvent(AppProperty.WORKSPACE);
@@ -103,6 +111,26 @@ public class AppSettings implements Observable<AppSettings.AppProperty>{
 		this.language = language;
 		Logo.generateLanguage(language);
 		publisher.publishEvent(AppProperty.LANGUAGE);
+	}
+
+	
+	/* * * * * * *
+	 * LANGUAGE
+	 * * * * * * */
+	
+	private LogoLanguage logoLanguage = LogoLanguage.ENGLISH;
+	
+	public LogoLanguage getLogoLanguage() {
+		return logoLanguage;
+	}
+	
+	protected void setLogoLanguage(LogoLanguage language) {
+		if (language == this.logoLanguage)
+			return;
+		logger.trace("Change language from " + this.language + " to " + language);
+		this.logoLanguage = language;
+		Logo.generateLogoLanguage(language);
+		publisher.publishEvent(AppProperty.LOGO_LANGUAGE);
 	}
 	
 	/**
@@ -157,7 +185,7 @@ public class AppSettings implements Observable<AppSettings.AppProperty>{
 	 * * * * * * */
 	
 	public enum AppProperty {
-		LANGUAGE, SYNTAX_HIGHLIGHTING, FONT, WORKSPACE;
+		LANGUAGE, LOGO_LANGUAGE, SYNTAX_HIGHLIGHTING, FONT, WORKSPACE;
 	}
 	
 	private transient final PropertyChangePublisher<AppProperty> publisher = new PropertyChangePublisher<>();

@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import xlogo.Logo;
+import xlogo.kernel.Primitive;
 import xlogo.kernel.userspace.procedures.ProcedureErrorType;
 
 /**
@@ -98,7 +99,9 @@ public class ProcedureErrorMessage
 		
 		sb.append(procedureDescription);
 		sb.append(": ");
-		sb.append(Logo.messages.getString(type.getDescription()));
+		sb.append(Logo.messages.getString(type.getDescription())
+				.replace("{to}", Primitive.TO)
+				.replace("{end}", Primitive.END));
 		
 		return sb.toString();
 	}

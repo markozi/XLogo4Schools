@@ -44,6 +44,7 @@ import xlogo.messages.async.dialog.DialogMessenger;
 import xlogo.storage.Storable;
 import xlogo.storage.WSManager;
 import xlogo.storage.workspace.Language;
+import xlogo.storage.workspace.LogoLanguage;
 import xlogo.storage.workspace.NumberOfBackups;
 import xlogo.storage.workspace.WorkspaceConfig;
 
@@ -54,6 +55,7 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 	JLabel						workspaceLabel;
 	JLabel						wsLocationLabel;
 	JLabel						wsLanguageLabel;
+	JLabel						wsLogoLanguageLabel;
 	JLabel						wsBackupLabel;
 	JLabel						userLabel;
 	
@@ -71,7 +73,8 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 	JLabel						wsLocation;
 	JFileChooser				wsLocationChooser;
 	JComboBox<Language>			languageSelection;
-	JComboBox<NumberOfBackups>	nOfBackupsSelecteion;
+	JComboBox<LogoLanguage>		logoLanguageSelection;
+	JComboBox<NumberOfBackups>	nOfBackupsSelection;
 	JCheckBox					userCreatable;
 	
 	public WorkspaceTab() {
@@ -95,6 +98,7 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 		workspaceLabel = new JLabel("Workspace: ");
 		wsLocationLabel = new JLabel("Location: ");
 		wsLanguageLabel = new JLabel("Language: ");
+		wsLogoLanguageLabel = new JLabel("Logo: ");
 		wsBackupLabel = new JLabel("Number of Backups: ");
 		userLabel = new JLabel("User: ");
 		
@@ -112,7 +116,8 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 		wsLocation = new JLabel();
 		wsLocationChooser = new JFileChooser();
 		languageSelection = new JComboBox<>(Language.values());
-		nOfBackupsSelecteion = new JComboBox<>(NumberOfBackups.values());
+		logoLanguageSelection = new JComboBox<>(LogoLanguage.values());
+		nOfBackupsSelection = new JComboBox<>(NumberOfBackups.values());
 		userCreatable = new JCheckBox("Allow the users to create new user accounts?");
 		
 		populateWorkspaceList();
@@ -133,12 +138,15 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 		userSelection.setMaximumSize(new Dimension(150, 25));
 		languageSelection.setMinimumSize(new Dimension(150, 25));
 		languageSelection.setMaximumSize(new Dimension(150, 25));
-		nOfBackupsSelecteion.setMinimumSize(new Dimension(75, 25));
-		nOfBackupsSelecteion.setMaximumSize(new Dimension(75, 25));
+		logoLanguageSelection.setMinimumSize(new Dimension(150, 25));
+		logoLanguageSelection.setMaximumSize(new Dimension(150, 25));
+		nOfBackupsSelection.setMinimumSize(new Dimension(75, 25));
+		nOfBackupsSelection.setMaximumSize(new Dimension(75, 25));
 		
 		component.add(workspaceLabel);
 		component.add(wsLocationLabel);
 		component.add(wsLanguageLabel);
+		component.add(wsLogoLanguageLabel);
 		component.add(wsBackupLabel);
 		component.add(userLabel);
 		
@@ -153,7 +161,8 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 		component.add(userSelection);
 		component.add(wsLocation);
 		component.add(languageSelection);
-		component.add(nOfBackupsSelecteion);
+		component.add(logoLanguageSelection);
+		component.add(nOfBackupsSelection);
 		
 		GroupLayout groupLayout = new GroupLayout(component);
 		component.setLayout(groupLayout);
@@ -179,8 +188,11 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 								groupLayout.createParallelGroup().addComponent(wsLanguageLabel)
 										.addComponent(languageSelection))
 						.addGroup(
+								groupLayout.createParallelGroup().addComponent(wsLogoLanguageLabel)
+										.addComponent(logoLanguageSelection))
+						.addGroup(
 								groupLayout.createParallelGroup().addComponent(wsBackupLabel)
-										.addComponent(nOfBackupsSelecteion))
+										.addComponent(nOfBackupsSelection))
 						.addGroup(groupLayout.createParallelGroup().addComponent(userCreatable)));
 		
 		groupLayout.setHorizontalGroup(groupLayout
@@ -191,7 +203,8 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 								.addGroup(
 										groupLayout.createParallelGroup().addComponent(workspaceLabel)
 												.addComponent(userLabel).addComponent(wsLocationLabel)
-												.addComponent(wsLanguageLabel).addComponent(wsBackupLabel))
+												.addComponent(wsLanguageLabel).addComponent(wsLogoLanguageLabel)
+												.addComponent(wsBackupLabel))
 								.addGroup(
 										groupLayout
 												.createParallelGroup()
@@ -214,8 +227,9 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 																		groupLayout.createParallelGroup()
 																				.addComponent(importWorkspaceBtn)
 																				.addComponent(importUserBtn)))
-												.addComponent(wsLocation).addComponent(languageSelection)
-												.addComponent(nOfBackupsSelecteion))).addComponent(userCreatable));
+												.addComponent(wsLocation)
+												.addComponent(languageSelection).addComponent(logoLanguageSelection)
+												.addComponent(nOfBackupsSelection))).addComponent(userCreatable));
 	}
 	
 	@Override
@@ -303,14 +317,29 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 				}).run();
 			}
 		});
+
+		/*
+		 * LOGO LANGUAGE
+		 */
+		
+		logoLanguageSelection.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent arg0) {
+				new Thread(new Runnable(){
+					public void run() {
+						LogoLanguage lang = (LogoLanguage) logoLanguageSelection.getSelectedItem();
+						changeLogoLanguage(lang);
+					}
+				}).run();
+			}
+		});
 		
 		/*
 		 * BACKUP VERSIONS
 		 */
 		
-		nOfBackupsSelecteion.addActionListener(new ActionListener(){
+		nOfBackupsSelection.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
-				NumberOfBackups n = (NumberOfBackups) nOfBackupsSelecteion.getSelectedItem();
+				NumberOfBackups n = (NumberOfBackups) nOfBackupsSelection.getSelectedItem();
 				WSManager.getInstance().getWorkspaceConfigInstance().setNumberOfBackups(n);
 			}
 		});
@@ -354,10 +383,12 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 		
 		// Language
 		languageSelection.setSelectedItem(wc.getLanguage());
+		logoLanguageSelection.setSelectedItem(wc.getLogoLanguage());
 		changeLanguage(wc.getLanguage());
+		changeLogoLanguage(wc.getLogoLanguage());
 		
 		// Backups
-		nOfBackupsSelecteion.setSelectedItem(wc.getNumberOfBackups());
+		nOfBackupsSelection.setSelectedItem(wc.getNumberOfBackups());
 		
 		// User Creation
 		userCreatable.setSelected(wc.isUserCreationAllowed());
@@ -375,7 +406,8 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 		removeUserBtn.setEnabled(false);
 		importUserBtn.setEnabled(false);
 		languageSelection.setEnabled(false);
-		nOfBackupsSelecteion.setEnabled(false);
+		logoLanguageSelection.setEnabled(false);
+		nOfBackupsSelection.setEnabled(false);
 		userCreatable.setEnabled(false);
 	}
 	
@@ -391,7 +423,8 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 		removeUserBtn.setEnabled(true);
 		importUserBtn.setEnabled(true);
 		languageSelection.setEnabled(true);
-		nOfBackupsSelecteion.setEnabled(true);
+		logoLanguageSelection.setEnabled(true);
+		nOfBackupsSelection.setEnabled(true);
 		userCreatable.setEnabled(true);
 	}
 	
@@ -497,10 +530,19 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 		}
 	}
 	
+	private void changeLogoLanguage(LogoLanguage lang) {
+		WorkspaceConfig wc = WSManager.getInstance().getWorkspaceConfigInstance();
+		
+		if (wc.getLogoLanguage() != lang) {
+			wc.setLogoLanguage(lang);
+		}
+	}
+	
 	protected void setText() {
 		workspaceLabel.setText(Logo.messages.getString("ws.settings.workspace"));
 		wsLocationLabel.setText(Logo.messages.getString("ws.settings.location"));
 		wsLanguageLabel.setText(Logo.messages.getString("ws.settings.language"));
+		wsLogoLanguageLabel.setText(Logo.messages.getString("ws.settings.logolanguage"));
 		wsBackupLabel.setText(Logo.messages.getString("ws.settings.backups"));
 		userLabel.setText(Logo.messages.getString("ws.settings.user"));
 		addWorkspaceBtn.setText(Logo.messages.getString("ws.settings.add"));

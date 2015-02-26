@@ -25,7 +25,7 @@ public class WorkspaceConfigJSONSerializer extends JSONSerializer<WorkspaceConfi
 	private static final String	COMMENT_STYLE				= "commentStyle";
 	private static final String	COMMENT_COLOR				= "commentColor";
 	private static final String	BRACE_STYLE					= "braceStyle";
-	private static final String	BRACE_COLOR					= "braceColor"; // TODO enable syntax highlighting
+	private static final String	BRACE_COLOR					= "braceColor";
 	private static final String IS_SYNTAX_HIGHLIGHTING_ENABLED	= "isSyntaxHighlightingEnabled";
 	private static final String	CONTEST_SETTINGS			= "contestSettings";
 	private static final String	N_OF_CONTEST_BONUS_FILES	= "nOfContestBonusFiles";

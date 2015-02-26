@@ -43,6 +43,7 @@ import org.apache.logging.log4j.Logger;
 import xlogo.Logo;
 import xlogo.interfaces.ErrorDetector;
 import xlogo.interfaces.ProcedureMapper;
+import xlogo.kernel.Primitive;
 import xlogo.kernel.userspace.ProcedureErrorMessage;
 import xlogo.kernel.userspace.procedures.ExecutablesContainer;
 import xlogo.kernel.userspace.procedures.Procedure;
@@ -515,7 +516,7 @@ public class LogoFile extends StorableDocument implements ExecutablesContainer, 
 	 */
 	private static String untilEnd(BufferedReader br) throws IOException
 	{
-		String end = Logo.messages.getString("fin").toLowerCase();
+		String end = Primitive.END.toLowerCase();
 		StringBuffer text = new StringBuffer();
 		String line;
 		

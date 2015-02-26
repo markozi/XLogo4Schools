@@ -45,6 +45,7 @@ import java.util.ResourceBundle;
 import xlogo.storage.WSManager;
 import xlogo.storage.global.GlobalConfig;
 import xlogo.storage.workspace.Language;
+import xlogo.storage.workspace.LogoLanguage;
 import xlogo.storage.workspace.WorkspaceConfig;
 import xlogo.gui.welcome.WelcomeScreen;
 import xlogo.kernel.Primitive;
@@ -116,6 +117,11 @@ public class Logo {
 			lang = WSManager.getInstance().getWorkspaceConfigInstance().getLanguage();
 		}
 		generateLanguage(lang);
+		LogoLanguage logo = LogoLanguage.ENGLISH;
+		if (wc != null){
+			lang = WSManager.getInstance().getWorkspaceConfigInstance().getLanguage();
+		}
+		generateLogoLanguage(logo);
 
 		showWelcomeScreen();
 	}
@@ -152,6 +158,7 @@ public class Logo {
 		
 		welcomeScreen.closeFrame();
 		generateLanguage(wc.getLanguage());
+		generateLogoLanguage(wc.getLogoLanguage());
 		
 		// Initialize frame
 		SwingUtilities.invokeLater(new Runnable(){
@@ -182,7 +189,9 @@ public class Logo {
 		translationLanguage[11]=Logo.messages.getString("pref.general.catalan");
 		translationLanguage[12]=Logo.messages.getString("pref.general.hungarian");
 		translationLanguage[13]=Logo.messages.getString("pref.general.abz.german.english");
-		
+	}
+	
+	public static void generateLogoLanguage(LogoLanguage lang){
 		Primitive.buildPrimitiveTreemap(lang);
-	}	
+	}
 }

@@ -46,8 +46,9 @@ import java.math.BigDecimal;
 import xlogo.kernel.LoopProperties;
 import xlogo.messages.async.history.HistoryMessenger;
 import xlogo.storage.WSManager;
-import xlogo.storage.workspace.Language;
+import xlogo.storage.workspace.LogoLanguage;
 import xlogo.utils.Utils;
+import xlogo.AppSettings;
 import xlogo.Application;
 
 import java.io.*;
@@ -75,6 +76,9 @@ public class Primitive
 	
 	// Treemap for primitives (better efficiency in searching)
 	public static TreeMap<String, String>	primitives			= new TreeMap<String, String>();
+	public static String EXAMPLE_PROGRAM = "repeat 4 [fd 100 rt 90]";
+	public static String TO = "to";
+	public static String END = "end";
 	
 	public static Stack<LoopProperties>		stackLoop			= new Stack<LoopProperties>();
 	
@@ -86,7 +90,7 @@ public class Primitive
 	{
 		this.app = app;
 		// build treemap for primitives
-		buildPrimitiveTreemap(WSManager.getInstance().getWorkspaceConfigInstance().getLanguage());
+		buildPrimitiveTreemap(AppSettings.getInstance().getLogoLanguage());
 	}
 	
 	/**
@@ -143,12 +147,17 @@ public class Primitive
 	}
 	
 	// Exécution des primitives
-	public static void buildPrimitiveTreemap(Language lang)
+	public static void buildPrimitiveTreemap(LogoLanguage lang)
 	{
 		// this.exportPrimCSV();
 		primitives = new TreeMap<String, String>();
 		Locale locale = lang.getLocale();
 		ResourceBundle prim = ResourceBundle.getBundle("primitives", locale);
+		
+		EXAMPLE_PROGRAM = prim.getString("pref.highlight.example");
+		TO = prim.getString("pour");
+		END = prim.getString("fin");
+		
 		try
 		{
 			BufferedReader bfr = new BufferedReader(new InputStreamReader(
