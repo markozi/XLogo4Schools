@@ -85,11 +85,6 @@ public abstract class AbstractWorkspacePanel extends X4SComponent{
 		
 		workspaceListChangeListener = () -> {
 			ignoreGuiEvents = true;
-			if (WSManager.getWorkspaceConfig() != null){
-				enableComponents();
-			} else {
-				disableComponents();
-			}
 			populateWorkspaceList();
 			ignoreGuiEvents = false;
 		};
