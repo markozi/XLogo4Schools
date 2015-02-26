@@ -39,6 +39,7 @@ import javax.swing.JPopupMenu;
 
 import xlogo.storage.WSManager;
 import xlogo.storage.workspace.Language;
+import xlogo.storage.workspace.LogoLanguage;
 
 import java.awt.event.*;
 /**
@@ -121,7 +122,7 @@ public class Popup extends JPopupMenu implements ActionListener {
 		jpopcouper.setText(Logo.messages.getString("menu.edition.cut"));
 		jpopcopier.setText(Logo.messages.getString("menu.edition.copy"));
 		// Si le langage choisie est l'esperanto, on rajoute les caractères accentués spéciaux au menu
-		if (WSManager.getWorkspaceConfig().getLanguage()==Language.LANGUAGE_ESPERANTO) {
+		if (WSManager.getWorkspaceConfig().getLogoLanguage()==LogoLanguage.ESPERANTO) {
 			add(separ);
 			for (int i=0;i<jpopcar.length;i++) {
 				add(jpopcar[i]);

@@ -28,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.InvocationTargetException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -103,64 +102,6 @@ public class GlobalConfig implements Serializable, Observable<GlobalConfig.Globa
 	}
 	
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-	 * Physical Workspaces (stored on file system)
-	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-		
-	/**
-	 * Load the specified workspace from the file system.
-	 * @param workspaceName
-	 * @return the specified workspace or null if it does not exist.
-	 * @throws IOException
-	 */
-	private StorableObject<WorkspaceConfig, WorkspaceProperty> retrieveWorkspace(String workspaceName) throws IOException {
-		StorableObject<WorkspaceConfig, WorkspaceProperty> wsc = getCachedWorkspace(workspaceName);
-		if (wsc != null) {
-			logger.trace("Retrieved cached workspace: " + workspaceName);
-			return wsc;
-		}
-		
-		if (!existsWorkspace(workspaceName)) {
-			logger.warn("Attempting to load an inexistent workspace: " + workspaceName);
-			return null;
-		}
-		
-		File wsDir = getWorkspaceDirectory(workspaceName);
-
-		logger.trace("Retrieving workspace: " + workspaceName + " from " + wsDir.toString());
-		try {
-			wsc = new StorableObject<>(WorkspaceConfig.class, wsDir).createOrLoad();
-			wsc.get().setDirectory(wsDir);
-			cacheWorkspace(workspaceName, wsc);
-		}
-		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException ignore) { }
-			
-		return wsc;
-	}
-		
-	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-	 * Workspace Cache
-	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-	
-	/**
-	 * Workspace Objects that have already been created or loaded from disk.
-	 */
-	private transient Map<String, StorableObject<WorkspaceConfig, WorkspaceProperty>>	cachedWorkspaces;
-	
-	private StorableObject<WorkspaceConfig, WorkspaceProperty> getCachedWorkspace(String workspaceName) {
-		if (cachedWorkspaces == null) {
-			cachedWorkspaces = new TreeMap<>();
-		}
-		return cachedWorkspaces.get(workspaceName);
-	}
-	
-	private void cacheWorkspace(String workspaceName, StorableObject<WorkspaceConfig, WorkspaceProperty> wsc) {
-		if (cachedWorkspaces == null) {
-			cachedWorkspaces = new TreeMap<>();
-		}
-		cachedWorkspaces.put(workspaceName, wsc);
-	}
-	
-	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * Workspaces
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 	
@@ -183,7 +124,6 @@ public class GlobalConfig implements Serializable, Observable<GlobalConfig.Globa
 	public void addWorkspace(StorableObject<WorkspaceConfig, WorkspaceProperty> wc) {
 		File location = wc.getLocation();
 		String name = wc.get().getWorkspaceName();
-		cacheWorkspace(name, wc);
 		addWorkspace(name, location.getParentFile().toString());
 	}
 	
@@ -200,7 +140,6 @@ public class GlobalConfig implements Serializable, Observable<GlobalConfig.Globa
 		}
 		
 		workspaces.remove(workspaceName);
-		cachedWorkspaces.remove(workspaceName);
 		publisher.publishEvent(GlobalProperty.WORKSPACES);
 	}
 	
@@ -285,22 +224,21 @@ public class GlobalConfig implements Serializable, Observable<GlobalConfig.Globa
 		return currentWorkspace;
 	}
 	
-
-	
 	/**
 	 * Load the workspace
 	 * <p>Always succeeds if workspaceName equals {@link WorkspaceConfig#VIRTUAL_WORKSPACE}
 	 * @param workspaceName - the workspace to load and enter
 	 * @throws IOException - if the workspace could not be loaded
 	 */
-	public void enterWorkspace(String workspaceName) throws IOException {
-		logger.trace("Entering workspace: " + workspaceName);
+	public void enterWorkspace(StorableObject<WorkspaceConfig, WorkspaceConfig.WorkspaceProperty> wc) throws IOException {
+		String name = wc.get().getWorkspaceName();
+		logger.trace("Entering workspace: " + name);
 		if (currentWorkspace != null) {
 			leaveWorkspace();
 		}
-		currentWorkspace = retrieveWorkspace(workspaceName);
+		currentWorkspace = wc;
 		
-		setLastUsedWorkspace(workspaceName);
+		setLastUsedWorkspace(name);
 		
 		publisher.publishEvent(GlobalProperty.CURRENT_WORKSPACE);
 		

@@ -45,6 +45,7 @@ import xlogo.storage.user.UserConfig;
 import xlogo.storage.user.UserConfig.UserProperty;
 import xlogo.storage.workspace.WorkspaceConfig;
 import xlogo.storage.workspace.WorkspaceConfig.WorkspaceProperty;
+import xlogo.storage.workspace.WorkspaceConfigJSONSerializer;
 import xlogo.utils.Utils;
 
 /**
@@ -305,29 +306,7 @@ public class WSManager {
 	/*
 	 * Config Creation
 	 */
-	
-	/* *
-	 * 
-	 * @param dir - where the workspace should be located
-	 * @param workspaceName
-	 * @param deferred - if true, the workspace is not persisted until changes are made to it
-	 * @return
-	 * @throws IOException
-	 * /
-	public static StorableObject<WorkspaceConfig, WorkspaceConfig.WorkspaceProperty> getWorkspace(File dir, String workspaceName, boolean deferred)
-			throws IOException {
-		if (!Storable.checkLegalName(workspaceName)) {
-			DialogMessenger.getInstance().dispatchError(Logo.messages.getString(MessageKeys.NAME_ERROR_TITLE),
-					Logo.messages.getString(MessageKeys.ILLEGAL_NAME));
-			return null;
-		}
-		File wsd = StorableObject.getDirectory(dir, workspaceName);
-		Serializer<WorkspaceConfig> serializer = new WorkspaceSettingJSONMapper();
-		StorableObject<WorkspaceConfig, WorkspaceConfig.WorkspaceProperty> wsc = new StorableObject<>(WorkspaceConfig.class, wsd, deferred).withSerializer(serializer);
-		wsc.get().setLocation(wsd);
-		return wsc;
-	}
-	*/
+		
 	/**
 	 * Load the specified user's settings from the current workspace
 	 * or create the user if it does not exist yet or if it was deleted for unknown reasons.
@@ -421,17 +400,16 @@ public class WSManager {
 	 */
 	protected StorableObject<WorkspaceConfig, WorkspaceProperty> createWorkspace(GlobalConfig gc, File wsDir){
 		StorableObject<WorkspaceConfig, WorkspaceConfig.WorkspaceProperty> wc;
-		wc = new StorableObject<>(WorkspaceConfig.class, wsDir);
-		try {
-			wc.createOrLoad();
-			wc.get().setDirectory(wsDir);
-			gc.addWorkspace(wc);
-			enterWorkspace(gc, wsDir.getName());
-			return wc;
-		}
-		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException | IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		wc = WorkspaceConfigJSONSerializer.createOrLoad(wsDir);
+		if (wc != null){
+			try {
+				gc.addWorkspace(wc);
+				enterWorkspace(gc, wsDir.getName());
+			}
+			catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		return wc;
 	}
@@ -484,7 +462,17 @@ public class WSManager {
 			logger.trace("Retrieving USB workspace: " + workspaceName);
 			initUSBDrive(gc, workspaceName);
 		}
-		gc.enterWorkspace(workspaceName);
+		File wsDir = gc.getWorkspaceDirectory(workspaceName);
+		if (wsDir == null){
+			logger.error("Can't find workspace " + workspaceName);
+			return;
+		}
+		StorableObject<WorkspaceConfig, WorkspaceConfig.WorkspaceProperty> wc = WorkspaceConfigJSONSerializer.createOrLoad(wsDir);
+		if (wc == null){
+			logger.error("Can't enter workspace because creation or laod failed for " + workspaceName);
+			return;
+		}
+		gc.enterWorkspace(wc);
 	}
 	
 	/*

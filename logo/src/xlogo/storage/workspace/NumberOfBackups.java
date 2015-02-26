@@ -54,4 +54,19 @@ public enum NumberOfBackups {
 		}
 		return Integer.toString(number);
 	}
+	
+	public int getValue(){
+		return number;
+	}
+	
+	public static NumberOfBackups valueOf(int value){
+		switch(value){
+			case 0: return NumberOfBackups.NO_BACKUPS;
+			case 1: return NumberOfBackups.ONE;
+			case 3: return NumberOfBackups.THREE;
+			case 10: return NumberOfBackups.TEN;
+			case 50: return NumberOfBackups.FIFTY;
+			default: return NumberOfBackups.INFINITE;
+		}
+	}
 }

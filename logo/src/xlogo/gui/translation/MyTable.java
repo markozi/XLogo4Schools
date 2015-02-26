@@ -261,7 +261,7 @@ public class MyTable extends JPanel implements Searchable{
 	    	ResourceBundle[] rb=new ResourceBundle[getColumnCount()];
 	    	// initialize all ResourceBundle
 	    	for(int i=0;i<getColumnCount();i++){
-	       		Locale locale = Language.getLanguage(i).getLocale();
+	       		Locale locale = Language.valueOf(i).getLocale();
 	       		// In CREATE Mode, when i=getColumnCount(), the last locale is null
 	       		if (null==locale) break;
 	       		rb[i] = ResourceBundle.getBundle(bundle, locale);

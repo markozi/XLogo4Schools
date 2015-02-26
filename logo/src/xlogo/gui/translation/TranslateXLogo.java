@@ -111,10 +111,10 @@ public class TranslateXLogo extends JFrame implements ActionListener {
 		          try {
 		        	  Locale locale=null;
 		        	  if (action.equals(TranslateXLogo.CREATE)){
-		        		  locale = Language.getLanguage(0).getLocale();
+		        		  locale = Language.valueOf(0).getLocale();
 		        		}
 		    			else if (!action.equals(TranslateXLogo.CONSULT)){
-		    				  locale = Language.getLanguage(Integer.parseInt(id)).getLocale();
+		    				  locale = Language.valueOf(Integer.parseInt(id)).getLocale();
 		    			}
 		        	java.util.Vector<String> v=bottom.getPrimTable().getKeys();
 		        	ResourceBundle rb = ResourceBundle.getBundle("primitives", locale);

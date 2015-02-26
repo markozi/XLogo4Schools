@@ -90,7 +90,7 @@ public class AppSettings implements Observable<AppSettings.AppProperty>{
 	 * LANGUAGE
 	 * * * * * * */
 	
-	private Language	language	= Language.LANGUAGE_ENGLISH;
+	private Language	language	= Language.ENGLISH;
 	
 	public Language getLanguage() {
 		return language;
@@ -113,7 +113,7 @@ public class AppSettings implements Observable<AppSettings.AppProperty>{
 	 */
 	public String translate(String key) {
 		if (Logo.messages == null) {
-			Logo.generateLanguage(Language.LANGUAGE_ENGLISH); // TODO this is a temporary bug fix
+			Logo.generateLanguage(Language.ENGLISH); // TODO this is a temporary bug fix
 		}
 		return Logo.messages.getString(key);
 	}

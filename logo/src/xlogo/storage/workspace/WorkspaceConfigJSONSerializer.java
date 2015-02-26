@@ -1,11 +1,15 @@
 package xlogo.storage.workspace;
 
 import java.awt.Font;
+import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import xlogo.storage.JSONSerializer;
+import xlogo.storage.StorableObject;
+import xlogo.storage.workspace.WorkspaceConfig.WorkspaceProperty;
 
 public class WorkspaceConfigJSONSerializer extends JSONSerializer<WorkspaceConfig> {
 	
@@ -21,15 +25,33 @@ public class WorkspaceConfigJSONSerializer extends JSONSerializer<WorkspaceConfi
 	private static final String	COMMENT_STYLE				= "commentStyle";
 	private static final String	COMMENT_COLOR				= "commentColor";
 	private static final String	BRACE_STYLE					= "braceStyle";
-	private static final String	BRACE_COLOR					= "braceColor";
+	private static final String	BRACE_COLOR					= "braceColor"; // TODO enable syntax highlighting
+	private static final String IS_SYNTAX_HIGHLIGHTING_ENABLED	= "isSyntaxHighlightingEnabled";
 	private static final String	CONTEST_SETTINGS			= "contestSettings";
 	private static final String	N_OF_CONTEST_BONUS_FILES	= "nOfContestBonusFiles";
 	private static final String	N_OF_CONTEST_FILES			= "nOfContestFiles";
 	private static final String	IS_USER_CREATION_ALLOWED	= "isUserCreationAllowed";
 	private static final String	LANGUAGE					= "language";
+	private static final String	LOGO_LANGUAGE				= "logoLanguage";
 	private static final String	NUMBER_OF_BACKUPS			= "numberOfBackups";
 	private static final String	USER_LIST					= "userList";
 	private static final String	LAST_ACTIVE_USER			= "lastActiveUser";
+	
+	
+	public static StorableObject<WorkspaceConfig, WorkspaceProperty> createOrLoad(File wsDir){
+		StorableObject<WorkspaceConfig, WorkspaceConfig.WorkspaceProperty> wc;
+		wc = new StorableObject<>(WorkspaceConfig.class, wsDir).withSerializer(new WorkspaceConfigJSONSerializer());
+		try {
+			wc.createOrLoad();
+			wc.get().setDirectory(wsDir);
+			return wc;
+		}
+		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return wc;
+	}
 	
 	@Override
 	public JSONObject serialize2JSON(WorkspaceConfig ws) {
@@ -38,8 +60,9 @@ public class WorkspaceConfigJSONSerializer extends JSONSerializer<WorkspaceConfi
 		
 		json.put(USER_LIST, new JSONArray(ws.getUserList()));
 		json.put(LAST_ACTIVE_USER, ws.getLastActiveUser());
-		json.put(NUMBER_OF_BACKUPS, ws.getNumberOfBackups().toString());
-		json.put(LANGUAGE, ws.getLanguage().toString());
+		json.put(NUMBER_OF_BACKUPS, ws.getNumberOfBackups().getValue());
+		json.put(LANGUAGE, ws.getLanguage().getValue());
+		json.put(LOGO_LANGUAGE, ws.getLogoLanguage().getValue());
 		json.put(IS_USER_CREATION_ALLOWED, ws.isUserCreationAllowed());
 		
 		JSONObject jsonContestSettings = new JSONObject();
@@ -47,11 +70,12 @@ public class WorkspaceConfigJSONSerializer extends JSONSerializer<WorkspaceConfi
 		jsonContestSettings.put(N_OF_CONTEST_BONUS_FILES, ws.getNOfContestBonusFiles());
 		json.put(CONTEST_SETTINGS, jsonContestSettings);
 		
-		JSONObject jsonSyntaxHighlightingStyles = new JSONObject().put(BRACE_COLOR, ws.getBraceColor())
-				.put(BRACE_STYLE, ws.getBraceStyle()).put(COMMENT_COLOR, ws.getCommentColor())
-				.put(COMMENT_STYLE, ws.getCommentStyle()).put(OPERAND_COLOR, ws.getOperandColor())
-				.put(OPERAND_STYLE, ws.getOperandStyle()).put(PRIMITIVE_COLOR, ws.getPrimitiveColor())
-				.put(PRIMITIVE_STYLE, ws.getPrimitiveStyle());
+		JSONObject jsonSyntaxHighlightingStyles = new JSONObject()
+				.put(BRACE_COLOR, ws.getBraceColor()).put(BRACE_STYLE, ws.getBraceStyle())
+				.put(COMMENT_COLOR, ws.getCommentColor()).put(COMMENT_STYLE, ws.getCommentStyle())
+				.put(OPERAND_COLOR, ws.getOperandColor()).put(OPERAND_STYLE, ws.getOperandStyle())
+				.put(PRIMITIVE_COLOR, ws.getPrimitiveColor()).put(PRIMITIVE_STYLE, ws.getPrimitiveStyle())
+				.put(IS_SYNTAX_HIGHLIGHTING_ENABLED, ws.isSyntaxHighlightingEnabled());
 		json.put(SYNTAX_HIGHLIGHTING_STYLES, jsonSyntaxHighlightingStyles);
 		
 		JSONObject jsonFont = new JSONObject().put(NAME, ws.getFont().getName()).put(STYLE, ws.getFont().getStyle())
@@ -77,11 +101,15 @@ public class WorkspaceConfigJSONSerializer extends JSONSerializer<WorkspaceConfi
 		}
 		
 		if (json.has(NUMBER_OF_BACKUPS)) {
-			ws.setNumberOfBackups(NumberOfBackups.valueOf(json.getString(NUMBER_OF_BACKUPS)));
+			ws.setNumberOfBackups(NumberOfBackups.valueOf(json.getInt(NUMBER_OF_BACKUPS)));
 		}
 		
 		if (json.has(LANGUAGE)) {
-			ws.setLanguage(Language.valueOf(json.getString(LANGUAGE)));
+			ws.setLanguage(Language.valueOf(json.getInt(LANGUAGE)));
+		}
+		
+		if (json.has(LOGO_LANGUAGE)) {
+			ws.setLogoLanguage(LogoLanguage.valueOf(json.getInt(LOGO_LANGUAGE)));
 		}
 		
 		if (json.has(IS_USER_CREATION_ALLOWED)) {
@@ -136,6 +164,9 @@ public class WorkspaceConfigJSONSerializer extends JSONSerializer<WorkspaceConfi
 				ws.setPrimitiveStyle(jsonContestSettings.getInt(PRIMITIVE_STYLE));
 			}
 			
+			if (jsonContestSettings.has(IS_SYNTAX_HIGHLIGHTING_ENABLED)) {
+				ws.setSyntaxHighlightingEnabled(jsonContestSettings.getBoolean(IS_SYNTAX_HIGHLIGHTING_ENABLED));
+			}
 		}
 		
 		if (json.has(FONT)) {

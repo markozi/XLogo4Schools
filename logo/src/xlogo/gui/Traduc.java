@@ -172,10 +172,10 @@ public class Traduc extends JFrame implements ActionListener {
 			}
 			// ajout des mots clés pour et fin
 			int id=combo_origine.getSelectedIndex();
-			Locale locale=Language.getLanguage(id).getLocale();
+			Locale locale=Language.valueOf(id).getLocale();
 			ResourceBundle res1=ResourceBundle.getBundle("langage",locale);
 			id=combo_destination.getSelectedIndex();
-			locale=Language.getLanguage(id).getLocale();
+			locale=Language.valueOf(id).getLocale();
 			ResourceBundle res2=ResourceBundle.getBundle("langage",locale);
 			tre.put(res1.getString("pour"),res2.getString("pour"));
 			tre.put(res1.getString("fin"),res2.getString("fin"));
@@ -210,7 +210,7 @@ public class Traduc extends JFrame implements ActionListener {
  private ResourceBundle genere_langue(JComboBox jc){ // fixe la langue utilisée pour les messages
 	  Locale locale=null;
 	  int id=jc.getSelectedIndex();
-		locale=Language.getLanguage(id).getLocale();
+		locale=Language.valueOf(id).getLocale();
 		return ResourceBundle.getBundle("primitives",locale);
 	}
 }

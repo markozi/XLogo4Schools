@@ -27,33 +27,30 @@
 
 package xlogo.storage.workspace;
 
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
 public enum Language {
-	LANGUAGE_FRENCH(0, "French", "fr", "FR"),
-	LANGUAGE_ENGLISH(1, "English", "en", "US"),
-	LANGUAGE_ARABIC(2, "Arabic", "ar", "MA"),
-	LANGUAGE_SPANISH(3, "Spanish", "es", "ES"),
-	LANGUAGE_PORTUGAL(4, "Portuguese", "pt", "BR"),
-	LANGUAGE_ESPERANTO(5, "Esperanto", "eo", "EO"),
-	LANGUAGE_GERMAN(6, "German", "de", "DE"),
-	LANGUAGE_GALICIAN(7, "Galician", "gl", "ES"),
-	LANGUAGE_ASTURIAN(8, "Asturian", "al", "ES"),
-	LANGUAGE_GREEK(9, "Greek", "el", "GR"),
-	LANGUAGE_ITALIAN(10, "Italian", "it", "IT"),
-	LANGUAGE_CATALAN(11, "Catalan", "ca", "ES"),
-	LANGUAGE_HUNGARIAN(12, "Hungarian", "hu", "HU"),
-	LANGUAGE_ENGLISH_GERMAN(13, "ABZ German/English", "en", "DE");
+	FRENCH(0, "French", "fr", "FR"),
+	ENGLISH(1, "English", "en", "US"),
+//	ARABIC(2, "Arabic", "ar", "MA"),
+//	SPANISH(3, "Spanish", "es", "ES"),
+//	PORTUESE(4, "Portuguese", "pt", "BR"),
+//	ESPERANTO(5, "Esperanto", "eo", "EO"),
+	GERMAN(6, "German", "de", "DE"),
+//	GALICIAN(7, "Galician", "gl", "ES"),
+//	ASTURIAN(8, "Asturian", "al", "ES"),
+//	GREEK(9, "Greek", "el", "GR"),
+	ITALIAN(10, "Italian", "it", "IT")
+//	CATALAN(11, "Catalan", "ca", "ES"),
+//	HUNGARIAN(12, "Hungarian", "hu", "HU"),
+//	ENGLISH_GERMAN(13, "ABZ German/English", "en", "DE") // TODO remove this
+	;
 	
 	private int value;
 	private String englishName;
 	private String languageCode;
 	private String countryCode;
 	
-    private static Map<Integer, Language> valueToLanguage;
-
     private Language(int value, String englishName, String languageCode, String countryCode) {
         this.value = value;
         this.englishName = englishName;
@@ -61,26 +58,30 @@ public enum Language {
         this.countryCode = countryCode;
     }
     
-    public static Language getLanguage(int i)
-    {
-    	if (valueToLanguage == null)
-    		initMapping();
-    	return valueToLanguage.get(i);
-    }
-    
-    public static void initMapping()
-    {
-    	valueToLanguage = new HashMap<Integer, Language>();
-    	for (Language lang : values()) {
-    		valueToLanguage.put(lang.value, lang);
-        }
-    }
-    
     public int getValue()
     {
     	return value;
     }
     
+	public static Language valueOf(int value){
+		switch(value){
+			case 0: return Language.FRENCH;
+			case 1: return Language.ENGLISH;
+//			case 2: return Language.ARABIC;
+//			case 3: return Language.SPANISH;
+//			case 4: return Language.PORTUESE;
+//			case 5: return Language.ESPERANTO;
+			case 6: return Language.GERMAN;
+//			case 7: return Language.GALICIAN;
+//			case 8: return Language.ASTURIAN;
+//			case 9: return Language.GREEK;
+			case 10: return Language.ITALIAN;
+//			case 11: return Language.CATALAN;
+//			case 12: return Language.HUNGARIAN;
+			default: return Language.ENGLISH;
+		}
+	}
+	
     public String getEnglishName()
     {
     	return englishName;
@@ -108,4 +109,5 @@ public enum Language {
     {
     	return countryCode;
     }
+    	
 }

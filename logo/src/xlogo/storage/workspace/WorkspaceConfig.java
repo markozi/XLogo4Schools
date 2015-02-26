@@ -109,6 +109,7 @@ public class WorkspaceConfig implements Serializable, Observable<WorkspaceConfig
 	private String					lastActiveUser;
 	private NumberOfBackups			numberOfBackups		= NumberOfBackups.INFINITE;
 	private Language				language;
+	private LogoLanguage			logoLanguage		= LogoLanguage.ENGLISH;
 	private boolean					allowUserCreation	= true;
 	private ContestConfig			contestSettings; // Contest //TODO create options in workspace settings
 	private SyntaxHighlightConfig	syntaxHighlightingStyles;	// TODO = new SyntaxHighlightStyles();
@@ -335,8 +336,20 @@ public class WorkspaceConfig implements Serializable, Observable<WorkspaceConfig
 
 	public Language getLanguage() {
 		if (language == null)
-			return Language.LANGUAGE_ENGLISH;
+			return Language.ENGLISH;
 		return language;
+	}
+	
+	public LogoLanguage getLogoLanguage() {
+		if (logoLanguage == null)
+			return LogoLanguage.ENGLISH;
+		return logoLanguage;
+	}
+
+	public void setLogoLanguage(LogoLanguage logoLanguage) {
+		if (this.logoLanguage == logoLanguage) { return; }
+		this.logoLanguage = logoLanguage;
+		publisher.publishEvent(WorkspaceProperty.LOGO_LANGUAGE);
 	}
 	
 	/*
@@ -511,7 +524,7 @@ public class WorkspaceConfig implements Serializable, Observable<WorkspaceConfig
 	 */
 	
 	public enum WorkspaceProperty {
-		FONT, SYNTAX_HIGHLIGHTING, ALLOW_USER_CREATION, LANGUAGE, N_OF_BACKUPS, LAST_ACTIVE_USER, USER_LIST, CONTEST;
+		FONT, SYNTAX_HIGHLIGHTING, ALLOW_USER_CREATION, LANGUAGE, N_OF_BACKUPS, LAST_ACTIVE_USER, USER_LIST, CONTEST, LOGO_LANGUAGE;
 	}
 
 	private transient PropertyChangePublisher<WorkspaceProperty> publisher = new PropertyChangePublisher<>();

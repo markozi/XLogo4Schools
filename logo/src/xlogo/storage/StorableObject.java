@@ -194,7 +194,7 @@ public class StorableObject<T extends Observable<E>, E extends Enum<E>> extends 
 		
 		if (!isVirtual()) {
 			if (getSerializer() != null) {
-				Utils.store(file, getSerializer().serialize2String(get()));
+				Utils.storeFile(file, getSerializer().serialize2String(get()));
 			}
 			else {
 				Utils.store(file, get());

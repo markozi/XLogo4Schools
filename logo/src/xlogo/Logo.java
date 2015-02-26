@@ -111,7 +111,7 @@ public class Logo {
 	/**Builds Application with the valid Config*/
 	public Logo() {
 		WorkspaceConfig wc = WSManager.getWorkspaceConfig();
-		Language lang = Language.LANGUAGE_ENGLISH;
+		Language lang = Language.ENGLISH;
 		if (wc != null){
 			lang = WSManager.getInstance().getWorkspaceConfigInstance().getLanguage();
 		}

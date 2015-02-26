@@ -11,11 +11,13 @@ public abstract class JSONSerializer<T> implements Serializer<T>{
 	
 	@Override
 	public T deserialize(String json) {
-		return deserialize(new JSONObject(json));
+		return deserialize(new JSONObject(json.trim()));
 	}
 
 	@Override
 	public String serialize2String(T target) {
-		return serialize2JSON(target).toString();
+		JSONObject json = serialize2JSON(target);
+		String serialized = json.toString();
+		return serialized;
 	}
 }
