@@ -35,7 +35,7 @@
 
 	<!-- Version for this Build -->
 	
-	<property name="version" value="0.9.05beta-2014-12-22"/>
+	<property name="version" value="0.9.06beta-2015-02-27"/>
 	
 		<echo message="Using Java version ${ant.java.version}."/>
 		
