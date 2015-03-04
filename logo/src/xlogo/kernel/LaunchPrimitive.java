@@ -69,6 +69,7 @@ import xlogo.gui.Lis;
 import xlogo.gui.MyTextAreaDialog;
 import xlogo.kernel.DrawPanel;
 import xlogo.gui.HistoryPanel;
+import xlogo.AppSettings;
 import xlogo.Application;
 import xlogo.Logo;
 import xlogo.kernel.network.*;
@@ -200,7 +201,7 @@ public class LaunchPrimitive
 		}
 		else
 		{
-			Language lang = WSManager.getInstance().getWorkspaceConfigInstance().getLanguage();
+			Language lang = AppSettings.getInstance().getLanguage();
 			
 			switch (id)
 			{

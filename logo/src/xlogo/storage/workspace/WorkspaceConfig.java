@@ -290,7 +290,7 @@ public class WorkspaceConfig implements Serializable, Observable<WorkspaceConfig
 
 	public Language getLanguage() {
 		if (language == null)
-			return Language.ENGLISH;
+			return Language.getDefault();
 		return language;
 	}
 	

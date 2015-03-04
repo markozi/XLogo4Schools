@@ -41,6 +41,7 @@ import xlogo.storage.WSManager;
 import xlogo.storage.workspace.Language;
 import xlogo.storage.workspace.WorkspaceConfig;
 import xlogo.utils.Utils;
+import xlogo.AppSettings;
 import xlogo.Logo;
 /**
  * Title :        XLogo
@@ -87,7 +88,7 @@ public class Traduc extends JFrame implements ActionListener {
 	public Traduc(){
 		WorkspaceConfig wc = WSManager.getWorkspaceConfig();
 		Font font = wc.getFont();
-		Language lang = wc.getLanguage();
+		Language lang = AppSettings.getInstance().getLanguage();
 		
 		setTitle(Logo.messages.getString("menu.tools.translate"));
 		setIconImage(Toolkit.getDefaultToolkit().createImage(Utils.class.getResource("icone.png")));

@@ -62,7 +62,7 @@ import org.json.JSONObject;
 import xlogo.kernel.MyCalculator;
 import xlogo.kernel.Affichage;
 import xlogo.storage.WSManager;
-import xlogo.storage.workspace.Language;
+import xlogo.storage.workspace.LogoLanguage;
 import xlogo.Logo;
 
 public class Utils {
@@ -622,7 +622,7 @@ public class Utils {
 	}
 	
 	public static String primitiveName(String generic) {
-		Language lang = WSManager.getInstance().getWorkspaceConfigInstance().getLanguage();
+		LogoLanguage lang = WSManager.getInstance().getWorkspaceConfigInstance().getLogoLanguage();
 		Locale locale = lang.getLocale();
 		ResourceBundle prim = ResourceBundle.getBundle("primitives", locale);
 		String st = prim.getString(generic);

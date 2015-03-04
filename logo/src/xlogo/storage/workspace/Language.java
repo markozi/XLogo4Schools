@@ -109,5 +109,27 @@ public enum Language {
     {
     	return countryCode;
     }
-    	
+    
+    /**
+     * Try to get best match for locale or english otherwise
+     * @param locale
+     * @return
+     */
+    public static Language forLocale(Locale locale){
+    	Language result = Language.ENGLISH;
+    	for (Language lang : Language.values()){
+    		Locale l = lang.getLocale();
+    		if(l.equals(locale)){
+    			return lang;
+    		}
+    		if (l.getLanguage().equals(locale.getLanguage())){
+    			result = lang;
+    		}
+    	}
+    	return result;
+    }
+    
+    public static Language getDefault(){
+    	return forLocale(Locale.getDefault());
+    }
 }

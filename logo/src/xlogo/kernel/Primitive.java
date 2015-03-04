@@ -45,7 +45,6 @@ import java.math.BigDecimal;
 
 import xlogo.kernel.LoopProperties;
 import xlogo.messages.async.history.HistoryMessenger;
-import xlogo.storage.WSManager;
 import xlogo.storage.workspace.LogoLanguage;
 import xlogo.utils.Utils;
 import xlogo.AppSettings;
@@ -102,7 +101,7 @@ public class Primitive
 	protected String getAllPrimitives()
 	{
 		Vector<String> list = new Vector<String>();
-		Locale locale = WSManager.getInstance().getWorkspaceConfigInstance().getLanguage().getLocale();
+		Locale locale = AppSettings.getInstance().getLanguage().getLocale();
 		ResourceBundle prim = ResourceBundle.getBundle("primitives", locale);
 		try
 		{

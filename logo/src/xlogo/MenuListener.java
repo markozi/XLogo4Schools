@@ -111,7 +111,7 @@ public class MenuListener extends JDialog implements ActionListener {
 	 * task corresponding to the incoming event.
 	 */
 	public void actionPerformed(ActionEvent e) {		
-		Language lang = WSManager.getWorkspaceConfig().getLanguage();
+		Language lang = AppSettings.getInstance().getLanguage();
 		
 		String cmd = e.getActionCommand();
 		if (MenuListener.EDIT_COPY.equals(cmd)) { // Copier

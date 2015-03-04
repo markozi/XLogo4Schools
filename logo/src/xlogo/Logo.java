@@ -112,14 +112,16 @@ public class Logo {
 	/**Builds Application with the valid Config*/
 	public Logo() {
 		WorkspaceConfig wc = WSManager.getWorkspaceConfig();
-		Language lang = Language.ENGLISH;
+		// Language for User Interface
+		Language lang = Language.getDefault();
 		if (wc != null){
-			lang = WSManager.getInstance().getWorkspaceConfigInstance().getLanguage();
+			lang = AppSettings.getInstance().getLanguage();
 		}
 		generateLanguage(lang);
+		// Logo Programming Language
 		LogoLanguage logo = LogoLanguage.ENGLISH;
 		if (wc != null){
-			lang = WSManager.getInstance().getWorkspaceConfigInstance().getLanguage();
+			logo = WSManager.getInstance().getWorkspaceConfigInstance().getLogoLanguage();
 		}
 		generateLogoLanguage(logo);
 
@@ -157,7 +159,7 @@ public class Logo {
 		WorkspaceConfig wc = WSManager.getInstance().getWorkspaceConfigInstance();
 		
 		welcomeScreen.closeFrame();
-		generateLanguage(wc.getLanguage());
+		generateLanguage(AppSettings.getInstance().getLanguage());
 		generateLogoLanguage(wc.getLogoLanguage());
 		
 		// Initialize frame

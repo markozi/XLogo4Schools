@@ -474,7 +474,7 @@ public class WelcomeScreen extends X4SFrame {
 		WebPage editorPane = new WebPage();
 		editorPane.setEditable(false);
 		
-		String langCode = WSManager.getWorkspaceConfig().getLanguage().getLanguageCode();
+		String langCode = AppSettings.getInstance().getLanguage().getLanguageCode();
 		
 		String path = "gpl/gpl-" + langCode + ".html";
 		
