@@ -47,7 +47,7 @@ public abstract class AbstractPanelColor extends JPanel implements ActionListene
 	//	private ImageIcon[] images=new ImageIcon[17];
 	private Integer[]				intArray			= new Integer[17];
 	private JButton					bchoisir			= new JButton(Logo.messages.getString("pref.highlight.other"));
-	protected JComboBox<Integer>	combo_couleur;
+	protected JComboBox	combo_couleur;
 	private Color					couleur_perso		= Color.WHITE;
 	
 	public AbstractPanelColor(Color c) {
@@ -55,7 +55,7 @@ public abstract class AbstractPanelColor extends JPanel implements ActionListene
 		for (int i = 0; i < 17; i++) {
 			intArray[i] = new Integer(i);
 		}
-		combo_couleur = new JComboBox<>(intArray);
+		combo_couleur = new JComboBox(intArray);
 		ComboBoxRenderer renderer = new ComboBoxRenderer();
 		combo_couleur.setRenderer(renderer);
 		setColorAndStyle(c);

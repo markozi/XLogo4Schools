@@ -29,11 +29,8 @@ package xlogo.storage.workspace;
 
 import java.awt.Font;
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.TreeMap;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -94,11 +91,20 @@ public class WorkspaceConfig implements Serializable, Observable<WorkspaceConfig
 		this.wsDir = wsDir;
 	}
 	
+	private transient String wsName;
+	
 	public String getWorkspaceName(){
+		if (wsName != null){
+			return wsName;
+		}
 		File wsDir = getDirectory();
 		if (wsDir == null)
 			throw new IllegalStateException("Name is not available because location is null.");
 		return wsDir.getName();
+	}
+	
+	public void setWorkspaceName(String wsName){
+		this.wsName = wsName;
 	}
 	
 	/*
@@ -159,21 +165,7 @@ public class WorkspaceConfig implements Serializable, Observable<WorkspaceConfig
 		return activeUser;
 	}
 	
-	public void enterInitialUserSpace() throws IOException{
-		String user = getLastActiveUser();
-		if (user != null && userList.contains(user)){
-			enterUserSpace(user);
-		}
-	}
-	
-	/**
-	 * @throws IOException If the old userConfig could not be stored. 
-	 */
-	public void enterUserSpace(String username) throws IOException {
-		enterUserSpace(retrieveUserSpace(username));
-	}
-	
-	public void enterUserSpace(StorableObject<UserConfig, UserProperty> userConfig) throws IOException {
+	public void enterUserSpace(StorableObject<UserConfig, UserProperty> userConfig) {
 		if(userConfig == activeUser){
 			return;
 		}
@@ -184,51 +176,17 @@ public class WorkspaceConfig implements Serializable, Observable<WorkspaceConfig
 		logger.trace("Entering user space: " + userConfig.get().getUserName());
 		
 		activeUser = userConfig;
+		publisher.publishEvent(WorkspaceProperty.USER);
 		setLastActiveUser(userConfig.get().getUserName());
 	}
 	
-	/**
-	 * @throws IOException If userConfig could not be stored. 
-	 */
-	public void leaveUserSpace() throws IOException {
+	public void leaveUserSpace() {
 		logger.trace("Leaving user space: " + activeUser.get().getUserName());
 		if (activeUser.isDirty())
 			activeUser.store();
 		activeUser = null;
 	}
-	
-	
-	protected StorableObject<UserConfig, UserProperty> retrieveUserSpace(String username){
-		StorableObject<UserConfig, UserProperty> uc = getCachedUserSpace(username);
-		if (uc == null && getDirectory() != null){
-			uc = WSManager.getUser(getDirectory(), username);
-			cacheUserSpace(username, uc);
-		}
 		
-		return uc;
-	}
-	
-	/**
-	 * User Cache
-	 * 
-	 * UserConfigs that have already been created or loaded from disk.
-	 */
-	private transient Map<String, StorableObject<UserConfig, UserProperty>> cachedUserSpaces;
-	
-	private StorableObject<UserConfig, UserProperty> getCachedUserSpace(String username) {
-		if (cachedUserSpaces == null){
-			cachedUserSpaces= new TreeMap<String, StorableObject<UserConfig, UserProperty>>();
-		}
-		return cachedUserSpaces.get(username);
-	}
-	
-	private void cacheUserSpace(String username, StorableObject<UserConfig, UserProperty> wsc){
-		if (cachedUserSpaces == null){
-			cachedUserSpaces= new TreeMap<String, StorableObject<UserConfig, UserProperty>>();
-		}
-		cachedUserSpaces.put(username, wsc);
-	}
-	
 	/*
 	 * User list
 	 */
@@ -244,23 +202,19 @@ public class WorkspaceConfig implements Serializable, Observable<WorkspaceConfig
 	
 	public void addUser(StorableObject<UserConfig, UserConfig.UserProperty> uc){
 		String name = uc.get().getUserName();
-		cacheUserSpace(name, uc);
 		addUser(name);
 	}
 	
 	/**
 	 * @param userName will be removed logically only
-	 * @throws IOException 
 	 */
 	public void removeUser(String username){
 		logger.trace("Removing user: " + username);
 		if (existsUserLogically(username)){
 			userList.remove(username);
-			cachedUserSpaces.remove(username);
 			publisher.publishEvent(WorkspaceProperty.USER_LIST);
 		} else {
 			userList.remove(username);
-			cachedUserSpaces.remove(username);
 		}
 		
 		if (activeUser != null && activeUser.get().getUserName().equals(username)){
@@ -524,15 +478,15 @@ public class WorkspaceConfig implements Serializable, Observable<WorkspaceConfig
 	 */
 	
 	public enum WorkspaceProperty {
-		FONT, SYNTAX_HIGHLIGHTING, ALLOW_USER_CREATION, LANGUAGE, N_OF_BACKUPS, LAST_ACTIVE_USER, USER_LIST, CONTEST, LOGO_LANGUAGE;
+		FONT, SYNTAX_HIGHLIGHTING, ALLOW_USER_CREATION, LANGUAGE, N_OF_BACKUPS, LAST_ACTIVE_USER, USER_LIST, CONTEST, LOGO_LANGUAGE, USER;
 	}
 
-	private transient PropertyChangePublisher<WorkspaceProperty> publisher = new PropertyChangePublisher<>();
+	private transient PropertyChangePublisher<WorkspaceProperty> publisher = new PropertyChangePublisher<WorkspaceProperty>();
 	
 	@Override
 	public void addPropertyChangeListener(WorkspaceProperty property, PropertyChangeListener listener) {
 		if (publisher == null){
-			publisher = new PropertyChangePublisher<>();
+			publisher = new PropertyChangePublisher<WorkspaceProperty>();
 		}
 		publisher.addPropertyChangeListener(property, listener);
 	}

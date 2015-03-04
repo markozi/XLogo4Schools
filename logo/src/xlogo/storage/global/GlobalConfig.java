@@ -25,7 +25,6 @@ package xlogo.storage.global;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
@@ -109,6 +108,12 @@ public class GlobalConfig implements Serializable, Observable<GlobalConfig.Globa
 	 * Logical Workspaces (name and location stored in Map)
 	 */
 	private Map<String, String>	workspaces;
+
+	public void addWorkspace(StorableObject<WorkspaceConfig, WorkspaceProperty> wc) {
+		File location = wc.getLocation();
+		String name = wc.get().getWorkspaceName();
+		addWorkspace(name, location.getParentFile().toString());
+	}
 	
 	/**
 	 * @param workspaceName
@@ -118,13 +123,6 @@ public class GlobalConfig implements Serializable, Observable<GlobalConfig.Globa
 		logger.trace("Adding workspace: '" + workspaceName + "' at " + location);
 		workspaces.put(workspaceName, location);
 		publisher.publishEvent(GlobalProperty.WORKSPACES);
-		setLastUsedWorkspace(workspaceName);
-	}
-	
-	public void addWorkspace(StorableObject<WorkspaceConfig, WorkspaceProperty> wc) {
-		File location = wc.getLocation();
-		String name = wc.get().getWorkspaceName();
-		addWorkspace(name, location.getParentFile().toString());
 	}
 	
 	public void removeWorkspace(String workspaceName) {
@@ -134,7 +132,7 @@ public class GlobalConfig implements Serializable, Observable<GlobalConfig.Globa
 			leaveWorkspace();
 		}
 		
-		if (lastUsedWorkspace.equals(workspaceName)) {
+		if (workspaceName.equals(lastUsedWorkspace)) {
 			lastUsedWorkspace = null;
 			publisher.publishEvent(GlobalProperty.LAST_USED_WORKSPACE);
 		}
@@ -228,9 +226,8 @@ public class GlobalConfig implements Serializable, Observable<GlobalConfig.Globa
 	 * Load the workspace
 	 * <p>Always succeeds if workspaceName equals {@link WorkspaceConfig#VIRTUAL_WORKSPACE}
 	 * @param workspaceName - the workspace to load and enter
-	 * @throws IOException - if the workspace could not be loaded
 	 */
-	public void enterWorkspace(StorableObject<WorkspaceConfig, WorkspaceConfig.WorkspaceProperty> wc) throws IOException {
+	public void enterWorkspace(StorableObject<WorkspaceConfig, WorkspaceConfig.WorkspaceProperty> wc) {
 		String name = wc.get().getWorkspaceName();
 		logger.trace("Entering workspace: " + name);
 		if (currentWorkspace != null) {
@@ -241,13 +238,10 @@ public class GlobalConfig implements Serializable, Observable<GlobalConfig.Globa
 		setLastUsedWorkspace(name);
 		
 		publisher.publishEvent(GlobalProperty.CURRENT_WORKSPACE);
-		
-		currentWorkspace.get().enterInitialUserSpace();
 	}
 	
 	/**
 	 * Afterwards, currentWorkspace is null
-	 * @throws IOException If workspace could not be saved.
 	 */
 	public void leaveWorkspace() {
 		if (currentWorkspace == null)
@@ -256,13 +250,7 @@ public class GlobalConfig implements Serializable, Observable<GlobalConfig.Globa
 		logger.trace("Leaving workspace: " + currentWorkspace.get().getWorkspaceName());
 		
 		if (currentWorkspace.get().getActiveUser() != null) {
-			try {
-				currentWorkspace.get().leaveUserSpace();
-			}
-			catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			currentWorkspace.get().leaveUserSpace();
 		}
 		
 		if (currentWorkspace.isDirty())
@@ -458,12 +446,12 @@ public class GlobalConfig implements Serializable, Observable<GlobalConfig.Globa
 		PATH, PASSWORD, LAST_USED_WORKSPACE, CURRENT_WORKSPACE, WORKSPACES;
 	}
 
-	private transient PropertyChangePublisher<GlobalProperty> publisher = new PropertyChangePublisher<>();
+	private transient PropertyChangePublisher<GlobalProperty> publisher = new PropertyChangePublisher<GlobalProperty>();
 	
 	@Override
 	public void addPropertyChangeListener(GlobalProperty property, PropertyChangeListener listener) {
 		if (publisher == null){
-			publisher = new PropertyChangePublisher<>();
+			publisher = new PropertyChangePublisher<GlobalProperty>();
 		}
 		publisher.addPropertyChangeListener(property, listener);
 	}

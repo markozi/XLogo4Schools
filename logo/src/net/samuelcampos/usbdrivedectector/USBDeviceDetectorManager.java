@@ -124,4 +124,11 @@ public class USBDeviceDetectorManager {
         }
 
     }
+
+    /**
+     * @author Marko Zivkovic
+     */
+	public synchronized void stop() {
+		timer.cancel();
+	}
 }

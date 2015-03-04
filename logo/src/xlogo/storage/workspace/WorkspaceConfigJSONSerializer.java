@@ -2,7 +2,6 @@ package xlogo.storage.workspace;
 
 import java.awt.Font;
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -36,17 +35,26 @@ public class WorkspaceConfigJSONSerializer extends JSONSerializer<WorkspaceConfi
 	private static final String	NUMBER_OF_BACKUPS			= "numberOfBackups";
 	private static final String	USER_LIST					= "userList";
 	private static final String	LAST_ACTIVE_USER			= "lastActiveUser";
-	
-	
+
 	public static StorableObject<WorkspaceConfig, WorkspaceProperty> createOrLoad(File wsDir){
+		return createOrLoad(wsDir, false, false);
+	}
+	
+	public static StorableObject<WorkspaceConfig, WorkspaceProperty> createOrLoad(File wsDir, boolean isDeferred){
+		return createOrLoad(wsDir, isDeferred, false);
+	}
+	
+	public static StorableObject<WorkspaceConfig, WorkspaceProperty> createOrLoad(File wsDir, boolean isDeferred, boolean ignoreCacheOnce){
 		StorableObject<WorkspaceConfig, WorkspaceConfig.WorkspaceProperty> wc;
-		wc = new StorableObject<>(WorkspaceConfig.class, wsDir).withSerializer(new WorkspaceConfigJSONSerializer());
-		try {
-			wc.createOrLoad();
-			wc.get().setDirectory(wsDir);
-			return wc;
+		wc = new StorableObject<WorkspaceConfig,WorkspaceProperty>(WorkspaceConfig.class, wsDir).withSerializer(new WorkspaceConfigJSONSerializer());
+		if (ignoreCacheOnce){
+			wc.ignoreCacheOnce();
 		}
-		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+		try {
+			wc = wc.createOrLoad();
+			wc.get().setDirectory(wsDir);
+		}
+		catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

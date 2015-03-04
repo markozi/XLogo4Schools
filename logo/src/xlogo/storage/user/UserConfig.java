@@ -703,12 +703,12 @@ public class UserConfig implements Serializable, Observable<UserConfig.UserPrope
 	TCP_PORT;
 	}
 	
-	private transient PropertyChangePublisher<UserProperty>	publisher = new PropertyChangePublisher<>();
+	private transient PropertyChangePublisher<UserProperty>	publisher = new PropertyChangePublisher<UserProperty>();
 	
 	@Override
 	public void addPropertyChangeListener(UserProperty property, PropertyChangeListener listener) {
 		if (publisher == null){
-			publisher = new PropertyChangePublisher<>();
+			publisher = new PropertyChangePublisher<UserProperty>();
 		}
 		publisher.addPropertyChangeListener(property, listener);
 	}

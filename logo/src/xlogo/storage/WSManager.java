@@ -24,13 +24,6 @@ package xlogo.storage;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.List;
-
-import net.samuelcampos.usbdrivedectector.USBDeviceDetectorManager;
-import net.samuelcampos.usbdrivedectector.USBStorageDevice;
-import net.samuelcampos.usbdrivedectector.events.IUSBDriveListener;
-import net.samuelcampos.usbdrivedectector.events.USBStorageEvent;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,6 +36,7 @@ import xlogo.storage.global.GlobalConfig;
 import xlogo.storage.global.GlobalConfig.GlobalProperty;
 import xlogo.storage.user.UserConfig;
 import xlogo.storage.user.UserConfig.UserProperty;
+import xlogo.storage.user.UserConfigJSONSerializer;
 import xlogo.storage.workspace.WorkspaceConfig;
 import xlogo.storage.workspace.WorkspaceConfig.WorkspaceProperty;
 import xlogo.storage.workspace.WorkspaceConfigJSONSerializer;
@@ -81,9 +75,9 @@ import xlogo.utils.Utils;
 public class WSManager {
 	private static Logger		logger				= LogManager.getLogger(WSManager.class.getSimpleName());
 	
-	/*
-	 * Singleton instantiation
-	 */
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * Singleton
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 	private static WSManager	instance;
 	private static boolean isConstructingSingleton = false;
 	
@@ -98,6 +92,11 @@ public class WSManager {
 		}
 		return instance;
 	}
+
+	
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * Config Access
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 	
 	/**
 	 * This is a shortcut for {@code WSManager.getInstance().getWorkspaceConfigInstance()}
@@ -126,224 +125,6 @@ public class WSManager {
 	public static UserConfig getUserConfig() {
 		return getInstance().getUserConfigInstance();
 	}
-
-	private transient USBDeviceDetectorManager	driveDetector = new USBDeviceDetectorManager();
-	private StorableObject<GlobalConfig, GlobalProperty>	globalConfig;
-	
-	private WSManager() {
-		try {
-			globalConfig = new StorableObject<>(GlobalConfig.class, GlobalConfig.DEFAULT_LOCATION)
-					.withCreationInitializer(gc -> {
-						createWorkspace(gc, WorkspaceConfig.DEFAULT_DIRECTORY);
-						WorkspaceConfig wc = gc.getCurrentWorkspace().get(); // TODO wc.getLocation() is null at this place :(
-						createUser(wc, UserConfig.DEFAULT_DIRECTORY);
-						init(gc);
-					})
-					.withLoadInitializer(gc -> init(gc))
-					.createOrLoad();
-		}
-		catch (Exception e) { 
-			DialogMessenger.getInstance().dispatchError("Unable to Initilize Global Configuration", e.toString());
-		}
-	}
-	
-	protected void init(GlobalConfig gc){
-		initUSBWorkspaces(gc);
-		gc.cleanUpWorkspaces();
-		enterInitialWorkspace(gc);
-	}
-	
-	/**
-	 * This is used to have a workspace ready at the beginning, without any user interaction.
-	 * <p>
-	 * Tries to enter workspaces with the following priority.
-	 * 1. Last used workspace (if any)
-	 * 2. Default workspace, if there is no last used workspace
-	 * 3. Virtual Workspace, if entering or creating the default workspace failed for some reason.
-	 */
-	protected void enterInitialWorkspace(GlobalConfig gc) {
-		logger.trace("Entering initial workspace.");
-		
-		if (gc.getAllWorkspaces().length == 0){
-			logger.warn("No workspaces available.");
-			return;
-		}
-		
-		String initialWs = getFirstUSBWorkspace(gc);
-		
-		if (initialWs == null) {
-			initialWs = gc.getLastUsedWorkspace();
-		}
-		
-		if (initialWs == null) {
-			logger.warn("No workspaces available.");
-			initialWs = gc.getAllWorkspaces()[0];
-		}
-				
-		try {
-			enterWorkspace(gc, initialWs);
-		}
-		catch (IOException e1) {
-			DialogMessenger.getInstance().dispatchError("Workspace Error", "Cannot enter workspace: " + e1.toString());
-		}
-	}
-		
-	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-	 * USB Detection & Handling
-	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-		
-	/**
-	 * Detect External Drives
-	 */
-	protected void initUSBWorkspaces(GlobalConfig gc) {
-		if (driveDetector != null){
-			return;
-		}
-		
-		driveDetector = new USBDeviceDetectorManager(800);
-		
-		for (USBStorageDevice rmDevice : driveDetector.getRemovableDevices()) {
-			if (rmDevice.canRead() && rmDevice.canWrite()) {
-				addUSBDrive(gc, rmDevice);
-			}
-		}
-		
-		driveDetector.addDriveListener(new IUSBDriveListener(){
-			
-			@Override
-			public void usbDriveEvent(USBStorageEvent event) {
-				USBStorageDevice rmDevice = event.getStorageDevice();
-				switch (event.getEventType()) {
-					case CONNECTED:
-						addUSBDrive(gc, rmDevice);
-						break;
-					case REMOVED:
-						removeUSBDrive(gc, rmDevice);
-						break;
-				}
-			}
-		});
-	}
-	
-	protected void addUSBDrive(GlobalConfig gc, USBStorageDevice rmDevice) {
-		if (gc.getWorkspaceDirectory(rmDevice.getSystemDisplayName()) == null) {
-			logger.trace("USB Drive attached: " + rmDevice);
-			String deviceName = rmDevice.getSystemDisplayName();
-			File location = rmDevice.getRootDirectory();
-			gc.addWorkspace(deviceName, location.getAbsolutePath());
-		}
-	}
-	
-	protected void removeUSBDrive(GlobalConfig gc, USBStorageDevice rmDevice) {
-		logger.trace("USB Drive removed: " + rmDevice);
-		String deviceName = rmDevice.getSystemDisplayName();
-		gc.removeWorkspace(deviceName);
-	}
-	
-	protected StorableObject<WorkspaceConfig, WorkspaceProperty> initUSBDrive(GlobalConfig gc, String deviceName) throws IOException {
-		logger.trace("Initializing USB Drive: " + deviceName);
-		File usbRoot = null;
-		for (USBStorageDevice device : driveDetector.getRemovableDevices()) {
-			if (deviceName.equals(device.getSystemDisplayName())) {
-				usbRoot = device.getRootDirectory();
-				break;
-			}
-		}
-		if (usbRoot == null) { return null; }
-		
-		StorableObject<WorkspaceConfig, WorkspaceProperty> wsc = 
-				new StorableObject<>(WorkspaceConfig.class, usbRoot, WorkspaceConfig.USB_DEFAULT_WORKSPACE, true);
-		try {
-			wsc.createOrLoad();
-			gc.addWorkspace(wsc);
-		}
-		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		/*
-		File wsDir = StorableObject.getDirectory(usbRoot, WorkspaceConfig.USB_DEFAULT_WORKSPACE);
-		File wsConfigFile = StorableObject.getSerFile(wsDir, WorkspaceConfig.class);
-		if (wsConfigFile.exists()) {
-			logger.trace("Loading USB workspace from " + wsDir.getAbsolutePath());
-			wsc = WorkspaceConfig.loadWorkspace(usbRoot, WorkspaceConfig.USB_DEFAULT_WORKSPACE);
-			for (String user : wsc.getUserList()) {
-				logger.trace("\t Having user " + user);
-			}
-		}
-		else {
-			logger.trace("Creating new temporary USB workspace at " + usbRoot);
-			wsc = WorkspaceConfig.createDeferredWorkspace(usbRoot, WorkspaceConfig.USB_DEFAULT_WORKSPACE);
-			wsc.setUserCreationAllowed(true);
-		}*/
-		return wsc;
-	}
-	
-	public String getFirstUSBWorkspace(GlobalConfig gc) {
-		for (String ws : gc.getAllWorkspaces()) {
-			if (isUSBDrive(ws)) { return ws; }
-		}
-		return null;
-	}
-	
-	public boolean isUSBDrive(String workspaceName) {
-		List<USBStorageDevice> devices = driveDetector.getRemovableDevices();
-		logger.trace("Is '" + workspaceName + "' on a USB Drive?");
-		for (USBStorageDevice device : devices) {
-			if (workspaceName.equals(device.getSystemDisplayName())) {
-				logger.trace("\t = Yes, corresponding USB Device found.");
-				return true;
-			}
-			else {
-				logger.trace("\t Does not corresponding to " + device.getSystemDisplayName());
-			}
-		}
-		
-		logger.trace("\t = No, could not find corresponding USB Drive.");
-		return false;
-	}
-	
-	/*
-	 * Config Creation
-	 */
-		
-	/**
-	 * Load the specified user's settings from the current workspace
-	 * or create the user if it does not exist yet or if it was deleted for unknown reasons.
-	 * @param workspace
-	 * @param username
-	 * @return the loaded UserConfig
-	 * @throws IOException 
-	 */
-	public static StorableObject<UserConfig, UserProperty> getUser(File location, String username) {
-		
-		if (!isWorkspaceDirectory(location)) {
-			DialogMessenger.getInstance().dispatchError(Logo.messages.getString(MessageKeys.WS_ERROR_TITLE),
-					Logo.messages.getString(MessageKeys.WS_DOES_NOT_EXIST));
-			return null;
-		}
-		
-		if (!Storable.checkLegalName(username)) {
-			DialogMessenger.getInstance().dispatchError(Logo.messages.getString(MessageKeys.NAME_ERROR_TITLE),
-					Logo.messages.getString(MessageKeys.ILLEGAL_NAME));
-			return null;
-		}
-		File userDir = Storable.getDirectory(location, username);
-		StorableObject<UserConfig, UserProperty> userConfig = new StorableObject<>(UserConfig.class, userDir);
-		try {
-			userConfig.createOrLoad();
-		}
-		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		userConfig.get().setDirectory(userDir);
-		return userConfig;
-	}
-	
-	/*
-	 * Config access
-	 */
 	
 	/**
 	 * @return the instance of the GlobalConfig
@@ -373,9 +154,121 @@ public class WSManager {
 			return wc.getActiveUser().get();
 	}
 	
-	/*
-	 * WORKSPACE CONFIG : create, delete, enter
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * Initialization
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+	private USBWorkspaceManager usbManager;
+	private StorableObject<GlobalConfig, GlobalProperty>	globalConfig;
+	private boolean hasEnteredApplication = false;
+	
+	private WSManager() {
+		usbManager = new USBWorkspaceManager(new USBWorkspaceManager.WorkspaceContainer(){
+			@Override
+			public void add(StorableObject<WorkspaceConfig, WorkspaceProperty> usbwc) {
+				GlobalConfig gc = getGlobalConfigInstance();
+				if (!hasEnteredApplication){
+					gc.addWorkspace(usbwc);
+					enterWorkspace(gc, usbwc);
+				}
+			}
+			
+			@Override
+			public void remove(StorableObject<WorkspaceConfig, WorkspaceProperty> usbwc) {
+				GlobalConfig gc = getGlobalConfigInstance();
+				if (hasEnteredApplication){
+					if (usbwc.equals(gc.getCurrentWorkspace())){
+						// TODO translate
+						DialogMessenger.getInstance().dispatchError(
+								"USB Stick Removed", 
+								"I will not be able to remember your changes. Please reinsert your USB stick.");
+					}
+					// else ignore
+				} else {
+					gc.removeWorkspace(usbwc.get().getWorkspaceName());
+					enterInitialWorkspace(gc);
+				}
+			}
+		});
+		
+		globalConfig = new StorableObject<GlobalConfig, GlobalProperty>(GlobalConfig.class,
+				GlobalConfig.DEFAULT_LOCATION).withCreationInitializer(new StorableObject.Initializer<GlobalConfig>(){
+			@Override
+			public void init(GlobalConfig gc) {
+				StorableObject<WorkspaceConfig,WorkspaceProperty> wc = createWorkspace(gc, WorkspaceConfig.DEFAULT_DIRECTORY);
+				createUser(wc, UserConfig.DEFAULT_DIRECTORY);
+				initGc(gc);
+			}
+			
+		}).withLoadInitializer(new StorableObject.Initializer<GlobalConfig>(){
+			@Override
+			public void init(GlobalConfig gc) {
+				initGc(gc);
+			}
+		});
+		try {
+			globalConfig = globalConfig.createOrLoad();
+		}
+		catch (Exception e) {
+			DialogMessenger.getInstance().dispatchError("Unable to Initilize Global Configuration", e.toString());
+		}
+	}
+	
+	protected void initGc(GlobalConfig gc){
+		usbManager.init();
+		gc.cleanUpWorkspaces();
+		StorableObject<WorkspaceConfig,WorkspaceProperty> wc = enterInitialWorkspace(gc);
+		if (wc != null && wc.get() != null){
+			enterInitialUserSpace(wc);
+		}
+	}
+	
+	public void enterApplication(){
+		hasEnteredApplication = true;
+	}
+	
+	/**
+	 * This is used to have a workspace ready at the beginning, without any user interaction.
+	 * <p>
+	 * Tries to enter workspaces with the following priority.
+	 * 1. Last used workspace (if any)
+	 * 2. Default workspace, if there is no last used workspace
+	 * 3. Virtual Workspace, if entering or creating the default workspace failed for some reason.
 	 */
+	protected StorableObject<WorkspaceConfig,WorkspaceProperty> enterInitialWorkspace(GlobalConfig gc) {
+		logger.trace("Entering initial workspace.");
+		
+		if (gc.getAllWorkspaces().length == 0){
+			logger.warn("No workspaces available.");
+			return null;
+		}
+		
+		String initialWs = usbManager.getFirstUSBWorkspace(gc.getAllWorkspaces());
+		if (initialWs != null) {
+			File wsDir = usbManager.getWorkspaceDirectory(initialWs);
+			StorableObject<WorkspaceConfig, WorkspaceProperty> wc = WorkspaceConfigJSONSerializer.createOrLoad(wsDir, true);
+			return enterWorkspace(gc, wc);
+		}
+		
+		initialWs = gc.getLastUsedWorkspace();
+		
+		if (initialWs == null) {
+			initialWs = gc.getAllWorkspaces()[0];
+		}
+		return enterWorkspace(gc, initialWs);
+	}
+	
+	public void enterInitialUserSpace(StorableObject<WorkspaceConfig,WorkspaceProperty> wc) {
+		String user = wc.get().getLastActiveUser();
+		
+		if (user != null && wc.get().existsUserLogically(user)){
+			enterUserSpace(user);
+		}
+	}
+	
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * WORKSPACE CONFIG : create, delete, enter
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 	
 	/**
 	 * A new workspace is created in the defined directory.
@@ -383,9 +276,8 @@ public class WSManager {
 	 * @see WorkspaceConfig#loadWorkspace(File)
 	 * @param location
 	 * @param name
-	 * @throws IOException
 	 */
-	public void createWorkspace(File location, String name) throws IOException { // TODO delegate to overloaded method above
+	public void createWorkspace(File location, String name) {
 		File wsDir = StorableObject.getDirectory(location, name);
 		GlobalConfig gc = getGlobalConfig();
 		createWorkspace(gc, wsDir);
@@ -402,19 +294,13 @@ public class WSManager {
 		StorableObject<WorkspaceConfig, WorkspaceConfig.WorkspaceProperty> wc;
 		wc = WorkspaceConfigJSONSerializer.createOrLoad(wsDir);
 		if (wc != null){
-			try {
-				gc.addWorkspace(wc);
-				enterWorkspace(gc, wsDir.getName());
-			}
-			catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			gc.addWorkspace(wc);
+			enterWorkspace(gc, wsDir.getName());
 		}
 		return wc;
 	}
 	
-	public void deleteWorkspace(String wsName, boolean deleteFromDisk) throws SecurityException {
+	public void deleteWorkspace(String wsName, boolean deleteFromDisk) {
 		GlobalConfig gc = getGlobalConfigInstance();
 		File wsDir = gc.getWorkspaceDirectory(wsName);
 		gc.leaveWorkspace();
@@ -436,10 +322,7 @@ public class WSManager {
 			return;
 		}
 		getGlobalConfigInstance().addWorkspace(workspaceName, workspaceDir.getParent());
-		try {
-			enterWorkspace(workspaceName);
-		}
-		catch (IOException ignore) { /* This won't hopefully ever happen. */}
+		enterWorkspace(workspaceName);
 	}
 	
 	/**
@@ -448,36 +331,51 @@ public class WSManager {
 	 * @param workspaceName - the workspace to load and enter
 	 * @throws IOException - if the old workspace could not be loaded
 	 */
-	public void enterWorkspace(String workspaceName) throws IOException {
+	public void enterWorkspace(String workspaceName) {
 		GlobalConfig gc = getGlobalConfigInstance();
 		enterWorkspace(gc, workspaceName);
 	}
 	
-	protected void enterWorkspace(GlobalConfig gc, String workspaceName) throws IOException {
-		if(gc.getCurrentWorkspace() != null && workspaceName.equals(gc.getCurrentWorkspace().get().getWorkspaceName())){
+	protected StorableObject<WorkspaceConfig, WorkspaceConfig.WorkspaceProperty> enterWorkspace(GlobalConfig gc, String workspaceName) {
+		StorableObject<WorkspaceConfig, WorkspaceConfig.WorkspaceProperty> wc = gc.getCurrentWorkspace();
+		if(wc != null && workspaceName.equals(wc.get().getWorkspaceName())){
 			logger.trace("I'm already in workspace: " + workspaceName);
-			return;
+			return gc.getCurrentWorkspace();
 		}
-		if (isUSBDrive(workspaceName)) {
+		wc = null;
+
+		if (usbManager.isUSBDrive(workspaceName)) {
 			logger.trace("Retrieving USB workspace: " + workspaceName);
-			initUSBDrive(gc, workspaceName);
+			wc = usbManager.createOrLoad(workspaceName);
 		}
-		File wsDir = gc.getWorkspaceDirectory(workspaceName);
-		if (wsDir == null){
-			logger.error("Can't find workspace " + workspaceName);
-			return;
+		
+		if (wc == null){
+			File wsDir = gc.getWorkspaceDirectory(workspaceName);
+			
+			if (wsDir == null){
+				logger.error("Can't find workspace " + workspaceName);
+				return gc.getCurrentWorkspace();
+			}
+			wc = WorkspaceConfigJSONSerializer.createOrLoad(wsDir);
 		}
-		StorableObject<WorkspaceConfig, WorkspaceConfig.WorkspaceProperty> wc = WorkspaceConfigJSONSerializer.createOrLoad(wsDir);
+		
 		if (wc == null){
 			logger.error("Can't enter workspace because creation or laod failed for " + workspaceName);
-			return;
+			return gc.getCurrentWorkspace();
 		}
-		gc.enterWorkspace(wc);
+		
+		return enterWorkspace(gc, wc);
+	}
+
+	protected StorableObject<WorkspaceConfig, WorkspaceConfig.WorkspaceProperty> enterWorkspace(GlobalConfig gc, StorableObject<WorkspaceConfig, WorkspaceProperty> wc) {
+		gc.enterWorkspace(wc);		
+		enterInitialUserSpace(wc);
+		return gc.getCurrentWorkspace();
 	}
 	
-	/*
-	 * USER CONFIG : create, delete, enter
-	 */
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 *  USER CONFIG : create, delete, enter
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 	
 	/**
 	 * A new user is created in the current workspace.
@@ -490,24 +388,21 @@ public class WSManager {
 			throw new IllegalStateException("Cannot create a user directory outside of workspaces. Use createUser(File dir) for special cases.");
 		}
 		File userDir = StorableObject.getDirectory(wc.getLocation(), username);
-		createUser(wc.get(), userDir);
+		createUser(wc, userDir);
 	}
 	
-	private void createUser(WorkspaceConfig wc, File userDir){
-		StorableObject<UserConfig, UserConfig.UserProperty> duc = new StorableObject<>(UserConfig.class, userDir);
+	private void createUser(StorableObject<WorkspaceConfig,WorkspaceProperty> wc, File userDir){
+		StorableObject<UserConfig, UserConfig.UserProperty> duc = new StorableObject<UserConfig,UserProperty>(UserConfig.class, userDir);
 		try {
-			duc.createOrLoad();
+			duc = duc.createOrLoad();
 		}
-		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException e) { }
+		catch (Exception e) { }
 		if (!duc.isPersisted()){
 			logger.warn("Could not persist user files.");
 		}
 		duc.get().setDirectory(userDir);
-		wc.addUser(duc);
-		try {
-			enterUserSpace(wc, userDir.getName());
-		}
-		catch (IOException ignore) { /* This won't ever happen hopefully */ }
+		wc.get().addUser(duc);
+		enterUserSpace(wc.get(), duc);
 	}
 	
 	/**
@@ -555,22 +450,32 @@ public class WSManager {
 	/**
 	 * @throws IOException If the old userConfig could not be stored. 
 	 */
-	public void enterUserSpace(String name) throws IOException {
+	public void enterUserSpace(String name) {
 		WorkspaceConfig wc = getWorkspaceConfigInstance();
 		if (wc == null)
 			throw new IllegalStateException("Must be in WorkspaceDirectory first to enter UserSpace.");
 		enterUserSpace(wc, name);
 	}
 	
-	private void enterUserSpace(WorkspaceConfig wc, String name) throws IOException {
-		wc.enterUserSpace(name);
+	protected void enterUserSpace(WorkspaceConfig wc, String username) {
+		File userDir = StorableObject.getDirectory(wc.getDirectory(), username);
+		StorableObject<UserConfig, UserProperty> uc = UserConfigJSONSerializer.createOrLoad(userDir);
+		if (uc != null){
+			enterUserSpace(wc, uc);
+		} else {
+			DialogMessenger.getInstance().dispatchError("Workspace Error", "Cannot enter workspace.");
+		}
 	}
 	
-	/*
-	 * 	Short cuts
-	 */
+	protected void enterUserSpace(WorkspaceConfig wc, StorableObject<UserConfig, UserProperty> uc) {
+		wc.enterUserSpace(uc);
+	}
 	
-	public void storeAllSettings() throws IOException {
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 *  SHORTCUTS
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+		
+	public void storeAllSettings() {
 		globalConfig.store();
 		StorableObject<WorkspaceConfig, WorkspaceConfig.WorkspaceProperty> swc = globalConfig.get().getCurrentWorkspace();
 		if (swc == null) { return; }
@@ -580,9 +485,17 @@ public class WSManager {
 		suc.store();
 	}
 	
-	/*
-	 * DIRECTORIES & FILE MANIPULATION
+	/**
+	 * Make sure all threads are stopped and open files saved and closed.
 	 */
+	public void stopEverything(){
+		usbManager.stop();
+		storeAllSettings();
+	}
+	
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 *  DIRECTORIES & FILE MANIPULATION
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 	
 	public static File[] listDirectories(File dir) {
 		File[] dirs = dir.listFiles(new java.io.FileFilter(){

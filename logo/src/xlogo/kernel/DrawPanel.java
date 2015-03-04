@@ -402,10 +402,15 @@ import xlogo.kernel.perspective.*;
 				}
 				shape=gp;*/
 				tryRecord2DMode(tortue.corX,tortue.corY);	
-				g.draw(line);
-				 //if (!tortue.isVisible()) 
-					 clip();
-		//		g.dispose();
+				//g.draw(line);
+				//if (!tortue.isVisible()) 
+				//	 clip();
+				//g.dispose();
+					 
+				for (int i = 0; i < 7; i++) {// TODO find other solution for this hack
+					g.draw(line);
+					clip();
+				}
 			}
 			montrecacheTortue(true);
 		} else if (DrawPanel.WINDOW_MODE == DrawPanel.WINDOW_WRAP) { //mode enroule
@@ -459,6 +464,8 @@ import xlogo.kernel.perspective.*;
 				
 				line.setLine(x1,y1,x2,y2);
 								
+				g.draw(line);
+				g.draw(line);
 				g.draw(line);
 					 clip();
 			}

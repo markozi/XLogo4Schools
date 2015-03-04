@@ -31,6 +31,7 @@ import org.apache.logging.log4j.Logger;
 
 import xlogo.interfaces.Observable;
 import xlogo.interfaces.Observable.PropertyChangeListener;
+import xlogo.storage.cache.ObjectCache;
 import xlogo.storage.workspace.Serializer;
 import xlogo.utils.Utils;
 
@@ -49,8 +50,9 @@ public class StorableObject<T extends Observable<E>, E extends Enum<E>> extends 
 	private Class<T>			targetClass			= null;
 	private T					object				= null;
 	private Serializer<T>		serializer			= null;
-	private Initializer<T>		creationInitilizer = null;
-	private Initializer<T>		loadInitilizer 	= null;
+	private Initializer<T>		creationInitilizer 	= null;
+	private Initializer<T>		loadInitilizer 		= null;
+	private boolean				ignoreCacheOnce 	= false;
 	
 	private transient final PropertyChangeListener objectDirtyListener = new PropertyChangeListener(){
 		@Override
@@ -137,28 +139,40 @@ public class StorableObject<T extends Observable<E>, E extends Enum<E>> extends 
 	 * Create, Store & Load
 	 */
 
+	/**
+	 * @return This must not necessarily return the same object but possibly a cached version
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 * @throws NoSuchMethodException
+	 * @throws SecurityException
+	 */
 	public StorableObject<T, E> createOrLoad() throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, SecurityException {
-		File file = getFilePath();
-		
-		if (file.exists()) {
-			try {
-				load();
-			}
-			catch (Exception e) {
-				logger.warn("Could not load object from file " + e.toString());
-				file.delete();
-			}
+		StorableObject<T, E> res = null;
+		try {
+			res = load();
+		}
+		catch (Exception e) {
+			logger.warn("Could not load object from file " + e.toString());
 		}
 		
-		if(!file.exists() || object == null){
-			create();
-			store();
+		if(res == null){
+			res = create();
+			res.store();
 		}
 		
-		
-		return this;
+		return res;
 	}
 	
+	/**
+	 * 
+	 * @return
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 * @throws NoSuchMethodException
+	 * @throws SecurityException
+	 */
 	public StorableObject<T, E> create() throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		set(getTargetClass().getConstructor().newInstance());
 		if (getCreationInitilizer() != null) {
@@ -168,7 +182,20 @@ public class StorableObject<T extends Observable<E>, E extends Enum<E>> extends 
 		return this;
 	}
 	
+	/**
+	 * 
+	 * @return Either a cached version
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 * @throws ClassCastException
+	 */
 	public StorableObject<T, E> load() throws IOException, ClassNotFoundException, ClassCastException{
+		// Try to get object from the cache
+		StorableObject<T, E> res = ignoreCache()? null : ObjectCache.getInstance().get(getFilePath(), getTargetClass());
+		if (res != null){
+			return res;
+		}
+		// Otherwise load from file
 		setPersisted(false);
 		if (getSerializer() != null){
 			set(loadObject(getFilePath(), getSerializer()));
@@ -295,6 +322,7 @@ public class StorableObject<T extends Observable<E>, E extends Enum<E>> extends 
 		}
 		
 		this.object = object;
+		ObjectCache.getInstance().cache(this);
 		
 		if (this.object != null){
 			object.addPropertyChangeListener(null, objectDirtyListener);
@@ -354,6 +382,29 @@ public class StorableObject<T extends Observable<E>, E extends Enum<E>> extends 
 		return this;
 	}
 	
+	/**
+	 * The next time this object is loaded or created, the cached objects are being ignored (and possibly overwritten)
+	 * @return
+	 */
+	public StorableObject<T, E> ignoreCacheOnce(){
+		ignoreCacheOnce = true;
+		return this;
+	}
+	
+	protected boolean ignoreCache(){
+		boolean result = ignoreCacheOnce;
+		ignoreCacheOnce = false;
+		return result;
+	}
+	
+	/*
+	 * Misc
+	 */
+	
+	public String toString(){
+		File path = getFilePath();
+		return getClass().getSimpleName() + ": {path:" + (path != null ? path.toString() : "undefined")  + "}";
+	}
 	
 	/*
 	 * Interfaces

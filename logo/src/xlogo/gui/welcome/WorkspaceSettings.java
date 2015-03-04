@@ -29,7 +29,6 @@ package xlogo.gui.welcome;
 
 import java.awt.Toolkit;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 
 import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
@@ -39,7 +38,6 @@ import xlogo.gui.welcome.settings.tabs.SyntaxHighlightingTab;
 import xlogo.gui.welcome.settings.tabs.ContestTab;
 import xlogo.gui.welcome.settings.tabs.GlobalTab;
 import xlogo.gui.welcome.settings.tabs.WorkspaceTab;
-import xlogo.messages.async.dialog.DialogMessenger;
 import xlogo.storage.WSManager;
 import xlogo.utils.Utils;
 
@@ -84,13 +82,13 @@ public class WorkspaceSettings extends X4SFrame {
 			@Override
 			public void dispose()
 			{
-				try {
+				//try {
 					WSManager.getInstance().storeAllSettings();
-				} catch (IOException e) {
-					DialogMessenger.getInstance().dispatchMessage(
-							translate("ws.error.title"),
-							translate("storage.could.not.store.gc"));
-				}
+				//} catch (IOException e) {
+				//	DialogMessenger.getInstance().dispatchMessage(
+				//			translate("ws.error.title"),
+				//			translate("storage.could.not.store.gc"));
+				//}
 				
 				listener.actionPerformed(null);
 				super.dispose();

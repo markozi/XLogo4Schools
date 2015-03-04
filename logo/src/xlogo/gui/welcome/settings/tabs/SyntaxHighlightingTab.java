@@ -54,7 +54,7 @@ public class SyntaxHighlightingTab extends AbstractWorkspacePanel{
 	private JPanel component;
 	
 	private JLabel workspaceLabel;
-	private JComboBox<String> workspaceSelection;
+	private JComboBox workspaceSelection;
 	private ColorStyleSelectionPanel commentStyleSelection;
 	private ColorStyleSelectionPanel braceStyleSelection;
 	private ColorStyleSelectionPanel primitiveStyleSelection;
@@ -85,7 +85,7 @@ public class SyntaxHighlightingTab extends AbstractWorkspacePanel{
 		//Font font = wc.getFont();
 		component = new JPanel();
 		workspaceLabel = new JLabel();
-		workspaceSelection = new JComboBox<>();
+		workspaceSelection = new JComboBox();
 		commentStyleSelection=new ColorStyleSelectionPanel(syntaxHighlighting.getCommentColor(), syntaxHighlighting.getCommentStyle(), translate("pref.highlight.comment"));
 		braceStyleSelection=new ColorStyleSelectionPanel(syntaxHighlighting.getBraceColor(), syntaxHighlighting.getBraceStyle(), translate("pref.highlight.parenthesis"));
 		primitiveStyleSelection=new ColorStyleSelectionPanel(syntaxHighlighting.getPrimitiveColor(), syntaxHighlighting.getPrimitiveStyle(), translate("pref.highlight.primitive"));
@@ -191,14 +191,22 @@ public class SyntaxHighlightingTab extends AbstractWorkspacePanel{
 				}
 			});
 		
-		logoLanguageChangeListener = () -> {
-			updateLogoLanguage();
+		logoLanguageChangeListener = new PropertyChangeListener(){
+			
+			@Override
+			public void propertyChanged() {
+				updateLogoLanguage();
+			}
 		};
 		
 		AppSettings.getInstance().addPropertyChangeListener(AppProperty.LOGO_LANGUAGE, logoLanguageChangeListener);
 		
-		syntaxHighlightChangeListener = () -> {
-			updateSyntaxHighlightingPreview();
+		syntaxHighlightChangeListener = new PropertyChangeListener(){
+			
+			@Override
+			public void propertyChanged() {
+				updateSyntaxHighlightingPreview();
+			}
 		};
 		
 		AppSettings.getInstance().addPropertyChangeListener(AppProperty.SYNTAX_HIGHLIGHTING, syntaxHighlightChangeListener);
@@ -248,7 +256,7 @@ public class SyntaxHighlightingTab extends AbstractWorkspacePanel{
 	}
 
 	@Override
-	protected JComboBox<String> getWorkspaceSelection() {
+	protected JComboBox getWorkspaceSelection() {
 		return workspaceSelection;
 	}
 

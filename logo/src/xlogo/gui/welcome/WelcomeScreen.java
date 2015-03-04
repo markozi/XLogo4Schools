@@ -32,6 +32,7 @@ import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.io.IOException;
 
+import xlogo.AppSettings.AppProperty;
 import xlogo.gui.components.X4SFrame;
 import xlogo.interfaces.Observable.PropertyChangeListener;
 import xlogo.messages.MessageKeys;
@@ -39,10 +40,10 @@ import xlogo.messages.async.dialog.DialogMessenger;
 import xlogo.storage.Storable;
 import xlogo.storage.WSManager;
 import xlogo.storage.global.GlobalConfig;
-import xlogo.storage.global.GlobalConfig.GlobalProperty;
 import xlogo.storage.workspace.WorkspaceConfig;
 import xlogo.utils.Utils;
 import xlogo.utils.WebPage;
+import xlogo.AppSettings;
 import xlogo.Application;
 
 /**
@@ -61,8 +62,8 @@ public class WelcomeScreen extends X4SFrame {
 	private JLabel				workspace;
 	private JLabel				username;
 	
-	private JComboBox<String>	workspaceSelection;
-	private JComboBox<String>	userSelection;
+	private JComboBox	workspaceSelection;
+	private JComboBox	userSelection;
 	
 	private JButton				openWorkspaceSettingsBtn;
 	private JButton				enterButton;
@@ -80,12 +81,13 @@ public class WelcomeScreen extends X4SFrame {
 	private PropertyChangeListener		onWorkspaceListChangeListener;
 	private PropertyChangeListener		onEnterWorkspaceListener;
 	
-	
+	private WSManager wsManager;
 	/**
 	 * 
 	 * @param listener to be informed when the user is ready to enter the application
 	 */
 	public WelcomeScreen(ActionListener onApplicationEnterListener) {
+		wsManager = WSManager.getInstance();
 		this.onApplicationEnterListener = onApplicationEnterListener;
 	}
 	
@@ -102,13 +104,12 @@ public class WelcomeScreen extends X4SFrame {
 			
 			@Override
 			public void dispose() {
-				try {
-					WSManager.getInstance().storeAllSettings();
-				}
-				catch (IOException e) {
-					DialogMessenger.getInstance().dispatchMessage(translate("ws.error.title"),
-							translate("storage.could.not.store.gc"));
-				}
+				//try {
+				//}
+				//catch (IOException e) {
+				//	DialogMessenger.getInstance().dispatchMessage(translate("ws.error.title"),
+				//			translate("storage.could.not.store.gc"));
+				//}
 				
 				super.dispose();
 			}
@@ -121,8 +122,8 @@ public class WelcomeScreen extends X4SFrame {
 		workspace = new JLabel("Workspace");
 		username = new JLabel("User");
 		
-		workspaceSelection = new JComboBox<>();
-		userSelection = new JComboBox<>();
+		workspaceSelection = new JComboBox();
+		userSelection = new JComboBox();
 		
 		openWorkspaceSettingsBtn = new JButton("Settings");
 		enterButton = new JButton("Enter");
@@ -209,24 +210,31 @@ public class WelcomeScreen extends X4SFrame {
 	@Override
 	protected void initEventListeners() {
 		
-		GlobalConfig gc = WSManager.getGlobalConfig();
-		
-		onWorkspaceListChangeListener = () -> {
-			ignoreGuiEvents = true;
-			populateWorkspaceList();
-			populateUserList();
-			ignoreGuiEvents = false;
+		onWorkspaceListChangeListener = new PropertyChangeListener(){
+			
+			@Override
+			public void propertyChanged() {
+				ignoreGuiEvents = true;
+				populateWorkspaceList();
+				populateUserList();
+				ignoreGuiEvents = false;
+			}
 		};
 		
-		onEnterWorkspaceListener = () -> {
-			ignoreGuiEvents = true;
-			populateWorkspaceList();
-			populateUserList();
-			ignoreGuiEvents = false;
+		onEnterWorkspaceListener = new PropertyChangeListener(){
+			
+			@Override
+			public void propertyChanged() {
+				ignoreGuiEvents = true;
+				populateWorkspaceList();
+				populateUserList();
+				ignoreGuiEvents = false;
+			}
 		};
-				
-		gc.addPropertyChangeListener(GlobalProperty.CURRENT_WORKSPACE, onEnterWorkspaceListener);
-		gc.addPropertyChangeListener(GlobalProperty.WORKSPACES, onWorkspaceListChangeListener);
+
+		AppSettings as = AppSettings.getInstance();
+		as.addPropertyChangeListener(AppProperty.WORKSPACE, onEnterWorkspaceListener);
+		as.addPropertyChangeListener(AppProperty.WORKSPACE_LIST, onWorkspaceListChangeListener);
 		
 		workspaceSelection.addItemListener(new ItemListener(){
 			public void itemStateChanged(ItemEvent e) {
@@ -310,7 +318,7 @@ public class WelcomeScreen extends X4SFrame {
 	private void populateWorkspaceList() {
 		GlobalConfig gc = WSManager.getGlobalConfig();
 		String[] workspaces = gc.getAllWorkspaces();
-		workspaceSelection.setModel(new DefaultComboBoxModel<>(workspaces));
+		workspaceSelection.setModel(new DefaultComboBoxModel(workspaces));
 		selectCurrentWorkspace();
 	}
 	
@@ -331,21 +339,21 @@ public class WelcomeScreen extends X4SFrame {
 		} else {
 			users = new String[0];
 		}
-		userSelection.setModel(new DefaultComboBoxModel<>(users));
+		userSelection.setModel(new DefaultComboBoxModel(users));
 		userSelection.setSelectedItem(lastUser);
 		enterButton.setEnabled(lastUser != null && lastUser.length() > 0);
 		userSelection.setEditable(isUserCreationAllowed);
 	}
 	
 	protected void enterWorkspace(String workspaceName) {
-		try {
-			WSManager.getInstance().enterWorkspace(workspaceName);
+		//try {
+			wsManager.enterWorkspace(workspaceName);
 			populateUserList();
-		}
-		catch (IOException e) {
-			DialogMessenger.getInstance().dispatchMessage(translate("ws.error.title"),
-					translate("ws.settings.could.not.enter.wp") + "\n\n" + e.toString());
-		}
+		//}
+		//catch (IOException e) {
+		//	DialogMessenger.getInstance().dispatchMessage(translate("ws.error.title"),
+		//			translate("ws.settings.could.not.enter.wp") + "\n\n" + e.toString());
+		//}
 	}
 	
 	private synchronized void showWorkspaceSettings() {
@@ -411,18 +419,19 @@ public class WelcomeScreen extends X4SFrame {
 		}
 		
 		// The following is in case the user entered a new name : Need to create user first
-		WorkspaceConfig wc = WSManager.getInstance().getWorkspaceConfigInstance();
-		if (!wc.existsUserLogically(username))
-			WSManager.getInstance().createUser(username);
+		WorkspaceConfig wc = WSManager.getWorkspaceConfig();
+		if (!wc.existsUserLogically(username)){
+			wsManager.createUser(username);
+		}
 		
-		try {
-			WSManager.getInstance().enterUserSpace(username);
-		}
-		catch (IOException e) {
-			DialogMessenger.getInstance().dispatchMessage(translate("ws.error.title"),
-					translate("welcome.could.not.enter.user") + "\n" + e.toString());
-			return;
-		}
+		//try {
+			wsManager.enterUserSpace(username);
+		//}
+		//catch (IOException e) {
+		//	DialogMessenger.getInstance().dispatchMessage(translate("ws.error.title"),
+		//			translate("welcome.could.not.enter.user") + "\n" + e.toString());
+		//	return;
+		//}
 		cleanupAfterEnter();
 	}
 	
@@ -432,12 +441,14 @@ public class WelcomeScreen extends X4SFrame {
 			// TODO remove each reference to workspace settings
 			workspaceSettings = null;
 		}
-		WSManager.getGlobalConfig().removePropertyChangeListener(GlobalProperty.CURRENT_WORKSPACE, onEnterWorkspaceListener);
-		WSManager.getGlobalConfig().removePropertyChangeListener(GlobalProperty.WORKSPACES, onWorkspaceListChangeListener);
-		try {
-			WSManager.getInstance().storeAllSettings();
-		}
-		catch (IOException ignore) { }
+		AppSettings as = AppSettings.getInstance();
+		as.removePropertyChangeListener(AppProperty.WORKSPACE, onEnterWorkspaceListener);
+		as.removePropertyChangeListener(AppProperty.WORKSPACE_LIST, onWorkspaceListChangeListener);
+		//try {
+			wsManager.storeAllSettings();
+			wsManager.enterApplication();
+		//}
+		//catch (IOException ignore) { }
 		onApplicationEnterListener.actionPerformed(new ActionEvent(this, 0, null));
 	}
 	

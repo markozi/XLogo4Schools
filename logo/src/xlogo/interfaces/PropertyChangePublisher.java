@@ -11,8 +11,8 @@ public class PropertyChangePublisher<E extends Enum<E>> implements Observable<E>
 	
 	private boolean enableEvents = true;
 	
-	private final HashMap<E, List<PropertyChangeListener>>	listeners	= new HashMap<>();
-	private final List<PropertyChangeListener> allPropertiesListeners = new ArrayList<>();
+	private final HashMap<E, List<PropertyChangeListener>>	listeners	= new HashMap<E, List<PropertyChangeListener>>();
+	private final List<PropertyChangeListener> allPropertiesListeners = new ArrayList<PropertyChangeListener>();
 	
 	@Override
 	public void addPropertyChangeListener(E property, PropertyChangeListener listener) {
@@ -26,7 +26,7 @@ public class PropertyChangePublisher<E extends Enum<E>> implements Observable<E>
 		}
 		List<PropertyChangeListener> list = listeners.get(property);
 		if (list == null) {
-			list = new ArrayList<>();
+			list = new ArrayList<PropertyChangeListener>();
 			listeners.put(property, list);
 		}
 		list.add(listener);
@@ -54,9 +54,15 @@ public class PropertyChangePublisher<E extends Enum<E>> implements Observable<E>
 			return;
 		}
 		setEnableEvents(false);
-		if (listeners.containsKey(property))
-			listeners.get(property).forEach((listener) -> listener.propertyChanged());
-		allPropertiesListeners.forEach((listener) -> listener.propertyChanged());
+		if (listeners.containsKey(property)){
+			for(PropertyChangeListener listener : listeners.get(property)){
+				listener.propertyChanged();
+			}
+		}
+		for(PropertyChangeListener listener : allPropertiesListeners){
+			listener.propertyChanged();
+		}
+		
 		setEnableEvents(true);
 	}
 

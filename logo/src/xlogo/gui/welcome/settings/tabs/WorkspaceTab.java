@@ -50,32 +50,32 @@ import xlogo.storage.workspace.WorkspaceConfig;
 
 public class WorkspaceTab extends AbstractWorkspacePanel {
 	
-	JPanel						component;
+	JPanel			component;
 	
-	JLabel						workspaceLabel;
-	JLabel						wsLocationLabel;
-	JLabel						wsLanguageLabel;
-	JLabel						wsLogoLanguageLabel;
-	JLabel						wsBackupLabel;
-	JLabel						userLabel;
+	JLabel			workspaceLabel;
+	JLabel			wsLocationLabel;
+	JLabel			wsLanguageLabel;
+	JLabel			wsLogoLanguageLabel;
+	JLabel			wsBackupLabel;
+	JLabel			userLabel;
 	
-	JButton						addWorkspaceBtn;
-	JButton						addUserBtn;
+	JButton			addWorkspaceBtn;
+	JButton			addUserBtn;
 	
-	JButton						removeWorkspaceBtn;
-	JButton						removeUserBtn;
+	JButton			removeWorkspaceBtn;
+	JButton			removeUserBtn;
 	
-	JButton						importWorkspaceBtn;
-	JButton						importUserBtn;
+	JButton			importWorkspaceBtn;
+	JButton			importUserBtn;
 	
-	JComboBox<String>			workspaceSelection;
-	JComboBox<String>			userSelection;
-	JLabel						wsLocation;
-	JFileChooser				wsLocationChooser;
-	JComboBox<Language>			languageSelection;
-	JComboBox<LogoLanguage>		logoLanguageSelection;
-	JComboBox<NumberOfBackups>	nOfBackupsSelection;
-	JCheckBox					userCreatable;
+	JComboBox		workspaceSelection;
+	JComboBox		userSelection;
+	JLabel			wsLocation;
+	JFileChooser	wsLocationChooser;
+	JComboBox		languageSelection;
+	JComboBox		logoLanguageSelection;
+	JComboBox		nOfBackupsSelection;
+	JCheckBox		userCreatable;
 	
 	public WorkspaceTab() {
 		super();
@@ -87,7 +87,7 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 	}
 	
 	@Override
-	protected JComboBox<String> getWorkspaceSelection() {
+	protected JComboBox getWorkspaceSelection() {
 		return workspaceSelection;
 	}
 	
@@ -111,21 +111,22 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 		importWorkspaceBtn = new JButton("Import");
 		importUserBtn = new JButton("Import");
 		
-		workspaceSelection = new JComboBox<>();
-		userSelection = new JComboBox<>();
+		workspaceSelection = new JComboBox();
+		userSelection = new JComboBox();
 		wsLocation = new JLabel();
 		wsLocationChooser = new JFileChooser();
-		languageSelection = new JComboBox<>(Language.values());
-		logoLanguageSelection = new JComboBox<>(LogoLanguage.values());
-		nOfBackupsSelection = new JComboBox<>(NumberOfBackups.values());
+		languageSelection = new JComboBox(Language.values());
+		logoLanguageSelection = new JComboBox(LogoLanguage.values());
+		nOfBackupsSelection = new JComboBox(NumberOfBackups.values());
 		userCreatable = new JCheckBox("Allow the users to create new user accounts?");
 		
 		populateWorkspaceList();
 		setValues();
 		
-		if (WSManager.getWorkspaceConfig() == null){
+		if (WSManager.getWorkspaceConfig() == null) {
 			disableComponents();
-		} else {
+		}
+		else {
 			enableComponents();
 		}
 	}
@@ -195,41 +196,49 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 										.addComponent(nOfBackupsSelection))
 						.addGroup(groupLayout.createParallelGroup().addComponent(userCreatable)));
 		
-		groupLayout.setHorizontalGroup(groupLayout
-				.createParallelGroup()
-				.addGroup(
-						groupLayout
-								.createSequentialGroup()
-								.addGroup(
-										groupLayout.createParallelGroup().addComponent(workspaceLabel)
-												.addComponent(userLabel).addComponent(wsLocationLabel)
-												.addComponent(wsLanguageLabel).addComponent(wsLogoLanguageLabel)
-												.addComponent(wsBackupLabel))
-								.addGroup(
-										groupLayout
-												.createParallelGroup()
-												.addGroup(
-														groupLayout
-																.createSequentialGroup()
-																.addGroup(
-																		groupLayout.createParallelGroup()
-																				.addComponent(workspaceSelection)
-																				.addComponent(userSelection))
-																.addGroup(
-																		groupLayout.createParallelGroup()
-																				.addComponent(addWorkspaceBtn)
-																				.addComponent(addUserBtn))
-																.addGroup(
-																		groupLayout.createParallelGroup()
-																				.addComponent(removeWorkspaceBtn)
-																				.addComponent(removeUserBtn))
-																.addGroup(
-																		groupLayout.createParallelGroup()
-																				.addComponent(importWorkspaceBtn)
-																				.addComponent(importUserBtn)))
-												.addComponent(wsLocation)
-												.addComponent(languageSelection).addComponent(logoLanguageSelection)
-												.addComponent(nOfBackupsSelection))).addComponent(userCreatable));
+		groupLayout
+				.setHorizontalGroup(groupLayout
+						.createParallelGroup()
+						.addGroup(
+								groupLayout
+										.createSequentialGroup()
+										.addGroup(
+												groupLayout.createParallelGroup().addComponent(workspaceLabel)
+														.addComponent(userLabel).addComponent(wsLocationLabel)
+														.addComponent(wsLanguageLabel)
+														.addComponent(wsLogoLanguageLabel).addComponent(wsBackupLabel))
+										.addGroup(
+												groupLayout
+														.createParallelGroup()
+														.addGroup(
+																groupLayout
+																		.createSequentialGroup()
+																		.addGroup(
+																				groupLayout
+																						.createParallelGroup()
+																						.addComponent(
+																								workspaceSelection)
+																						.addComponent(userSelection))
+																		.addGroup(
+																				groupLayout.createParallelGroup()
+																						.addComponent(addWorkspaceBtn)
+																						.addComponent(addUserBtn))
+																		.addGroup(
+																				groupLayout
+																						.createParallelGroup()
+																						.addComponent(
+																								removeWorkspaceBtn)
+																						.addComponent(removeUserBtn))
+																		.addGroup(
+																				groupLayout
+																						.createParallelGroup()
+																						.addComponent(
+																								importWorkspaceBtn)
+																						.addComponent(importUserBtn)))
+														.addComponent(wsLocation).addComponent(languageSelection)
+														.addComponent(logoLanguageSelection)
+														.addComponent(nOfBackupsSelection)))
+						.addComponent(userCreatable));
 	}
 	
 	@Override
@@ -317,7 +326,7 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 				}).run();
 			}
 		});
-
+		
 		/*
 		 * LOGO LANGUAGE
 		 */
@@ -435,7 +444,7 @@ public class WorkspaceTab extends AbstractWorkspacePanel {
 	private void populateUserList() {
 		WorkspaceConfig wc = WSManager.getInstance().getWorkspaceConfigInstance();
 		String[] users = wc.getUserList();
-		userSelection.setModel(new DefaultComboBoxModel<String>(users));
+		userSelection.setModel(new DefaultComboBoxModel(users));
 		//try {
 		//wc.enterInitialUserSpace(); // TODO maybe we still need this?
 		String lastUser = wc.getLastActiveUser();

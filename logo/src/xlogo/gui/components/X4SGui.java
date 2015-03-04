@@ -67,8 +67,11 @@ public abstract class X4SGui {
 		stopListenForLanguageChangeEvents();
 	}
 	
-	private PropertyChangeListener languageChangeListener = () -> {
-		setText();
+	private PropertyChangeListener languageChangeListener = new PropertyChangeListener(){
+		@Override
+		public void propertyChanged() {
+			setText();
+		}
 	};
 	
 	/**

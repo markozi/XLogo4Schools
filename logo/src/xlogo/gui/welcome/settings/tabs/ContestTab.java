@@ -46,7 +46,7 @@ public class ContestTab extends AbstractWorkspacePanel {
 	
 	JPanel component;
 	JLabel workspaceLabel;
-	JComboBox<String> workspaceSelection;
+	JComboBox workspaceSelection;
 	JLabel nOfFilesLabel;
 	JSpinner nOfFileSpinner;
 	JLabel nOfBonusFilesLabel;
@@ -58,7 +58,7 @@ public class ContestTab extends AbstractWorkspacePanel {
 	}
 
 	@Override
-	protected JComboBox<String> getWorkspaceSelection() {
+	protected JComboBox getWorkspaceSelection() {
 		return workspaceSelection;
 	}
 	
@@ -76,7 +76,7 @@ public class ContestTab extends AbstractWorkspacePanel {
 		component = new JPanel();
 		
 		workspaceLabel = new JLabel();
-		workspaceSelection = new JComboBox<>();
+		workspaceSelection = new JComboBox();
 
 		nOfFilesLabel = new JLabel();
 	    nOfFileSpinner = new JSpinner(new SpinnerNumberModel(contestFiles, 0, 100, 1));

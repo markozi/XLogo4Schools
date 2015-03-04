@@ -155,8 +155,15 @@ public class Application extends X4SFrame {
 		focusCommandLine();
 	}
 	
+	@Override
 	public JFrame getFrame() {
 		return mainFrame;
+	}
+	
+	@Override
+	public void closeFrame(){
+		WSManager.getInstance().stopEverything();
+		super.closeFrame();
 	}
 	
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -1096,6 +1103,7 @@ public class Application extends X4SFrame {
 	
 	public void closeWindow() {
 		WSManager storageManager = WSManager.getInstance();
+		storageManager.stopEverything();
 		try {
 			String openFile = userSpace.getOpenFileName();
 			if (openFile != null) {

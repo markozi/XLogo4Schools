@@ -36,26 +36,51 @@ public class AppSettings implements Observable<AppSettings.AppProperty>{
 	
 	private WorkspaceConfig	wc;
 	
-	private PropertyChangeListener	languageListener	= () -> {
-		setLanguage(wc.getLanguage());
+	private PropertyChangeListener	languageListener	= new PropertyChangeListener(){
+		
+		@Override
+		public void propertyChanged() {
+			setLanguage(wc.getLanguage());
+		}
 	};
 	
-	private PropertyChangeListener	logoLanguageListener= () -> {
-		setLogoLanguage(wc.getLogoLanguage());
+	private PropertyChangeListener	logoLanguageListener= new PropertyChangeListener(){
+		
+		@Override
+		public void propertyChanged() {
+			setLogoLanguage(wc.getLogoLanguage());
+		}
 	};
 	
-	private PropertyChangeListener	syntaxListener	= () -> {
-		setSyntaxHighlightingStyles(wc.getSyntaxHighlightStyles());
+	private PropertyChangeListener	syntaxListener	= new PropertyChangeListener(){
+		
+		@Override
+		public void propertyChanged() {
+			setSyntaxHighlightingStyles(wc.getSyntaxHighlightStyles());
+		}
 	};
 	
-	private PropertyChangeListener	workspaceListener	= () -> {
-		setWorkspace(WSManager.getWorkspaceConfig());
+	private PropertyChangeListener	workspaceListener	= new PropertyChangeListener(){
+		
+		@Override
+		public void propertyChanged() {
+			setWorkspace(WSManager.getWorkspaceConfig());
+		}
 	};
 	
-	public AppSettings() {
+	private PropertyChangeListener	workspaceListListener	= new PropertyChangeListener(){
+		
+		@Override
+		public void propertyChanged() {
+			publisher.publishEvent(AppProperty.WORKSPACE_LIST);
+		}
+	};
+	
+	private AppSettings() {
 		GlobalConfig gc = WSManager.getGlobalConfig();
 		WorkspaceConfig wc = WSManager.getWorkspaceConfig();
 		gc.addPropertyChangeListener(GlobalProperty.CURRENT_WORKSPACE, workspaceListener);
+		gc.addPropertyChangeListener(GlobalProperty.WORKSPACES, workspaceListListener);
 		if (wc != null) {
 			setWorkspace(gc.getCurrentWorkspace().get());
 		}
@@ -185,10 +210,10 @@ public class AppSettings implements Observable<AppSettings.AppProperty>{
 	 * * * * * * */
 	
 	public enum AppProperty {
-		LANGUAGE, LOGO_LANGUAGE, SYNTAX_HIGHLIGHTING, FONT, WORKSPACE;
+		LANGUAGE, LOGO_LANGUAGE, SYNTAX_HIGHLIGHTING, FONT, WORKSPACE, WORKSPACE_LIST;
 	}
 	
-	private transient final PropertyChangePublisher<AppProperty> publisher = new PropertyChangePublisher<>();
+	private transient final PropertyChangePublisher<AppProperty> publisher = new PropertyChangePublisher<AppProperty>();
 	
 	@Override
 	public void addPropertyChangeListener(AppProperty property, PropertyChangeListener listener) {

@@ -93,10 +93,12 @@ public abstract class Storable implements Serializable {
 				setPersisted(false);
 				try {
 					File file = getFilePath();
-					mkParentDirs(file);
+					if (!mkParentDirs(file)){
+						return;
+					}
 					storeCopyToFile(file);
 				}
-				catch (IOException ignore) { }
+				catch (Exception ignore) { }
 				setPersisted(true);
 			}
 		} else {
@@ -220,14 +222,16 @@ public abstract class Storable implements Serializable {
 				"Cannot store this to specified location : " + location.toString()); }
 	}
 	
-	public void mkParentDirs(File file) {
+	public boolean mkParentDirs(File file) {
 		File parent = file.getParentFile();
 		if (!parent.exists()) {
 			parent.mkdirs();
 		}
 
-		if (!parent.isDirectory() || !parent.canWrite()) { throw new IllegalArgumentException(
-				"Cannot store this to specified location : " + location.toString()); }
+		if (!parent.isDirectory() || !parent.canWrite()) { 
+			return false;
+		}
+		return true;
 	}
 	
 	/**

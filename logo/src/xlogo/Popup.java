@@ -38,7 +38,6 @@ import javax.swing.text.BadLocationException;
 import javax.swing.JPopupMenu;
 
 import xlogo.storage.WSManager;
-import xlogo.storage.workspace.Language;
 import xlogo.storage.workspace.LogoLanguage;
 
 import java.awt.event.*;

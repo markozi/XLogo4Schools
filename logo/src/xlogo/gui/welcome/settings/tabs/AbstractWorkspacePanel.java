@@ -30,19 +30,19 @@ package xlogo.gui.welcome.settings.tabs;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.IOException;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 
+import xlogo.AppSettings;
+import xlogo.AppSettings.AppProperty;
 import xlogo.gui.components.X4SComponent;
 import xlogo.interfaces.Observable.PropertyChangeListener;
 import xlogo.messages.async.dialog.DialogMessenger;
 import xlogo.storage.Storable;
 import xlogo.storage.WSManager;
 import xlogo.storage.global.GlobalConfig;
-import xlogo.storage.global.GlobalConfig.GlobalProperty;
 import xlogo.storage.workspace.WorkspaceConfig;
 
 public abstract class AbstractWorkspacePanel extends X4SComponent{
@@ -50,7 +50,7 @@ public abstract class AbstractWorkspacePanel extends X4SComponent{
 	private PropertyChangeListener enterWorkspaceListener;
 	private PropertyChangeListener workspaceListChangeListener;
 		
-	protected abstract JComboBox<String> getWorkspaceSelection();
+	protected abstract JComboBox getWorkspaceSelection();
 
 	private boolean ignoreGuiEvents = false;
 	
@@ -72,37 +72,42 @@ public abstract class AbstractWorkspacePanel extends X4SComponent{
 			}
 		});
 		
-		enterWorkspaceListener = () -> {
-			ignoreGuiEvents = true;
-			if (WSManager.getWorkspaceConfig() != null){
-				enableComponents();
-			} else {
-				disableComponents();
+		enterWorkspaceListener = new PropertyChangeListener(){
+			
+			@Override
+			public void propertyChanged() {
+				ignoreGuiEvents = true;
+				if (WSManager.getWorkspaceConfig() != null){
+					enableComponents();
+				} else {
+					disableComponents();
+				}
+				selectCurrentWorkspace();
+				ignoreGuiEvents = false;
 			}
-			selectCurrentWorkspace();
-			ignoreGuiEvents = false;
 		};
 		
-		workspaceListChangeListener = () -> {
-			ignoreGuiEvents = true;
-			populateWorkspaceList();
-			ignoreGuiEvents = false;
+		workspaceListChangeListener = new PropertyChangeListener(){
+			
+			@Override
+			public void propertyChanged() {
+				ignoreGuiEvents = true;
+				populateWorkspaceList();
+				ignoreGuiEvents = false;
+			}
 		};
-		
-		final GlobalConfig gc = WSManager.getGlobalConfig();
-		
-		gc.addPropertyChangeListener(GlobalProperty.WORKSPACES, workspaceListChangeListener);
-		
-		gc.addPropertyChangeListener(GlobalProperty.CURRENT_WORKSPACE, enterWorkspaceListener);
+		AppSettings as = AppSettings.getInstance();		
+		as.addPropertyChangeListener(AppProperty.WORKSPACE_LIST, workspaceListChangeListener);
+		as.addPropertyChangeListener(AppProperty.WORKSPACE, enterWorkspaceListener);
 	}
 
 	@Override
 	public void stopEventListeners()
 	{
 		super.stopEventListeners();
-		GlobalConfig gc = WSManager.getGlobalConfig();
-		gc.removePropertyChangeListener(GlobalProperty.WORKSPACES, workspaceListChangeListener);
-		gc.removePropertyChangeListener(GlobalProperty.CURRENT_WORKSPACE, enterWorkspaceListener);		
+		AppSettings as = AppSettings.getInstance();		
+		as.removePropertyChangeListener(AppProperty.WORKSPACE_LIST, workspaceListChangeListener);
+		as.removePropertyChangeListener(AppProperty.WORKSPACE, enterWorkspaceListener);	
 	}
 	
 	protected abstract void setValues();
@@ -114,7 +119,7 @@ public abstract class AbstractWorkspacePanel extends X4SComponent{
 	protected void populateWorkspaceList() {
 		GlobalConfig gc = WSManager.getGlobalConfig();
 		String[] workspaces = gc.getAllWorkspaces();
-		getWorkspaceSelection().setModel(new DefaultComboBoxModel<String>(workspaces));
+		getWorkspaceSelection().setModel(new DefaultComboBoxModel(workspaces));
 		selectCurrentWorkspace();
 	}
 	
@@ -194,24 +199,19 @@ public abstract class AbstractWorkspacePanel extends X4SComponent{
 	}
 
 	protected void enterWorkspace(String wsName) {
-		try {
-			// enter workspace
-			WSManager.getInstance().enterWorkspace(wsName);
-			WorkspaceConfig wc = WSManager.getInstance().getWorkspaceConfigInstance();
-			if (wc == null)
-			{
-				disableComponents();
-				return;
-			}
-			enableComponents();
-			setValues();
-		} catch (IOException e) {
+		// enter workspace
+		WSManager.getInstance().enterWorkspace(wsName);
+		WorkspaceConfig wc = WSManager.getInstance().getWorkspaceConfigInstance();
+		if (wc == null)
+		{
+			disableComponents();
 			DialogMessenger.getInstance().dispatchMessage(
 					translate("ws.error.title"),
-					translate("ws.settings.could.not.enter.wp") + e.toString());
-			disableComponents();
+					translate("ws.settings.could.not.enter.wp"));
+			return;
 		}
-		
+		enableComponents();
+		setValues();		
 	}
 
 	protected void addWorkspace() {
@@ -262,15 +262,15 @@ public abstract class AbstractWorkspacePanel extends X4SComponent{
 				return;
 		}
 		// dir exists & wsName doesn't exist yet => fine to create WS now
-		try {
+		//try {
 			WSManager.getInstance().createWorkspace(dir, wsName);
 			populateWorkspaceList();
-		} catch (IOException e) {
+		/*} catch (IOException e) {
 			DialogMessenger.getInstance().dispatchMessage(
 				translate("ws.error.title"),
 				translate("ws.settings.could.not.create.ws"));
 			return;
-		}
+		}*/
 			
 	}
 
