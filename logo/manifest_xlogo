@@ -1,2 +1,2 @@
 Main-Class: xlogo.Logo
-Class-Path: jh.jar vecmath.jar j3dcore.jar j3dutils.jar jl1.0.1.jar log4j-api-2.1.jar log4j-core-2.1.jar org.json-20131017.jar
+Class-Path: jh.jar jogamp-fat.jar vecmath.jar j3dcore.jar j3dutils.jar jl1.0.1.jar log4j-api-2.1.jar log4j-core-2.1.jar org.json-20131017.jar

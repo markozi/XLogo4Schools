@@ -72,8 +72,9 @@
 		    	<include name="linux/**"/>
 		    	<include name="solaris/**"/>
 		    	<include name="jh.jar"/>
-		    	<include name="j3dcore.jar"/>
+		    	<include name="jogamp-fat.jar"/>
     			<include name="vecmath.jar"/>
+		    	<include name="j3dcore.jar"/>
     			<include name="j3dutils.jar"/>
 				<include name="jl1.0.1.jar"/>
 				<include name="log4j-api-2.1.jar"/>
@@ -156,11 +157,12 @@
 	<target name="compile" depends="copy.static.files">
 <!--		<echo> ${ant.java.version}</echo> -->
     	<javac 
-    		source="1.6" encoding="utf8"
-    		target="1.6"
+    		source="1.8" encoding="utf8"
+    		target="1.8"
     		srcdir="src" destdir="deploy/"
     		includeantruntime="false">
     		 <classpath>
+		        <pathelement location="jogamp-fat.jar"/>
 		        <pathelement location="vecmath.jar"/>
 		        <pathelement location="j3dcore.jar"/>
 		        <pathelement location="j3dutils.jar"/>
@@ -179,6 +181,7 @@
     <target name="copy.static.files" depends="create.deploy">
      	<copy todir="deploy/">
         		<fileset dir=".">
+        			<include name="jogamp-fat.jar"/>
         			<include name="vecmath.jar"/>
         			<include name="j3dcore.jar"/>
         			<include name="j3dutils.jar"/>

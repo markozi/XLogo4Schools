@@ -212,12 +212,6 @@ public class Lanceur {
 		
 		// Linux
 		//InputStream lib;
-		OS os = OS.valueOf(osName, arch);
-		
-		for (Library lib : os.getLibraries()) {
-			copy2Tmp(lib);
-		}
-		
 	}
 	
 	private void initTmpFolder() {
@@ -330,30 +324,17 @@ public class Lanceur {
 	 */
 	enum Library {
 		TMP_XLOGO("tmp_xlogo.jar"),
-		
-		JH("jh.jar"), 
-		VECMATH("vecmath.jar"), 
-		J3D_CORE("j3dcore.jar"), 
-		J3D_UTILS("j3dutils.jar"), 
-		JLAYER("jl1.0.1.jar"), 
-		LOG4J_API("log4j-api-2.1.jar"), 
-		LOG4J_CORE("log4j-core-2.1.jar"), 
-		ORG_JSON("org.json-20131017.jar"),
-		
-		LIN_AMD64_J3D_CORE("linux/amd64/", "libj3dcore-ogl.so"), 
-		LIN_X86_J3D_CORE_OGL("linux/x86/", "libj3dcore-ogl.so"), 
-		LIN_X86_J3D_CORE_OGL_CG("linux/x86/", "libj3dcore-ogl-cg.so"),
-		
-		WIN_AMD64_J3D_CORE("windows/amd64/", "j3dcore-ogl.dll"), 
-		WIN_X86_J3D_CORE_D3D("windows/x86/", "j3dcore-d3d.dll"), 
-		WIN_X86_J3D_CORE_OGL("windows/x86/", "j3dcore-ogl.dll"), 
-		WIN_X86_J3D_CORE_CG("windows/x86/", "j3dcore-ogl-cg.dll"), 
-		WIN_X86_J3D_CORE_OGL_CHK("windows/x86/", "j3dcore-ogl-chk.dll"), 
-		WIN_AMD64_J3D_CORE_OGL("windows/amd64/", "j3dcore-ogl.dll"),
-		
-		SOL_X86_LIB_J3D_CORE("solaris/i386/", "libj3dcore-ogl.so"), 
-		SOL_AMD64_LIB_J3D_CORE("solaris/amd64/","libj3dcore-ogl.so"), ;
-		
+
+		JH("jh.jar"),
+		JOGAMP("jogamp-fat.jar"),
+		VECMATH("vecmath.jar"),
+		J3D_CORE("j3dcore.jar"),
+		J3D_UTILS("j3dutils.jar"),
+		JLAYER("jl1.0.1.jar"),
+		LOG4J_API("log4j-api-2.1.jar"),
+		LOG4J_CORE("log4j-core-2.1.jar"),
+		ORG_JSON("org.json-20131017.jar");
+
 		private String	path;
 		private String	libName;
 		
@@ -385,69 +366,6 @@ public class Lanceur {
 		
 		public File getFile(File location) {
 			return new File(location.getAbsolutePath() + File.separator + libName);
-		}
-	}
-	
-	/**
-	 * These represent different operating systems and architectures. They provide system specific {@link Library}s
-	 * @author Marko
-	 *
-	 */
-	enum OS {
-		WINDOWS_AMD64(
-				Library.WIN_AMD64_J3D_CORE, 
-				Library.WIN_AMD64_J3D_CORE_OGL), 
-		WINDOWS_X86(
-				Library.WIN_X86_J3D_CORE_D3D, 
-				Library.WIN_X86_J3D_CORE_OGL, 
-				Library.WIN_X86_J3D_CORE_CG,
-				Library.WIN_X86_J3D_CORE_OGL_CHK), 
-		LINUX_AMD64(
-				Library.LIN_AMD64_J3D_CORE), 
-		LINUX_86(
-				Library.LIN_X86_J3D_CORE_OGL, 
-				Library.LIN_X86_J3D_CORE_OGL_CG), 
-		SOLARIS_86(
-				Library.SOL_X86_LIB_J3D_CORE), 
-		SOLARIS_AMD64(
-				Library.SOL_AMD64_LIB_J3D_CORE), 
-		MAC, 
-		UNKNOWN;
-		
-		private Library[]	osLibs	= new Library[0];
-		
-		OS(Library... osLibs) {
-			this.osLibs = osLibs;
-		}
-		
-		public Library[] getLibraries() {
-			return osLibs;
-		}
-		
-		public static OS valueOf(String os, String arch) {
-			if (os.indexOf("linux") != -1) {
-				return (arch.indexOf("86") != -1) ? LINUX_86 : LINUX_AMD64;
-			}
-			else if (os.indexOf("windows") != -1) {
-				return (arch.indexOf("86") != -1) ? WINDOWS_X86 : WINDOWS_AMD64;
-			}
-			else if (os.indexOf("mac") != -1) {
-				return MAC;
-			}
-			else if (os.indexOf("sunos") != -1) {
-				if (arch.indexOf("86") != -1) {
-					return SOLARIS_86;
-				}
-				else if (arch.indexOf("amd64") != -1) {
-					return SOLARIS_AMD64;
-				}
-				else {
-					return UNKNOWN;
-				}
-			}
-			else {
-				return UNKNOWN;
-			}
 		}
 	}
 }
