@@ -1,0 +1,4 @@
+src/xlogo/kernel/perspective/ElementPoint.java
+src/xlogo/kernel/perspective/Viewer3D.java
+src/xlogo/kernel/perspective/ElementLine.java
+src/xlogo/kernel/DrawPanel.java

@@ -1,0 +1,8 @@
+src/xlogo/kernel/perspective/MyFog.java
+src/xlogo/kernel/perspective/MyLight.java
+src/xlogo/kernel/perspective/ElementPoint.java
+src/xlogo/kernel/perspective/Viewer3D.java
+src/xlogo/kernel/perspective/ElementPolygon.java
+src/xlogo/kernel/perspective/ElementLine.java
+src/xlogo/kernel/DrawPanel.java
+src/xlogo/Logo.java
