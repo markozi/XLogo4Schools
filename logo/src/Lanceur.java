@@ -24,7 +24,7 @@
 /** Title : XLogo
  * Description : XLogo is an interpreter for the Logo
  * programming language
- * 
+ *
  * @author Loïc Le Coq */
 
 import java.io.*;
@@ -34,15 +34,15 @@ import java.util.Calendar;
 
 /**
  * @author loic
- * 
+ *
  *         This class extracts the file tmp_xlogo.jar from the main archive
  *         in the temporary file's directory
  *         and then launch the command: <br>
  *         java -D-jar -Xmx64m -Djava.library.path=path_to_tmp -cp path_to_tmp
  *         tmp_xlogo.jar<br>
  * <br>
- *         XLogo executes with a predefined heap size for the Virtual Machine * 
- * 
+ *         XLogo executes with a predefined heap size for the Virtual Machine *
+ *
  * @author Marko Zivkovic
  *         The maximum heap size property is now fixed 128MB. In the future, the application preferences should be used.
  *         Command line arguments are ignored, because this application is GUI-based and for
@@ -50,7 +50,7 @@ import java.util.Calendar;
  */
 public class Lanceur {
 	private static int	DEFAULT_MEMORY_ALLOC	= 128;
-	
+
 	/**
 	 * The process which contains the XLogo application
 	 */
@@ -59,48 +59,48 @@ public class Lanceur {
 	 * The temporary folder which contains all files to start XLogo
 	 */
 	private File		tmpFolder				= null;
-	
+
 	/**
 	 * Main method
-	 * 
+	 *
 	 * @param args
 	 *            The path toward "lgo" files
 	 */
-	public static void main(String[] args) {
+	public static void main(final String[] args) {
 		new Lanceur();
 	}
-	
+
 	Lanceur() {
 		// Look for old files from XLogo crash
 		cleanTmp();
 		// Look for the memory that should be allocated to the JVM heap size
 		//Preferences prefs = Preferences.systemRoot().node(PROPERTIES_PREFIX); TODO this does not work ... :-(
 		//int memory = prefs.getInt("appMemory", DEFAULT_MEMORY_ALLOC);
-		int memory = DEFAULT_MEMORY_ALLOC;
-		
+		final int memory = DEFAULT_MEMORY_ALLOC;
+
 		// extract application in the java.io.tmp directory
 		extractApplication();
 		startApplicationProcess(memory);
 		restorePath();
 		deleteTmpFiles();
 	}
-	
-	private void startApplicationProcess(int memoire) {
+
+	private void startApplicationProcess(final int memoire) {
 		try {
 			// Add the tmp to the path
-			String newPath = tmpFolder.getAbsolutePath();
-			
+			final String newPath = tmpFolder.getAbsolutePath();
+
 			String javaLibraryPath = newPath + File.pathSeparatorChar + System.getProperty("java.library.path");
 			// Bug when launching under Windows with java webstart
 			javaLibraryPath = javaLibraryPath.replaceAll("\"", "");
 			System.out.println("Path: " + javaLibraryPath + "\n");
-			String[] commande = new String[5];
+			final String[] commande = new String[5];
 			commande[0] = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
 			commande[1] = "-jar";
 			commande[2] = "-Xmx" + memoire + "m";
 			commande[3] = "-Djava.library.path=" + javaLibraryPath;
 			commande[4] = Library.TMP_XLOGO.getFile(tmpFolder).getAbsolutePath();
-			
+
 			System.out.println("<----- Starting XLogo ---->");
 			String cmd = "";
 			for (int i = 0; i < commande.length; i++) {
@@ -113,26 +113,26 @@ public class Lanceur {
 			startStreamForward(p.getErrorStream());
 			p.waitFor();
 		}
-		catch (Exception e) {
+		catch (final Exception e) {
 			System.out.println(e);
 		}
 	}
-	
+
 	private void restorePath() {
-		String pathToFolder = tmpFolder.getAbsolutePath();
-		String path = System.getProperty("java.library.path");
-		StringTokenizer st = new StringTokenizer(path, File.pathSeparator);
+		final String pathToFolder = tmpFolder.getAbsolutePath();
+		final String path = System.getProperty("java.library.path");
+		final StringTokenizer st = new StringTokenizer(path, File.pathSeparator);
 		String newPath = "";
 		while (st.hasMoreTokens()) {
 			if (!newPath.equals(""))
 				newPath += File.pathSeparator;
-			String element = st.nextToken();
+			final String element = st.nextToken();
 			if (!element.equals(pathToFolder))
 				newPath += element;
 		}
 		System.setProperty("java.library.path", newPath);
 	}
-	
+
 	/**
 	 * Used to catch application streams and write them to System.out
 	 * @param stream
@@ -147,7 +147,7 @@ public class Lanceur {
 					while ((line = reader.readLine()) != null)
 						System.out.println(line);
 				}
-				catch (IOException e) {
+				catch (final IOException e) {
 					System.out.println(e.toString());
 				}
 				finally {
@@ -155,69 +155,69 @@ public class Lanceur {
 						try {
 							reader.close();
 						}
-						catch (IOException e) {}
+						catch (final IOException e) {}
 				}
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * This method checks for unused old XLogo files in temporary directory<br>
 	 * If it found files older than 24 hours with the prefix tmp_xlogo, these
 	 * files are deleted.
 	 */
 	private void cleanTmp() {
-		String path = System.getProperty("java.io.tmpdir");
-		File f = new File(path);
-		File[] files = f.listFiles();
+		final String path = System.getProperty("java.io.tmpdir");
+		final File f = new File(path);
+		final File[] files = f.listFiles();
 		if (null != files) {
 			for (int i = 0; i < files.length; i++) {
 				try {
 					if (files[i].getName().startsWith("tmp_xlogo")) {
-						long fileTime = files[i].lastModified();
-						long time = Calendar.getInstance().getTimeInMillis();
+						final long fileTime = files[i].lastModified();
+						final long time = Calendar.getInstance().getTimeInMillis();
 						// Delete file if it's more than 24 hours old
 						if (time - fileTime > 24 * 3600 * 1000) {
 							if (files[i].isDirectory())
 								deleteDirectory(files[i]);
 							files[i].delete();
-							
+
 						}
 					}
 				}
-				catch (Exception e) {
+				catch (final Exception e) {
 					e.printStackTrace();
 				}
 			}
 		}
 	}
-	
+
 	/**
 	 * This method extracts the file tmp_xlogo.jar from the archive and copy it
 	 * into the temporary directory.
 	 */
 	private void extractApplication() {
 		initTmpFolder();
-		
-		for (Library lib : Library.values()) {
+
+		for (final Library lib : Library.values()) {
 			if (lib.getPath() == null){
 				copy2Tmp(lib);
 			}
 		}
 		// extract the native driver for java 3d in this folder
-		String osName = System.getProperty("os.name").toLowerCase();
-		String arch = System.getProperty("os.arch");
+		final String osName = System.getProperty("os.name").toLowerCase();
+		final String arch = System.getProperty("os.arch");
 		System.out.println("Operating system: " + osName);
 		System.out.println("Architecture: " + arch);
-		
+
 		// Linux
 		//InputStream lib;
 	}
-	
+
 	private void initTmpFolder() {
 		// Create in the "java.io.tmpdir" a directory called tmp_xlogo
 		int i = 0;
-		String tmpPath = System.getProperty("java.io.tmpdir") + File.separator + "tmp_xlogo";
+		final String tmpPath = System.getProperty("java.io.tmpdir") + File.separator + "tmp_xlogo";
 		while (true) {
 			tmpFolder = new File(tmpPath + i);
 			if (!tmpFolder.exists())
@@ -225,38 +225,38 @@ public class Lanceur {
 			else
 				i++;
 		}
-		
+
 		System.out.println("Creating tmp_xlogo directory - success: " + tmpFolder.mkdir());
 	}
-		
-	private void copy2Tmp(Library lib) {
+
+	private void copy2Tmp(final Library lib) {
 		// extract the jar file in this folder
-		InputStream src = Lanceur.class.getResourceAsStream(lib.getResourcePath());
-		File file = lib.getFile(tmpFolder);
+		final InputStream src = Lanceur.class.getResourceAsStream(lib.getResourcePath());
+		final File file = lib.getFile(tmpFolder);
 		System.out.println("Get library " + lib.getResourcePath());
 		System.out.println("Copying " + lib.getLibraryName() + " - success: " + copy(src, file));
 	}
-	
+
 	private void deleteTmpFiles() {
 		System.out.println("Closing XLogo. Cleaning tmp file");
-		for (Library lib : Library.values()) {
-			File file = lib.getFile(tmpFolder);
+		for (final Library lib : Library.values()) {
+			final File file = lib.getFile(tmpFolder);
 			if (file.exists()) {
 				file.delete();
 			}
 		}
 		tmpFolder.delete();
 	}
-	
+
 	/**
 	 * This method copy the file tmp_xlogo.jar from the archive to the file
 	 * Destination.
-	 * 
+	 *
 	 * @param destination
 	 *            The output file
 	 * @return true if success, false otherwise
 	 */
-	private boolean copy(InputStream src, File destination) {
+	private boolean copy(final InputStream src, final File destination) {
 		boolean resultat = false;
 		// Declaration des flux
 		java.io.FileOutputStream destinationFile = null;
@@ -264,10 +264,10 @@ public class Lanceur {
 			// Création du fichier :
 			destination.createNewFile();
 			// Ouverture des flux
-			
+
 			destinationFile = new java.io.FileOutputStream(destination);
 			// Lecture par segment de 0.5Mo
-			byte buffer[] = new byte[512 * 1024];
+			final byte buffer[] = new byte[512 * 1024];
 			int nbLecture;
 			while ((nbLecture = src.read(buffer)) != -1) {
 				destinationFile.write(buffer, 0, nbLecture);
@@ -275,33 +275,33 @@ public class Lanceur {
 			// Copie réussie
 			resultat = true;
 		}
-		catch (java.io.FileNotFoundException f) {}
-		catch (java.io.IOException e) {}
+		catch (final java.io.FileNotFoundException f) {}
+		catch (final java.io.IOException e) {}
 		finally {
 			// Quoi qu'il arrive, on ferme les flux
 			try {
 				src.close();
 			}
-			catch (Exception e) {}
+			catch (final Exception e) {}
 			try {
 				destinationFile.close();
 			}
-			catch (Exception e) {}
+			catch (final Exception e) {}
 		}
 		return (resultat);
 	}
-	
+
 	/**
 	 * Delete a the directory created by Logo in /tmp
-	 * 
+	 *
 	 * @param path
 	 *            The Directory path
 	 * @return true if success
 	 */
-	private boolean deleteDirectory(File path) {
+	private boolean deleteDirectory(final File path) {
 		boolean resultat = true;
 		if (path.exists()) {
-			File[] files = path.listFiles();
+			final File[] files = path.listFiles();
 			if (null != files) {
 				for (int i = 0; i < files.length; i++) {
 					if (files[i].isDirectory()) {
@@ -316,7 +316,7 @@ public class Lanceur {
 		resultat &= path.delete();
 		return (resultat);
 	}
-	
+
 	/**
 	 * These represent libraries that should be packed into the new temporary jar.
 	 * @author Marko
@@ -337,34 +337,34 @@ public class Lanceur {
 
 		private String	path;
 		private String	libName;
-		
-		Library(String jarName) {
+
+		Library(final String jarName) {
 			this.libName = jarName;
 		}
-		
-		Library(String path, String libName) {
+
+		Library(final String path, final String libName) {
 			this.path = path;
 			this.libName = libName;
 		}
-		
+
 		public String getPath() {
 			return path;
 		}
-		
+
 		public String getLibraryName() {
 			return libName;
 		}
-		
+
 		public String getResourcePath() {
 			if (path != null){
 				return path + libName;
 			} else {
 				return libName;
 			}
-			
+
 		}
-		
-		public File getFile(File location) {
+
+		public File getFile(final File location) {
 			return new File(location.getAbsolutePath() + File.separator + libName);
 		}
 	}

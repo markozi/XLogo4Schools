@@ -1,36 +1,36 @@
 /* XLogo4Schools - A Logo Interpreter specialized for use in schools, based on XLogo by Loic Le Coq
  * Copyright (C) 2013 Marko Zivkovic
- * 
+ *
  * Contact Information: marko88zivkovic at gmail dot com
- * 
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.  This program is distributed in the hope that it will be 
- * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General 
- * Public License for more details.  You should have received a copy of the 
- * GNU General Public License along with this program; if not, write to the Free 
- * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, 
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.  This program is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.  You should have received a copy of the
+ * GNU General Public License along with this program; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301, USA.
- * 
- * 
+ *
+ *
  * This Java source code belongs to XLogo4Schools, written by Marko Zivkovic
  * during his Bachelor thesis at the computer science department of ETH Zurich,
  * in the year 2013 and/or during future work.
- * 
+ *
  * It is a reengineered version of XLogo written by Loic Le Coq, published
  * under the GPL License at http://xlogo.tuxfamily.org/
- * 
+ *
  * Contents of this file were initially written by Loic Le Coq,
- * modifications, extensions, refactorings might have been applied by Marko Zivkovic 
+ * modifications, extensions, refactorings might have been applied by Marko Zivkovic
  */
 
 /**
  * Title : XLogo
  * Description : XLogo is an interpreter for the Logo
  * programming language
- * 
+ *
  * @author Loïc Le Coq
  */
 package xlogo.kernel.perspective;
@@ -49,33 +49,33 @@ import xlogo.kernel.LogoError;
 
 /**
  * This class represent A polygon surface in 3D mode
- * 
+ *
  * @author loic
- * 
+ *
  * @author Marko Zivkovic - I decoupled this from Application
  */
 public class ElementPolygon extends Element3D
 {
-	public ElementPolygon(Viewer3D v3d)
+	public ElementPolygon(final Viewer3D v3d)
 	{
 		super(v3d);
 	}
-	
+
 	/**
 	 * This method calculates all attributes for polygon and add it to the
 	 * Polygon's list
 	 */
 	public void addToScene() throws LogoError
 	{
-		
+
 		if (vertex.size() < 3)
 			throw new LogoError(Logo.messages.getString("error.3d.3vertex"));
-		
+
 		// Create normal vector
-		
-		Point3d origine = vertex.get(0);
+
+		final Point3d origine = vertex.get(0);
 		// System.out.println(" origine "+origine.x+" "+origine.y+" "+origine.z);
-		
+
 		Point3d point1;
 		Vector3f vec1 = null;
 		Vector3f vec2 = null;
@@ -117,61 +117,61 @@ public class ElementPolygon extends Element3D
 			if (null == vec2)
 				throw new LogoError(Logo.messages.getString("error.3d.emptypolygon"));
 		}
-		
+
 		// Create Geometry
-		
-		int[] tab = new int[1];
+
+		final int[] tab = new int[1];
 		tab[0] = vertex.size();
-		TriangleFanArray tfa = new TriangleFanArray(vertex.size(), TriangleFanArray.COORDINATES
-				| TriangleFanArray.COLOR_3 | TriangleFanArray.NORMALS, tab);
+		final TriangleFanArray tfa = new TriangleFanArray(vertex.size(), GeometryArray.COORDINATES
+				| GeometryArray.COLOR_3 | GeometryArray.NORMALS, tab);
 		// TriangleFanArray tfa2=new
 		// TriangleFanArray(vertex.size(),TriangleFanArray.COORDINATES|TriangleFanArray.COLOR_3|TriangleFanArray.NORMALS,tab);
 		for (int i = 0; i < vertex.size(); i++)
 		{
-			
+
 			tfa.setCoordinate(i, vertex.get(i));
 			// tfa2.setCoordinate(i, vertex.get(vertex.size()-1-i));
 			
 			tfa.setColor(i, new Color3f(color.get(i)));
 			// tfa2.setColor(i, new Color3f(color.get(color.size()-i-1)));
-			
+
 			tfa.setNormal(i, vec2);
 			// tfa2.setNormal(i, vec1);
-			
+
 		}
-		
-		Shape3D s = new Shape3D(tfa);
-		Appearance appear = new Appearance();
-		Material mat = new Material(new Color3f(1.0f, 1.0f, 1.0f), new Color3f(0.0f, 0f, 0f), new Color3f(1f, 1.0f,
+
+		final Shape3D s = new Shape3D(tfa);
+		final Appearance appear = new Appearance();
+		final Material mat = new Material(new Color3f(1.0f, 1.0f, 1.0f), new Color3f(0.0f, 0f, 0f), new Color3f(1f, 1.0f,
 				1.0f), new Color3f(1f, 1f, 1f), 64);
 		appear.setMaterial(mat);
-		PolygonAttributes pa = new PolygonAttributes();
+		final PolygonAttributes pa = new PolygonAttributes();
 		pa.setCullFace(PolygonAttributes.CULL_NONE);
 		pa.setBackFaceNormalFlip(true);
 		appear.setPolygonAttributes(pa);
-		
+
 		s.setAppearance(appear);
 		v3d.add3DObject(s);
 		// DrawPanel.listPoly.add(s);
 		// DrawPanel.listPoly.add(new Shape3D(tfa2));
 		// System.out.println(DrawPanel.listPoly.size()+" "+vertex.get(i).x+" "+vertex.get(i).y+" "+vertex.get(i).z);
 	}
-	
+
 	public boolean isPoint()
 	{
 		return false;
 	}
-	
+
 	public boolean isPolygon()
 	{
 		return true;
 	}
-	
+
 	public boolean isLine()
 	{
 		return false;
 	}
-	
+
 	public boolean isText()
 	{
 		return false;
