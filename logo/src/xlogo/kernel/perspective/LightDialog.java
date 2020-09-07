@@ -36,10 +36,9 @@ import java.awt.Color;
 
 import xlogo.Logo;
 
-import javax.vecmath.Color3f;
-import javax.vecmath.Tuple3f;
-import javax.vecmath.Point3f;
-import javax.vecmath.Vector3f;
+import org.jogamp.vecmath.Color3f;
+import org.jogamp.vecmath.Tuple3f;
+import org.jogamp.vecmath.Point3f;
 import org.jogamp.vecmath.Vector3f;
 import javax.swing.BorderFactory;
 import javax.swing.JDialog;
@@ -97,12 +96,15 @@ public class LightDialog extends JDialog implements ActionListener
 		labelType = new JLabel(Logo.messages.getString("3d.light.type"));
 		comboType = new JComboBox(type);
 		comboType.setSelectedIndex(light.getType());
-		
-		Color3f col = light.getColor();
-		if (null != col)
-			panelColor = new PanelColor(col.get());
-		else
+
+		final Color3f col = light.getColor();
+		if (null != col) {
+		    final float[] t = new float[3];
+		    col.get(t);
+			panelColor = new PanelColor(new Color(t[0], t[1], t[2]));
+		} else {
 			panelColor = new PanelColor(Color.white);
+		}
 		panelColor.setBackground(comboType.getBackground());
 
 		panelPosition = new PanelPosition(Logo.messages.getString("3d.light.position"), light.getPosition());
@@ -183,11 +185,11 @@ public class LightDialog extends JDialog implements ActionListener
 
 	private void updateLight()
 	{
-		int t = comboType.getSelectedIndex();
-		Color3f c = new Color3f(panelColor.getValue());
-		Point3f p = panelPosition.getPosition();
-		Vector3f d = panelDirection.getDirection();
-		float a = panelAngle.getAngleValue();
+		final int t = comboType.getSelectedIndex();
+		final Color3f c = new Color3f(panelColor.getValue().getRGBColorComponents(null));
+		final Point3f p = panelPosition.getPosition();
+		final Vector3f d = panelDirection.getDirection();
+		final float a = panelAngle.getAngleValue();
 		light.setType(t);
 		light.setColor(c);
 		light.setPosition(p);

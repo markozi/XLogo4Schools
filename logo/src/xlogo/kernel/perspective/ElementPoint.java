@@ -28,21 +28,22 @@
 
 package xlogo.kernel.perspective;
 
-import javax.media.j3d.Appearance;
-import javax.media.j3d.Material;
-import javax.media.j3d.PointArray;
-import javax.media.j3d.PolygonAttributes;
-import javax.media.j3d.Transform3D;
-import javax.media.j3d.TransformGroup;
-import javax.vecmath.Point3d;
-import javax.vecmath.Color3f;
-import javax.vecmath.Vector3d;
+import org.jogamp.java3d.Appearance;
+import org.jogamp.java3d.GeometryArray;
+import org.jogamp.java3d.Material;
+import org.jogamp.java3d.PointArray;
+import org.jogamp.java3d.PolygonAttributes;
+import org.jogamp.java3d.Transform3D;
+import org.jogamp.java3d.TransformGroup;
+import org.jogamp.vecmath.Point3d;
+import org.jogamp.vecmath.Color3f;
+import org.jogamp.vecmath.Vector3d;
 
 import xlogo.kernel.LogoError;
 
-import javax.media.j3d.Shape3D;
+import org.jogamp.java3d.Shape3D;
 
-import com.sun.j3d.utils.geometry.Sphere;
+import org.jogamp.java3d.utils.geometry.Sphere;
 
 /**
  * @author Marko - I decoupled this from Application
@@ -69,7 +70,7 @@ public class ElementPoint extends Element3D
 			for (int i = 0; i < vertex.size(); i++)
 			{
 				point.setCoordinate(i, vertex.get(i));
-				point.setColor(i, new Color3f(color.get(i)));
+				point.setColor(i, new Color3f(color.get(i).getRGBColorComponents(null)));
 			}
 			v3d.add3DObject(new Shape3D(point));
 		}
@@ -77,7 +78,7 @@ public class ElementPoint extends Element3D
 		{
 			for (int i = 0; i < vertex.size(); i++)
 			{
-				createBigPoint(vertex.get(i), new Color3f(color.get(i)));
+				createBigPoint(vertex.get(i), new Color3f(color.get(i).getRGBColorComponents(null)));
 			}
 
 		}

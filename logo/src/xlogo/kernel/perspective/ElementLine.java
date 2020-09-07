@@ -28,24 +28,25 @@
 
 package xlogo.kernel.perspective;
 
-import javax.media.j3d.Appearance;
-import javax.media.j3d.LineStripArray;
-import javax.media.j3d.Material;
-import javax.media.j3d.PolygonAttributes;
-import javax.media.j3d.Shape3D;
-import javax.media.j3d.LineAttributes;
-import javax.media.j3d.TransformGroup;
+import org.jogamp.java3d.Appearance;
+import org.jogamp.java3d.GeometryArray;
+import org.jogamp.java3d.LineStripArray;
+import org.jogamp.java3d.Material;
+import org.jogamp.java3d.PolygonAttributes;
+import org.jogamp.java3d.Shape3D;
+import org.jogamp.java3d.LineAttributes;
+import org.jogamp.java3d.TransformGroup;
 
-import com.sun.j3d.utils.geometry.Sphere;
+import org.jogamp.java3d.utils.geometry.Sphere;
 
-import javax.media.j3d.Transform3D;
-import javax.vecmath.Color3f;
-import javax.vecmath.Point3d;
-import javax.vecmath.AxisAngle4d;
+import org.jogamp.java3d.Transform3D;
+import org.jogamp.vecmath.Color3f;
+import org.jogamp.vecmath.Point3d;
+import org.jogamp.vecmath.AxisAngle4d;
 
-import com.sun.j3d.utils.geometry.Cylinder;
+import org.jogamp.java3d.utils.geometry.Cylinder;
 
-import javax.vecmath.Vector3d;
+import org.jogamp.vecmath.Vector3d;
 
 import xlogo.kernel.LogoError;
 
@@ -94,7 +95,7 @@ public class ElementLine extends Element3D
 		{
 			line.setCoordinate(i, vertex.get(i));
 			// System.out.println("sommet "+(2*i-1)+" "+vertex.get(i).x+" "+vertex.get(i).y+" "+vertex.get(i).z+" ");
-			line.setColor(i, new Color3f(color.get(i)));
+			line.setColor(i, new Color3f(color.get(i).getRGBColorComponents(null)));
 		}
 		final Shape3D s = new Shape3D(line);
 		final Appearance appear = new Appearance();
@@ -127,7 +128,7 @@ public class ElementLine extends Element3D
 	{
 		for (int i = 0; i < size - 1; i++)
 		{
-			createLine(vertex.get(i), vertex.get(i + 1), new Color3f(color.get(i + 1)));
+			createLine(vertex.get(i), vertex.get(i + 1), new Color3f(color.get(i + 1).getRGBColorComponents(null)));
 		}
 
 	}

@@ -31,7 +31,7 @@ package xlogo.kernel.perspective;
 import java.awt.Color;
 import java.util.Vector;
 
-import javax.vecmath.Point3d;
+import org.jogamp.vecmath.Point3d;
 
 import xlogo.kernel.LogoError;
 
@@ -56,7 +56,7 @@ abstract public class Element3D
 	 * 
 	 * @uml.property name="vertex"
 	 * @uml.associationEnd multiplicity="(0 -1)"
-	 *                     elementType="javax.vecmath.Point3d"
+	 *                     elementType="org.jogamp.vecmath.Point3d"
 	 */
 	protected Vector<Point3d>	vertex;
 	

@@ -28,13 +28,13 @@
 
 package xlogo.kernel.perspective;
 
-import javax.media.j3d.BranchGroup;
-import javax.media.j3d.LinearFog;
-import javax.media.j3d.ExponentialFog;
-import javax.media.j3d.Fog;
-import javax.media.j3d.BoundingSphere;
+import org.jogamp.java3d.BranchGroup;
+import org.jogamp.java3d.LinearFog;
+import org.jogamp.java3d.ExponentialFog;
+import org.jogamp.java3d.Fog;
+import org.jogamp.java3d.BoundingSphere;
 
-import javax.vecmath.Color3f;
+import org.jogamp.vecmath.Color3f;
 
 public class MyFog extends BranchGroup
 {

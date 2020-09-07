@@ -28,17 +28,17 @@
 
 package xlogo.kernel.perspective;
 
-import javax.media.j3d.AmbientLight;
-import javax.media.j3d.BoundingSphere;
-import javax.media.j3d.DirectionalLight;
-import javax.media.j3d.Light;
-import javax.media.j3d.PointLight;
-import javax.media.j3d.SpotLight;
-import javax.vecmath.Color3f;
-import javax.vecmath.Point3d;
-import javax.vecmath.Point3f;
-import javax.vecmath.Vector3f;
-import javax.media.j3d.BranchGroup;
+import org.jogamp.java3d.AmbientLight;
+import org.jogamp.java3d.BoundingSphere;
+import org.jogamp.java3d.DirectionalLight;
+import org.jogamp.java3d.Light;
+import org.jogamp.java3d.PointLight;
+import org.jogamp.java3d.SpotLight;
+import org.jogamp.vecmath.Color3f;
+import org.jogamp.vecmath.Point3d;
+import org.jogamp.vecmath.Point3f;
+import org.jogamp.vecmath.Vector3f;
+import org.jogamp.java3d.BranchGroup;
 
 public class MyLight extends BranchGroup
 {

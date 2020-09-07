@@ -33,22 +33,23 @@ import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.Toolkit;
 
-import javax.media.j3d.BoundingSphere;
-import javax.media.j3d.BranchGroup;
-import javax.media.j3d.Canvas3D;
+import org.jogamp.java3d.BoundingSphere;
+import org.jogamp.java3d.BranchGroup;
+import org.jogamp.java3d.Canvas3D;
 
 import java.awt.image.BufferedImage;
 
-import javax.media.j3d.ImageComponent2D;
-import javax.media.j3d.ImageComponent;
-import javax.media.j3d.GraphicsContext3D;
-import javax.media.j3d.Shape3D;
-import javax.media.j3d.Raster;
-import javax.vecmath.Point3f;
-import javax.media.j3d.Transform3D;
-import javax.media.j3d.TransformGroup;
-import javax.media.j3d.Node;
-import javax.media.j3d.Background;
+import org.jogamp.java3d.ImageComponent2D;
+import org.jogamp.java3d.ImageComponent;
+import org.jogamp.java3d.GraphicsContext3D;
+import org.jogamp.java3d.Group;
+import org.jogamp.java3d.Shape3D;
+import org.jogamp.java3d.Raster;
+import org.jogamp.vecmath.Point3f;
+import org.jogamp.java3d.Transform3D;
+import org.jogamp.java3d.TransformGroup;
+import org.jogamp.java3d.Node;
+import org.jogamp.java3d.Background;
 
 import java.awt.GridBagLayout;
 import java.awt.Color;
@@ -59,21 +60,22 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.WindowConstants;
 import javax.swing.border.TitledBorder;
 
 import java.awt.GridLayout;
 
-import javax.vecmath.Color3f;
-import javax.vecmath.Point3d;
-import javax.vecmath.Vector3d;
+import org.jogamp.vecmath.Color3f;
+import org.jogamp.vecmath.Point3d;
+import org.jogamp.vecmath.Vector3d;
 
 import xlogo.storage.WSManager;
 import xlogo.utils.Utils;
 import xlogo.utils.WriteImage;
 import xlogo.Logo;
 
-import com.sun.j3d.utils.behaviors.vp.OrbitBehavior;
-import com.sun.j3d.utils.universe.SimpleUniverse;
+import org.jogamp.java3d.utils.behaviors.vp.OrbitBehavior;
+import org.jogamp.java3d.utils.universe.SimpleUniverse;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -121,7 +123,7 @@ public class Viewer3D extends JFrame implements ActionListener
 	public Viewer3D(final World3D w3d, final Color c)
 	{
 		this.w3d = w3d;
-		this.backgroundColor = new Color3f(c);
+		this.backgroundColor = new Color3f(c.getRGBColorComponents(null));
 		initGui();
 	}
 

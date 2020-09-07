@@ -35,14 +35,15 @@
  */
 package xlogo.kernel.perspective;
 
-import javax.media.j3d.Appearance;
-import javax.media.j3d.Material;
-import javax.media.j3d.PolygonAttributes;
-import javax.media.j3d.TriangleFanArray;
-import javax.vecmath.Point3d;
-import javax.media.j3d.Shape3D;
-import javax.vecmath.Vector3f;
-import javax.vecmath.Color3f;
+import org.jogamp.java3d.Appearance;
+import org.jogamp.java3d.GeometryArray;
+import org.jogamp.java3d.Material;
+import org.jogamp.java3d.PolygonAttributes;
+import org.jogamp.java3d.TriangleFanArray;
+import org.jogamp.vecmath.Point3d;
+import org.jogamp.java3d.Shape3D;
+import org.jogamp.vecmath.Vector3f;
+import org.jogamp.vecmath.Color3f;
 
 import xlogo.Logo;
 import xlogo.kernel.LogoError;
@@ -131,8 +132,8 @@ public class ElementPolygon extends Element3D
 
 			tfa.setCoordinate(i, vertex.get(i));
 			// tfa2.setCoordinate(i, vertex.get(vertex.size()-1-i));
-			
-			tfa.setColor(i, new Color3f(color.get(i)));
+
+			tfa.setColor(i, new Color3f(color.get(i).getRGBColorComponents(null)));
 			// tfa2.setColor(i, new Color3f(color.get(color.size()-i-1)));
 
 			tfa.setNormal(i, vec2);

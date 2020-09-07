@@ -54,7 +54,7 @@ import java.io.*;
 import javax.swing.JOptionPane;
 import javax.swing.ImageIcon;
 import javax.swing.Icon;
-import javax.vecmath.Point3d;
+import org.jogamp.vecmath.Point3d;
 
 import java.math.BigDecimal;
 

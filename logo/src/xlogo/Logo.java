@@ -34,7 +34,7 @@
  */
 package xlogo;
 
-import javax.media.j3d.VirtualUniverse;
+import org.jogamp.java3d.VirtualUniverse;
 import javax.swing.UIManager;
 import javax.swing.SwingUtilities;
 
